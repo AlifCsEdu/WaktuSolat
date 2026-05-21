@@ -338,15 +338,78 @@ export default function App() {
   const [manuallyDismissedAzanAlert, setManuallyDismissedAzanAlert] = useState<string | null>(null);
   const [manuallyExitedSolatPrayer, setManuallyExitedSolatPrayer] = useState<string | null>(null);
   
+  // Mosque Mode administrative controls state
+  const [iqamahModifier, setIqamahModifier] = useState<Record<string, number>>({});
+  const [iqamahPausedState, setIqamahPausedState] = useState<Record<string, { paused: boolean; remainingSecs: number }>>({});
+
   // Track the last active prayer to reset manual exit/dismiss states when it changes
   const lastActivePrayerRef = useRef<string | null>(null);
   useEffect(() => {
     if (prevPrayerKey && prevPrayerKey !== lastActivePrayerRef.current) {
       setManuallyDismissedAzanAlert(null);
       setManuallyExitedSolatPrayer(null);
+      // Reset Mosque mode admin states for the new prayer
+      if (prevPrayerKey) {
+        setIqamahModifier(prev => ({ ...prev, [prevPrayerKey]: 0 }));
+        setIqamahPausedState(prev => ({ ...prev, [prevPrayerKey]: { paused: false, remainingSecs: 0 } }));
+      }
       lastActivePrayerRef.current = prevPrayerKey;
     }
   }, [prevPrayerKey]);
+
+  const handleIqamahTogglePause = useCallback(() => {
+    if (!prevPrayerKey || !prevPrayerTime) return;
+    const isPaused = !!iqamahPausedState[prevPrayerKey]?.paused;
+    
+    if (isPaused) {
+      // Resuming: adjust the modifier so that iqamahEndTime matches the remaining seconds from now
+      const remainingSecs = iqamahPausedState[prevPrayerKey]?.remainingSecs || 0;
+      const pref = preferences[prevPrayerKey as PrayerKey];
+      const baseOffset = pref?.iqamahOffset ?? 0;
+      
+      const newIqamahEndTime = new Date(Date.now() + remainingSecs * 1000);
+      const newModifier = (newIqamahEndTime.getTime() - prevPrayerTime.getTime()) / 60000 - baseOffset;
+      
+      setIqamahModifier(prev => ({ ...prev, [prevPrayerKey]: newModifier }));
+      setIqamahPausedState(prev => ({
+        ...prev,
+        [prevPrayerKey]: { paused: false, remainingSecs: 0 }
+      }));
+    } else {
+      // Pausing: record current remaining seconds
+      const pref = preferences[prevPrayerKey as PrayerKey];
+      const activeModifier = iqamahModifier[prevPrayerKey] || 0;
+      const iqamahOffsetMinutes = (pref?.iqamahOffset ?? 0) + activeModifier;
+      const iqamahEndTime = new Date(prevPrayerTime.getTime() + iqamahOffsetMinutes * 60 * 1000);
+      const currentRemaining = Math.max(0, Math.floor((iqamahEndTime.getTime() - Date.now()) / 1000));
+      
+      setIqamahPausedState(prev => ({
+        ...prev,
+        [prevPrayerKey]: { paused: true, remainingSecs: currentRemaining }
+      }));
+    }
+  }, [prevPrayerKey, prevPrayerTime, iqamahPausedState, iqamahModifier, preferences]);
+
+  const handleIqamahAddMinute = useCallback(() => {
+    if (!prevPrayerKey) return;
+    
+    // Add 1 minute to the modifier
+    setIqamahModifier(prev => ({
+      ...prev,
+      [prevPrayerKey]: (prev[prevPrayerKey] || 0) + 1
+    }));
+    
+    // If paused, also add 60 seconds to the frozen remaining seconds
+    if (iqamahPausedState[prevPrayerKey]?.paused) {
+      setIqamahPausedState(prev => ({
+        ...prev,
+        [prevPrayerKey]: {
+          paused: true,
+          remainingSecs: (prev[prevPrayerKey]?.remainingSecs || 0) + 60
+        }
+      }));
+    }
+  }, [prevPrayerKey, iqamahPausedState]);
 
   // Compute Active States for Azan Alert, Iqamah Countdown, and Solat Mode
   let azanAlertActive = false;
@@ -362,19 +425,23 @@ export default function App() {
   let solatRemainingSeconds = 0;
   let solatTotalSeconds = 0;
   let solatPrayerName: string | null = null;
+  let isSolatDuaStage = false;
 
   if (prevPrayerKey && prevPrayerTime && todayData) {
     const validKeys: PrayerKey[] = ["fajr", "dhuhr", "asr", "maghrib", "isha"];
     
     if (validKeys.includes(prevPrayerKey as PrayerKey)) {
       const pref = preferences[prevPrayerKey as PrayerKey];
-      const iqamahOffsetMinutes = settings.showIqamah ? (pref?.iqamahOffset ?? 0) : 0;
+      const activeModifier = iqamahModifier[prevPrayerKey] || 0;
+      const iqamahOffsetMinutes = settings.showIqamah ? ((pref?.iqamahOffset ?? 0) + activeModifier) : 0;
       
       const solatDurations = settings.solatModeDuration ?? { fajr: 20, dhuhr: 15, asr: 15, maghrib: 10, isha: 20 };
       const solatDurationMinutes = solatDurations[prevPrayerKey] ?? 15;
       
       const iqamahEndTime = new Date(prevPrayerTime.getTime() + iqamahOffsetMinutes * 60 * 1000);
       const solatEndTime = new Date(iqamahEndTime.getTime() + solatDurationMinutes * 60 * 1000);
+      const duaDurationMinutes = settings.solatModeDuaDuration ?? 3;
+      const duaEndTime = new Date(solatEndTime.getTime() + duaDurationMinutes * 60 * 1000);
       
       // 1. Azan Alert Active Check
       if (settings.azanAlertStyle && settings.azanAlertStyle !== 'none' && manuallyDismissedAzanAlert !== prevPrayerKey) {
@@ -390,20 +457,36 @@ export default function App() {
       
       // 2. Iqamah Countdown Active Check (only active if Azan alert is finished or dismissed)
       if (settings.showIqamah && iqamahOffsetMinutes > 0 && !azanAlertActive) {
-        if (currentTime >= prevPrayerTime && currentTime < iqamahEndTime) {
+        const isPaused = !!iqamahPausedState[prevPrayerKey]?.paused;
+        const pausedSecs = iqamahPausedState[prevPrayerKey]?.remainingSecs || 0;
+        
+        if ((currentTime >= prevPrayerTime && currentTime < iqamahEndTime) || (isPaused && pausedSecs > 0)) {
           iqamahCountdownActive = true;
           iqamahTotalSeconds = iqamahOffsetMinutes * 60;
-          iqamahRemainingSeconds = Math.max(0, Math.floor((iqamahEndTime.getTime() - currentTime.getTime()) / 1000));
+          
+          if (isPaused) {
+            iqamahRemainingSeconds = pausedSecs;
+          } else {
+            iqamahRemainingSeconds = Math.max(0, Math.floor((iqamahEndTime.getTime() - currentTime.getTime()) / 1000));
+          }
           currentPrayerNameForIqamah = prevPrayerName;
         }
       }
       
-      // 3. Solat Mode Active Check (active after iqamahEndTime, only if not manually exited)
-      if (settings.solatModeEnabled && manuallyExitedSolatPrayer !== prevPrayerKey) {
-        if (currentTime >= iqamahEndTime && currentTime < solatEndTime) {
+      // 3. Solat Mode Active Check (active after iqamahEndTime, only if not manually exited and not paused)
+      if (settings.solatModeEnabled && manuallyExitedSolatPrayer !== prevPrayerKey && !iqamahPausedState[prevPrayerKey]?.paused) {
+        if (currentTime >= iqamahEndTime && currentTime < duaEndTime) {
           solatModeActive = true;
-          solatTotalSeconds = solatDurationMinutes * 60;
-          solatRemainingSeconds = Math.max(0, Math.floor((solatEndTime.getTime() - currentTime.getTime()) / 1000));
+          const isDua = currentTime >= solatEndTime;
+          isSolatDuaStage = isDua;
+          
+          if (isDua) {
+            solatTotalSeconds = duaDurationMinutes * 60;
+            solatRemainingSeconds = Math.max(0, Math.floor((duaEndTime.getTime() - currentTime.getTime()) / 1000));
+          } else {
+            solatTotalSeconds = solatDurationMinutes * 60;
+            solatRemainingSeconds = Math.max(0, Math.floor((solatEndTime.getTime() - currentTime.getTime()) / 1000));
+          }
           solatPrayerName = prevPrayerName;
         }
       }
@@ -522,6 +605,7 @@ export default function App() {
             remainingSeconds={solatRemainingSeconds}
             showClock={settings.solatModeShowClock}
             showQibla={settings.solatModeShowQibla}
+            isDuaStage={isSolatDuaStage}
             onExit={() => {
               if (prevPrayerKey) setManuallyExitedSolatPrayer(prevPrayerKey);
             }}
@@ -582,6 +666,9 @@ export default function App() {
               iqamahRemainingSeconds={iqamahRemainingSeconds}
               iqamahTotalSeconds={iqamahTotalSeconds}
               currentPrayerNameForIqamah={currentPrayerNameForIqamah}
+              iqamahPaused={prevPrayerKey ? !!iqamahPausedState[prevPrayerKey]?.paused : false}
+              onIqamahTogglePause={handleIqamahTogglePause}
+              onIqamahAddMinute={handleIqamahAddMinute}
             />
           </div>
         </section>

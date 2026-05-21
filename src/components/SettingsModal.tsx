@@ -33,6 +33,38 @@ import { PRAYER_NAMES } from "./PrayerSchedule";
 import { useEffect, useState } from "react";
 import { useAppContext } from "../AppContext";
 
+function playSynthesizedSoundLocal(type: 'chime' | 'tick', pitchHz?: number) {
+  try {
+    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    
+    osc.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    
+    if (type === 'tick') {
+      // Clean tick: high frequency, extremely short decay
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
+      gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.1);
+    } else {
+      // Chime: pure sine with pleasant harmonic decay
+      osc.type = 'triangle';
+      const freq = pitchHz || 587.33; // D5 default
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gainNode.gain.setValueAtTime(0.25, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.7);
+    }
+  } catch (e) {
+    // Ignore context errors
+  }
+}
+
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -658,219 +690,338 @@ export function SettingsModal({
               )}
 
               {activeTab === "mosque" && (
-                <div className="space-y-6 max-w-xl mx-auto pb-4">
-                  {/* Section 1: Azan Visual Alert */}
-                  <div className="p-6 sm:p-8 rounded-[var(--md-sys-shape-corner-extra-large)] bg-[var(--md-sys-color-surface-variant)]/30 ring-1 ring-[var(--md-sys-color-outline)]/5 shadow-sm space-y-4">
-                    <h3 className="text-lg font-black text-[var(--md-sys-color-primary)]">
-                      {t("azanAlertStyle" as any)}
-                    </h3>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {(["dramatic", "standard", "subtle", "none"] as const).map((style) => (
-                        /* @ts-ignore */
-                        <md-filter-chip
-                          key={style}
-                          label={
-                            style === "dramatic"
-                              ? t("styleDramatic" as any)
-                              : style === "standard"
-                                ? t("styleStandard" as any)
-                                : style === "subtle"
-                                  ? t("styleSubtle" as any)
-                                  : t("none")
-                          }
-                          selected={settings.azanAlertStyle === style || (!settings.azanAlertStyle && style === "standard")}
-                          onClick={() => updateSettings({ azanAlertStyle: style })}
-                        ></md-filter-chip>
-                      ))}
-                    </div>
-
-                    {settings.azanAlertStyle !== "none" && (
-                      <div className="flex items-center justify-between p-4 bg-[var(--md-sys-color-surface)] rounded-[2rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5 mt-4">
-                        <span className="font-bold text-[var(--md-sys-color-on-surface)] text-sm">
-                          {t("azanAlertDuration" as any)}
-                        </span>
-                        <div className="flex items-center gap-3 sm:gap-4">
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() =>
-                              updateSettings({
-                                azanAlertDuration: Math.max(5, (settings.azanAlertDuration ?? 20) - 5),
-                              })
-                            }
-                            className="relative overflow-hidden w-10 h-10 rounded-full flex items-center justify-center bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors"
-                          >
-                            {/* @ts-ignore */}
-                            <md-ripple></md-ripple>
-                            <Minus size={20} className="relative z-10" />
-                          </motion.button>
-                          <span className="w-20 flex font-mono text-base font-black items-center justify-center tabular-nums text-[var(--md-sys-color-primary)]">
-                            {settings.azanAlertDuration ?? 20} {t("seconds" as any)}
-                          </span>
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() =>
-                              updateSettings({
-                                azanAlertDuration: Math.min(120, (settings.azanAlertDuration ?? 20) + 5),
-                              })
-                            }
-                            className="relative overflow-hidden w-10 h-10 rounded-full flex items-center justify-center bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors"
-                          >
-                            {/* @ts-ignore */}
-                            <md-ripple></md-ripple>
-                            <Plus size={20} className="relative z-10" />
-                          </motion.button>
-                        </div>
+                <div className="space-y-8 max-w-xl mx-auto pb-6">
+                  {/* SUB-SECTION 1: VISUAL ALERTS */}
+                  <div className="p-6 sm:p-8 rounded-[var(--md-sys-shape-corner-extra-large)] bg-[var(--md-sys-color-surface-container-high)] ring-1 ring-[var(--md-sys-color-outline)]/10 shadow-sm space-y-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center">
+                        <Bell size={20} className="stroke-[2.5]" />
                       </div>
-                    )}
-                  </div>
-
-                  {/* Section 2: Iqamah Alert Sound */}
-                  <div className="p-6 sm:p-8 rounded-[var(--md-sys-shape-corner-extra-large)] bg-[var(--md-sys-color-surface-variant)]/30 ring-1 ring-[var(--md-sys-color-outline)]/5 shadow-sm space-y-4">
-                    <h3 className="text-lg font-black text-[var(--md-sys-color-primary)]">
-                      {t("iqamahCountdownSound" as any)}
-                    </h3>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {(["chime", "tick", "none"] as const).map((sound) => (
-                        /* @ts-ignore */
-                        <md-filter-chip
-                          key={sound}
-                          label={
-                            sound === "chime"
-                              ? t("chime" as any)
-                              : sound === "tick"
-                                ? t("clockMovementTick" as any)
-                                : t("none")
-                          }
-                          selected={settings.iqamahCountdownSound === sound || (!settings.iqamahCountdownSound && sound === "chime")}
-                          onClick={() => updateSettings({ iqamahCountdownSound: sound })}
-                        ></md-filter-chip>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Section 3: Solat Mode */}
-                  <div className="p-6 sm:p-8 rounded-[var(--md-sys-shape-corner-extra-large)] bg-[var(--md-sys-color-surface-variant)]/30 ring-1 ring-[var(--md-sys-color-outline)]/5 shadow-sm space-y-4">
-                    <div className="flex items-center justify-between">
                       <div>
-                        <h3 className="text-lg font-black text-[var(--md-sys-color-primary)]">
-                          {t("solatModeEnabled" as any)}
+                        <h3 className="text-lg font-black text-[var(--md-sys-color-on-surface)]">
+                          {t("visualAlertSection" as any)}
                         </h3>
-                        <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] leading-relaxed mt-1">
-                          {t("solatModeInstruction" as any)}
+                        <p className="text-xs text-[var(--md-sys-color-on-surface-variant)]">
+                          Configure visual overlays and adhan announcements.
                         </p>
                       </div>
-                      {/* @ts-ignore */}
-                      <md-switch
-                        selected={!!settings.solatModeEnabled}
-                        onChange={(e: any) =>
-                          updateSettings({ solatModeEnabled: e.target.selected })
-                        }
-                        icons
-                      ></md-switch>
                     </div>
 
-                    {settings.solatModeEnabled && (
-                      <div className="space-y-4 pt-4 border-t border-[var(--md-sys-color-outline)]/10">
-                        {/* Display Options */}
-                        <div className="flex items-center justify-between p-4 bg-[var(--md-sys-color-surface)] rounded-[2rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5">
-                          <span className="font-bold text-[var(--md-sys-color-on-surface)] text-sm">
-                            {t("solatModeShowClock" as any)}
-                          </span>
-                          {/* @ts-ignore */}
-                          <md-switch
-                            selected={settings.solatModeShowClock !== false}
-                            onChange={(e: any) =>
-                              updateSettings({ solatModeShowClock: e.target.selected })
-                            }
-                            icons
-                          ></md-switch>
-                        </div>
-
-                        <div className="flex items-center justify-between p-4 bg-[var(--md-sys-color-surface)] rounded-[2rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5">
-                          <span className="font-bold text-[var(--md-sys-color-on-surface)] text-sm">
-                            {t("solatModeShowQibla" as any)}
-                          </span>
-                          {/* @ts-ignore */}
-                          <md-switch
-                            selected={settings.solatModeShowQibla !== false}
-                            onChange={(e: any) =>
-                              updateSettings({ solatModeShowQibla: e.target.selected })
-                            }
-                            icons
-                          ></md-switch>
-                        </div>
-
-                        {/* Durations */}
-                        <h4 className="text-sm font-black text-[var(--md-sys-color-primary)] mt-6 px-1">
-                          {t("solatModeDuration" as any)}
-                        </h4>
-                        <div className="space-y-3">
-                          {(["fajr", "dhuhr", "asr", "maghrib", "isha"] as const).map((key) => {
-                            const duration = settings.solatModeDuration?.[key] ?? (key === "fajr" || key === "isha" ? 20 : key === "maghrib" ? 10 : 15);
-                            return (
-                              <div
-                                key={`solat-dur-${key}`}
-                                className="flex items-center justify-between p-4 bg-[var(--md-sys-color-surface)] rounded-[2rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5"
-                              >
-                                <span className="font-black text-[var(--md-sys-color-on-surface)] tracking-wider uppercase text-xs w-24">
-                                  {t(key as any)}
-                                </span>
-                                <div className="flex items-center gap-3">
-                                  <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={() => {
-                                      const currentDurations = settings.solatModeDuration ?? { fajr: 20, dhuhr: 15, asr: 15, maghrib: 10, isha: 20 };
-                                      updateSettings({
-                                        solatModeDuration: {
-                                          ...currentDurations,
-                                          [key]: Math.max(1, duration - 1),
-                                        },
-                                      });
-                                    }}
-                                    className="relative overflow-hidden w-8 h-8 rounded-full flex items-center justify-center bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors"
-                                  >
-                                    <Minus size={16} />
-                                  </motion.button>
-                                  <span className="w-12 flex font-mono font-bold items-center justify-center text-[var(--md-sys-color-primary)] tabular-nums">
-                                    {duration} m
-                                  </span>
-                                  <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={() => {
-                                      const currentDurations = settings.solatModeDuration ?? { fajr: 20, dhuhr: 15, asr: 15, maghrib: 10, isha: 20 };
-                                      updateSettings({
-                                        solatModeDuration: {
-                                          ...currentDurations,
-                                          [key]: Math.min(60, duration + 1),
-                                        },
-                                      });
-                                    }}
-                                    className="relative overflow-hidden w-8 h-8 rounded-full flex items-center justify-center bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors"
-                                  >
-                                    <Plus size={16} />
-                                  </motion.button>
-                                </div>
-                              </div>
-                            );
-                          })}
+                    <div className="space-y-4 pt-2 border-t border-[var(--md-sys-color-outline)]/10">
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1">
+                          {t("azanAlertStyle" as any)}
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                          {(["dramatic", "standard", "subtle", "none"] as const).map((style) => (
+                            /* @ts-ignore */
+                            <md-filter-chip
+                              key={style}
+                              label={
+                                style === "dramatic"
+                                  ? t("styleDramatic" as any)
+                                  : style === "standard"
+                                    ? t("styleStandard" as any)
+                                    : style === "subtle"
+                                      ? t("styleSubtle" as any)
+                                      : t("none")
+                              }
+                              selected={settings.azanAlertStyle === style || (!settings.azanAlertStyle && style === "standard")}
+                              onClick={() => updateSettings({ azanAlertStyle: style })}
+                            ></md-filter-chip>
+                          ))}
                         </div>
                       </div>
-                    )}
+
+                      {settings.azanAlertStyle !== "none" && (
+                        <div className="flex items-center justify-between p-4 bg-[var(--md-sys-color-surface)] rounded-[2rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5 mt-4">
+                          <span className="font-bold text-[var(--md-sys-color-on-surface)] text-sm">
+                            {t("azanAlertDuration" as any)}
+                          </span>
+                          <div className="flex items-center gap-3 sm:gap-4">
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() =>
+                                updateSettings({
+                                  azanAlertDuration: Math.max(5, (settings.azanAlertDuration ?? 20) - 5),
+                                })
+                              }
+                              className="relative overflow-hidden w-10 h-10 rounded-full flex items-center justify-center bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors"
+                            >
+                              {/* @ts-ignore */}
+                              <md-ripple></md-ripple>
+                              <Minus size={20} className="relative z-10" />
+                            </motion.button>
+                            <span className="w-20 flex font-mono text-base font-black items-center justify-center tabular-nums text-[var(--md-sys-color-primary)]">
+                              {settings.azanAlertDuration ?? 20} {t("seconds" as any)}
+                            </span>
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() =>
+                                updateSettings({
+                                  azanAlertDuration: Math.min(120, (settings.azanAlertDuration ?? 20) + 5),
+                                })
+                              }
+                              className="relative overflow-hidden w-10 h-10 rounded-full flex items-center justify-center bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors"
+                            >
+                              {/* @ts-ignore */}
+                              <md-ripple></md-ripple>
+                              <Plus size={20} className="relative z-10" />
+                            </motion.button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Section 4: Background Notifications */}
-                  <div className="p-6 sm:p-8 rounded-[var(--md-sys-shape-corner-extra-large)] bg-[var(--md-sys-color-surface-variant)]/30 ring-1 ring-[var(--md-sys-color-outline)]/5 shadow-sm space-y-4">
+                  {/* SUB-SECTION 2: IQAMAH COUNTDOWN SOUNDS */}
+                  <div className="p-6 sm:p-8 rounded-[var(--md-sys-shape-corner-extra-large)] bg-[var(--md-sys-color-surface-container-high)] ring-1 ring-[var(--md-sys-color-outline)]/10 shadow-sm space-y-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center">
+                        <Activity size={20} className="stroke-[2.5]" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-black text-[var(--md-sys-color-on-surface)]">
+                          {t("iqamahSoundSection" as any)}
+                        </h3>
+                        <p className="text-xs text-[var(--md-sys-color-on-surface-variant)]">
+                          Select countdown alert tones and audition sounds.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4 pt-2 border-t border-[var(--md-sys-color-outline)]/10">
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1">
+                          {t("iqamahCountdownSound" as any)}
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                          {(["chime", "tick", "none"] as const).map((sound) => (
+                            /* @ts-ignore */
+                            <md-filter-chip
+                              key={sound}
+                              label={
+                                sound === "chime"
+                                  ? t("chime" as any)
+                                  : sound === "tick"
+                                    ? t("clockMovementTick" as any)
+                                    : t("none")
+                              }
+                              selected={settings.iqamahCountdownSound === sound || (!settings.iqamahCountdownSound && sound === "chime")}
+                              onClick={() => updateSettings({ iqamahCountdownSound: sound })}
+                            ></md-filter-chip>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Audition Testing row */}
+                      <div className="grid grid-cols-2 gap-3 mt-4">
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => playSynthesizedSoundLocal('chime', 587.33)}
+                          className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-3xl bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] text-xs font-bold shadow-sm border border-[var(--md-sys-color-outline)]/5 transition-all focus:outline-none"
+                        >
+                          <Volume2 size={16} />
+                          {t("testIqamahChime" as any)}
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => playSynthesizedSoundLocal('tick')}
+                          className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-3xl bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] text-xs font-bold shadow-sm border border-[var(--md-sys-color-outline)]/5 transition-all focus:outline-none"
+                        >
+                          <Volume2 size={16} />
+                          {t("testIqamahTick" as any)}
+                        </motion.button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SUB-SECTION 3: SOLAT SCREENAVER */}
+                  <div className="p-6 sm:p-8 rounded-[var(--md-sys-shape-corner-extra-large)] bg-[var(--md-sys-color-surface-container-high)] ring-1 ring-[var(--md-sys-color-outline)]/10 shadow-sm space-y-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center">
+                        <Clock size={20} className="stroke-[2.5]" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-black text-[var(--md-sys-color-on-surface)]">
+                          {t("solatScreensaverSection" as any)}
+                        </h3>
+                        <p className="text-xs text-[var(--md-sys-color-on-surface-variant)]">
+                          Configure private prayer window and remembrance timers.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4 pt-2 border-t border-[var(--md-sys-color-outline)]/10">
+                      <div className="flex items-center justify-between p-1">
+                        <div>
+                          <h4 className="text-sm font-bold text-[var(--md-sys-color-on-surface)]">
+                            {t("solatModeEnabled" as any)}
+                          </h4>
+                          <p className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] leading-relaxed mt-0.5">
+                            {t("solatModeInstruction" as any)}
+                          </p>
+                        </div>
+                        {/* @ts-ignore */}
+                        <md-switch
+                          selected={!!settings.solatModeEnabled}
+                          onChange={(e: any) =>
+                            updateSettings({ solatModeEnabled: e.target.selected })
+                          }
+                          icons
+                        ></md-switch>
+                      </div>
+
+                      {settings.solatModeEnabled && (
+                        <div className="space-y-4 pt-4 mt-2 border-t border-[var(--md-sys-color-outline)]/5">
+                          {/* Show Clock & Qibla toggles */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="flex items-center justify-between p-4 bg-[var(--md-sys-color-surface)] rounded-[2rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5">
+                              <span className="font-bold text-[var(--md-sys-color-on-surface)] text-xs">
+                                {t("solatModeShowClock" as any)}
+                              </span>
+                              {/* @ts-ignore */}
+                              <md-switch
+                                selected={settings.solatModeShowClock !== false}
+                                onChange={(e: any) =>
+                                  updateSettings({ solatModeShowClock: e.target.selected })
+                                }
+                                icons
+                              ></md-switch>
+                            </div>
+
+                            <div className="flex items-center justify-between p-4 bg-[var(--md-sys-color-surface)] rounded-[2rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5">
+                              <span className="font-bold text-[var(--md-sys-color-on-surface)] text-xs">
+                                {t("solatModeShowQibla" as any)}
+                              </span>
+                              {/* @ts-ignore */}
+                              <md-switch
+                                selected={settings.solatModeShowQibla !== false}
+                                onChange={(e: any) =>
+                                  updateSettings({ solatModeShowQibla: e.target.selected })
+                                }
+                                icons
+                              ></md-switch>
+                            </div>
+                          </div>
+
+                          {/* Post-solat Dua duration */}
+                          <div className="flex items-center justify-between p-4 bg-[var(--md-sys-color-surface)] rounded-[2rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5 mt-2">
+                            <div>
+                              <span className="font-bold text-[var(--md-sys-color-on-surface)] text-sm block">
+                                {t("solatModeDuaDuration" as any)}
+                              </span>
+                              <span className="text-[10px] text-[var(--md-sys-color-on-surface-variant)] block">
+                                Serene dhikr interval before exit.
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() =>
+                                  updateSettings({
+                                    solatModeDuaDuration: Math.max(0, (settings.solatModeDuaDuration ?? 3) - 1),
+                                  })
+                                }
+                                className="relative overflow-hidden w-8 h-8 rounded-full flex items-center justify-center bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors"
+                              >
+                                <Minus size={16} />
+                              </motion.button>
+                              <span className="w-12 flex font-mono font-bold items-center justify-center text-[var(--md-sys-color-primary)] tabular-nums">
+                                {settings.solatModeDuaDuration ?? 3} m
+                              </span>
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() =>
+                                  updateSettings({
+                                    solatModeDuaDuration: Math.min(10, (settings.solatModeDuaDuration ?? 3) + 1),
+                                  })
+                                }
+                                className="relative overflow-hidden w-8 h-8 rounded-full flex items-center justify-center bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors"
+                              >
+                                <Plus size={16} />
+                              </motion.button>
+                            </div>
+                          </div>
+
+                          {/* Individual Prayer Durations */}
+                          <div className="pt-2">
+                            <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1 mb-2">
+                              {t("solatModeDuration" as any)}
+                            </h4>
+                            <div className="space-y-2">
+                              {(["fajr", "dhuhr", "asr", "maghrib", "isha"] as const).map((key) => {
+                                const duration = settings.solatModeDuration?.[key] ?? (key === "fajr" || key === "isha" ? 20 : key === "maghrib" ? 10 : 15);
+                                return (
+                                  <div
+                                    key={`solat-dur-${key}`}
+                                    className="flex items-center justify-between p-3 bg-[var(--md-sys-color-surface)] rounded-[1.5rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5"
+                                  >
+                                    <span className="font-bold text-[var(--md-sys-color-on-surface)] tracking-wider uppercase text-xs w-24 pl-1">
+                                      {t(key as any)}
+                                    </span>
+                                    <div className="flex items-center gap-3">
+                                      <motion.button
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={() => {
+                                          const currentDurations = settings.solatModeDuration ?? { fajr: 20, dhuhr: 15, asr: 15, maghrib: 10, isha: 20 };
+                                          updateSettings({
+                                            solatModeDuration: {
+                                              ...currentDurations,
+                                              [key]: Math.max(1, duration - 1),
+                                            },
+                                          });
+                                        }}
+                                        className="relative overflow-hidden w-8 h-8 rounded-full flex items-center justify-center bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors"
+                                      >
+                                        <Minus size={14} />
+                                      </motion.button>
+                                      <span className="w-12 flex font-mono font-bold items-center justify-center text-[var(--md-sys-color-primary)] tabular-nums text-sm">
+                                        {duration} m
+                                      </span>
+                                      <motion.button
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={() => {
+                                          const currentDurations = settings.solatModeDuration ?? { fajr: 20, dhuhr: 15, asr: 15, maghrib: 10, isha: 20 };
+                                          updateSettings({
+                                            solatModeDuration: {
+                                              ...currentDurations,
+                                              [key]: Math.min(60, duration + 1),
+                                            },
+                                          });
+                                        }}
+                                        className="relative overflow-hidden w-8 h-8 rounded-full flex items-center justify-center bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors"
+                                      >
+                                        <Plus size={14} />
+                                      </motion.button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* SUB-SECTION 4: BACKGROUND UTILITY */}
+                  <div className="p-6 sm:p-8 rounded-[var(--md-sys-shape-corner-extra-large)] bg-[var(--md-sys-color-surface-container-high)] ring-1 ring-[var(--md-sys-color-outline)]/10 shadow-sm space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h3 className="text-lg font-black text-[var(--md-sys-color-primary)]">
+                        <h3 className="text-sm font-bold text-[var(--md-sys-color-on-surface)]">
                           {t("backgroundNotifications" as any)}
                         </h3>
-                        <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] leading-relaxed mt-1">
-                          Keep prayer sound/alerts active even when tab is minimized or screen is locked
+                        <p className="text-[10px] text-[var(--md-sys-color-on-surface-variant)] leading-relaxed mt-0.5 max-w-[200px] sm:max-w-xs">
+                          Keep prayer sound/alerts active even when tab is minimized or screen is locked.
                         </p>
                       </div>
                       {/* @ts-ignore */}

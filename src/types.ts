@@ -56,6 +56,7 @@ export interface GeneralSettings {
   solatModeShowQibla?: boolean;
   backgroundNotifications?: boolean;
   iqamahCountdownSound?: 'chime' | 'tick' | 'none';
+  solatModeDuaDuration?: number; // minutes for post-solat dua screensaver
 }
 
 // Default preferences
@@ -78,5 +79,6 @@ export const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
   solatModeShowQibla: true,
   backgroundNotifications: false,
   iqamahCountdownSound: 'chime',
+  solatModeDuaDuration: 3,
 };
 

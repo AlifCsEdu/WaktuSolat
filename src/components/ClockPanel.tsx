@@ -4,7 +4,7 @@ import { ms, enUS } from "date-fns/locale";
 import { motion, AnimatePresence } from "motion/react";
 import "@material/web/elevation/elevation.js";
 import "@material/web/ripple/ripple.js";
-import { Compass, Sunrise, Moon, Calendar } from "lucide-react";
+import { Compass, Sunrise, Moon, Calendar, Play, Pause, Plus } from "lucide-react";
 import { useAppContext } from "../AppContext";
 import { getHijriFormatted, HIJRI_MONTHS, HIJRI_MONTHS_EN } from "../lib/holidays";
 import { useVisualStyle, getStyleClasses } from "../hooks/useVisualStyle";
@@ -76,6 +76,9 @@ export function ClockPanel({
   iqamahRemainingSeconds = 0,
   iqamahTotalSeconds = 0,
   currentPrayerNameForIqamah = null,
+  iqamahPaused = false,
+  onIqamahTogglePause,
+  onIqamahAddMinute,
 }: {
   currentTime: Date;
   nextPrayerName: string | null;
@@ -90,6 +93,9 @@ export function ClockPanel({
   iqamahRemainingSeconds?: number;
   iqamahTotalSeconds?: number;
   currentPrayerNameForIqamah?: string | null;
+  iqamahPaused?: boolean;
+  onIqamahTogglePause?: () => void;
+  onIqamahAddMinute?: () => void;
 }) {
   const { t, settings } = useAppContext();
   const visualStyle = useVisualStyle();
@@ -514,10 +520,12 @@ export function ClockPanel({
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.2 }}
               className={cn(
-                "p-2 sm:p-2.5 rounded-[var(--md-sys-shape-corner-extra-large)] flex-1 relative overflow-hidden cursor-default min-h-[56px] sm:min-h-[64px] lg:min-h-[68px] flex flex-col justify-between select-none transition-all duration-300",
+                "p-2 sm:p-2.5 rounded-[var(--md-sys-shape-corner-extra-large)] flex-1 relative overflow-hidden min-h-[56px] sm:min-h-[64px] lg:min-h-[68px] flex flex-col justify-between select-none transition-all duration-300 group cursor-default",
                 iqamahRemainingSeconds <= 10 
-                  ? "bg-red-500 text-white border-2 border-red-600 shadow-[0_0_15px_rgba(239,68,68,0.5)] animate-pulse" 
-                  : "bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] border border-[var(--md-sys-color-error)]/30",
+                  ? "bg-red-600 text-white border-2 border-red-700 shadow-[0_0_20px_rgba(220,38,38,0.7)] animate-pulse" 
+                  : iqamahRemainingSeconds <= 30
+                    ? "bg-amber-500 text-white border-2 border-amber-600 shadow-[0_0_15px_rgba(245,158,11,0.5)]"
+                    : "bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] border border-[var(--md-sys-color-error)]/30",
                 visualStyle === 'retro' && "border-2 border-[var(--md-sys-color-on-surface)] shadow-[4px_4px_0px_0px_var(--md-sys-color-on-surface)] rounded-none",
                 visualStyle === 'glass' && "bg-[var(--glass-bg)] backdrop-blur-[var(--glass-blur)] border border-[var(--glass-border)] text-[var(--md-sys-color-on-surface)]",
                 visualStyle === 'soft' && "shadow-[var(--soft-shadow-light)] border border-white/20"
@@ -552,28 +560,55 @@ export function ClockPanel({
                   <>
                     <h3 className={cn(
                       "md3-label-small font-black uppercase tracking-widest text-center",
-                      iqamahRemainingSeconds <= 10 ? "text-red-100 dark:text-red-200 animate-pulse" : "text-[var(--md-sys-color-on-error-container)]/80"
+                      iqamahRemainingSeconds <= 10 ? "text-red-100 dark:text-red-200" : iqamahRemainingSeconds <= 30 ? "text-amber-100" : "text-[var(--md-sys-color-on-error-container)]/80"
                     )}>
-                      IQAMAH {currentPrayerNameForIqamah ? `• ${currentPrayerNameForIqamah}` : ''}
+                      IQAMAH {currentPrayerNameForIqamah ? `• ${currentPrayerNameForIqamah}` : ''} {iqamahPaused ? " (PAUSED)" : ""}
                     </h3>
                     <div className="flex flex-col items-center">
                       <p className={cn(
                         "font-black font-mono tracking-tighter leading-none text-center transition-all duration-300",
-                        iqamahRemainingSeconds <= 10 ? "text-3xl sm:text-4xl lg:text-5xl text-white" : "text-xl sm:text-2xl lg:text-3xl"
+                        iqamahRemainingSeconds <= 10 ? "text-3xl sm:text-4xl lg:text-5xl text-white" : iqamahRemainingSeconds <= 30 ? "text-2.5xl sm:text-3xl lg:text-4xl text-white" : "text-xl sm:text-2xl lg:text-3xl"
                       )}>
                         {Math.floor(iqamahRemainingSeconds / 60)}:
                         {String(iqamahRemainingSeconds % 60).padStart(2, '0')}
                       </p>
                       <p className={cn(
                         "text-[9px] sm:text-[10px] font-bold mt-1 tracking-wide text-center",
-                        iqamahRemainingSeconds <= 10 ? "text-red-100" : "opacity-80"
+                        iqamahRemainingSeconds <= 10 ? "text-red-100" : iqamahRemainingSeconds <= 30 ? "text-amber-100" : "opacity-80"
                       )}>
-                        {iqamahRemainingSeconds <= 10 ? "SEDIA BERSOLAT" : "Sila bersedia untuk solat berjemaah"}
+                        {iqamahRemainingSeconds <= 10 ? "SEDIA BERSOLAT" : iqamahRemainingSeconds <= 30 ? "SAK SAF RAPAT & LURUS" : "Sila bersedia untuk solat berjemaah"}
                       </p>
                     </div>
                   </>
                 )}
               </div>
+
+              {/* Tactile Administrative Overlays revealed on hover/touch */}
+              {onIqamahTogglePause && onIqamahAddMinute && iqamahRemainingSeconds > 5 && (
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-3 z-20">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onIqamahTogglePause();
+                    }}
+                    className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/40 text-white flex items-center justify-center backdrop-blur transition-all active:scale-90"
+                    title={iqamahPaused ? "Mula" : "Jeda"}
+                  >
+                    {iqamahPaused ? <Play className="w-5 h-5 fill-white stroke-[2.5]" /> : <Pause className="w-5 h-5 fill-white stroke-[2.5]" />}
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onIqamahAddMinute();
+                    }}
+                    className="px-3 py-1.5 rounded-full bg-white/20 hover:bg-white/40 text-white flex items-center gap-1 font-bold text-xs backdrop-blur transition-all active:scale-90"
+                    title="Tambah 1 minit"
+                  >
+                    <Plus className="w-4 h-4 stroke-[3]" />
+                    <span>+1m</span>
+                  </button>
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
