@@ -625,9 +625,13 @@ const ALIASES: Record<string, string> = {
 export function ZoneSelector({
   selectedZone,
   onZoneSelect,
+  isAutoDetecting,
+  currentLocationName,
 }: {
   selectedZone: string;
   onZoneSelect: (zone: string) => void;
+  isAutoDetecting?: boolean;
+  currentLocationName?: string | null;
 }) {
   const { t, settings, updateSettings } = useAppContext();
   const visualStyle = useVisualStyle();
@@ -1187,23 +1191,23 @@ export function ZoneSelector({
                     className="flex flex-col items-center justify-center h-full p-6 text-center"
                   >
                     <div className="w-16 h-16 bg-[var(--md-sys-color-secondary-container)] rounded-full flex items-center justify-center mb-4 text-[var(--md-sys-color-on-secondary-container)]">
-                      <Crosshair size={28} className="opacity-80" />
+                      <Crosshair size={28} className={cn("opacity-80", isAutoDetecting && "animate-spin")} />
                     </div>
                     <h3 className="text-xl font-bold text-[var(--md-sys-color-on-surface)] mb-1">
-                      {t('autoModeActive' as any) || "Auto Mode Active"}
+                      {isAutoDetecting ? t("detecting") : (t('autoModeActive' as any) || "Auto Mode Active")}
                     </h3>
                     <p className="text-[var(--md-sys-color-on-surface-variant)] text-sm max-w-[250px] mx-auto mb-8 opacity-80">
-                      {t('autoModeActiveDesc' as any) || "Your zone will update automatically as you travel."}
+                      {isAutoDetecting ? "Memeriksa isyarat GPS..." : (t('autoModeActiveDesc' as any) || "Your zone will update automatically as you travel.")}
                     </p>
                     
                     <div className="bg-[var(--md-sys-color-surface-container)] rounded-[24px] p-5 w-full max-w-xs border border-[var(--md-sys-color-outline)]/5 shadow-sm">
                       <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--md-sys-color-primary)] mb-1.5 opacity-80">
                         {t('autoModeCurrent' as any) || "Current Detected Location:"}
                       </p>
-                      <p className="text-xl font-black leading-tight text-[var(--md-sys-color-on-surface)] mb-1">
-                        {selectedLabel}
+                      <p className="text-xl font-black leading-tight text-[var(--md-sys-color-on-surface)] mb-1 truncate">
+                        {isAutoDetecting ? "Sedang menjejak..." : (currentLocationName || selectedLabel)}
                       </p>
-                      <div className="inline-flex bg-[var(--md-sys-color-surface-variant)]/50 px-2 py-0.5 rounded text-xs font-mono font-bold text-[var(--md-sys-color-on-surface-variant)]">
+                      <div className="inline-flex bg-[var(--md-sys-color-surface-variant)]/50 px-2 py-0.5 rounded text-xs font-mono font-bold text-[var(--md-sys-color-on-surface-variant)] mt-1">
                         {selectedZone}
                       </div>
                     </div>
@@ -1214,30 +1218,59 @@ export function ZoneSelector({
                     {!searchQuery && (() => {
                       try {
                         const recent = JSON.parse(localStorage.getItem("waktu-solat-recent-zones") || "[]");
-                        if (Array.isArray(recent) && recent.length > 0) {
+                        // Filter out the currently selected zone and limit to 3
+                        const filtered = Array.isArray(recent) 
+                          ? recent.filter((z: string) => z !== selectedZone).slice(0, 3) 
+                          : [];
+                        if (filtered.length > 0) {
                           return (
                             <div className="px-6 md:px-8 pt-6 pb-2">
-                              <h3 className="text-xs font-bold uppercase tracking-widest text-[var(--md-sys-color-on-surface-variant)] mb-4">
+                              <h3 className="text-xs font-bold uppercase tracking-widest text-[var(--md-sys-color-on-surface-variant)] mb-4 flex items-center gap-2">
+                                <span className="opacity-60">🕐</span>
                                 {t('recentLocations' as any) || "Recent Locations"}
                               </h3>
-                              <div className="flex flex-wrap gap-2">
-                                {recent.map((code: string) => {
-                                  let l = code;
+                              <div className="flex flex-col gap-2">
+                                {filtered.map((code: string) => {
+                                  let label = code;
+                                  let stateName = "";
                                   for (const state of JAKIM_ZONES) {
                                     const found = state.zones.find(z => z.v === code);
-                                    if (found) { l = found.l; break; }
+                                    if (found) { label = found.l; stateName = state.state; break; }
                                   }
                                   return (
-                                    <button
+                                    <motion.button
+                                      whileHover={{ scale: 1.01 }}
+                                      whileTap={{ scale: 0.98 }}
                                       key={`recent-${code}`}
                                       onClick={() => {
                                         onZoneSelect(code);
                                         setIsOpen(false);
                                       }}
-                                      className="bg-[var(--md-sys-color-surface-container)] hover:bg-[var(--md-sys-color-secondary-container)] hover:text-[var(--md-sys-color-on-secondary-container)] text-[var(--md-sys-color-on-surface)] px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition-colors border border-[var(--md-sys-color-outline)]/5"
+                                      className="relative overflow-hidden bg-[var(--md-sys-color-surface-container)] hover:bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-surface)] px-4 py-3 rounded-2xl text-left font-bold shadow-sm transition-all border border-[var(--md-sys-color-outline)]/5 flex items-center gap-3 group"
                                     >
-                                      {l}
-                                    </button>
+                                      {/* @ts-ignore */}
+                                      <md-ripple></md-ripple>
+                                      {STATE_FLAGS[stateName] && (
+                                        <div className="w-[24px] h-[16px] bg-white overflow-hidden shadow-[0_0_0_1px_rgba(0,0,0,0.1)] shrink-0 rounded-[2px]">
+                                          <img
+                                            src={STATE_FLAGS[stateName]}
+                                            alt=""
+                                            className="w-full h-full object-cover"
+                                          />
+                                        </div>
+                                      )}
+                                      <div className="flex flex-col min-w-0 flex-1">
+                                        <span className="text-sm font-bold truncate group-hover:text-[var(--md-sys-color-on-secondary-container)] transition-colors">
+                                          {label}
+                                        </span>
+                                        <span className="text-[10px] opacity-60 truncate">
+                                          {stateName}
+                                        </span>
+                                      </div>
+                                      <span className="text-[11px] font-mono font-black tracking-wider bg-[var(--md-sys-color-surface-variant)]/50 px-2 py-0.5 rounded-md text-[var(--md-sys-color-on-surface-variant)] shrink-0 opacity-70">
+                                        {code}
+                                      </span>
+                                    </motion.button>
                                   );
                                 })}
                               </div>

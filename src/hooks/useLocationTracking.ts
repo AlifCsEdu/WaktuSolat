@@ -1,4 +1,50 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
+
+/**
+ * Extract the state/subdivision name from the geocode API response.
+ * The API returns { osm: <nominatim data>, bdc: <bigdatacloud data> }.
+ */
+function extractStateName(data: any): string {
+  // Try BigDataCloud first (more reliable for Malaysia)
+  if (data?.bdc?.principalSubdivision) return data.bdc.principalSubdivision;
+  if (data?.bdc?.city) return data.bdc.city;
+  // Fallback to Nominatim/OSM
+  if (data?.osm?.address?.state) return data.osm.address.state;
+  if (data?.osm?.address?.city) return data.osm.address.city;
+  return "";
+}
+
+function extractLocalityName(data: any): string {
+  if (data?.bdc?.locality) return data.bdc.locality;
+  if (data?.bdc?.city) return data.bdc.city;
+  if (data?.osm?.address?.city) return data.osm.address.city;
+  if (data?.osm?.address?.town) return data.osm.address.town;
+  if (data?.osm?.address?.suburb) return data.osm.address.suburb;
+  if (data?.bdc?.principalSubdivision) return data.bdc.principalSubdivision;
+  if (data?.osm?.address?.state) return data.osm.address.state;
+  return "Kawasan Semasa";
+}
+
+function mapStateToZone(stateName: string): string {
+  if (!stateName) return "";
+  const s = stateName.toLowerCase();
+  if (s.includes("johor")) return "JHR02";
+  if (s.includes("kedah")) return "KDH01";
+  if (s.includes("kelantan")) return "KTN01";
+  if (s.includes("melaka") || s.includes("malacca")) return "MLK01";
+  if (s.includes("negeri sembilan")) return "NGS02";
+  if (s.includes("pahang")) return "PHG02";
+  if (s.includes("perak")) return "PRK02";
+  if (s.includes("perlis")) return "PLS01";
+  if (s.includes("pulau pinang") || s.includes("penang")) return "PNG01";
+  if (s.includes("sabah")) return "SBH07";
+  if (s.includes("sarawak")) return "SWK08";
+  if (s.includes("selangor")) return "SGR01";
+  if (s.includes("terengganu")) return "TRG01";
+  if (s.includes("kuala lumpur") || s.includes("putrajaya") || s.includes("federal territory")) return "WLY01";
+  if (s.includes("labuan")) return "WLY02";
+  return "";
+}
 
 export function useLocationTracking(
   selectedZone: string,
@@ -10,110 +56,130 @@ export function useLocationTracking(
   const [autoUpdatedZone, setAutoUpdatedZone] = useState<string | null>(null);
   const [autoUpdatedLocationName, setAutoUpdatedLocationName] = useState<string | null>(null);
   
-  // Expose current detected name for UI
   const [currentLocationName, setCurrentLocationName] = useState<string | null>(null);
+  const [isDetecting, setIsDetecting] = useState(false);
 
   const lastCheckTime = useRef<number>(0);
+  
+  // Use refs for dependencies to prevent infinite re-render loops inside checkLocation
+  const selectedZoneRef = useRef(selectedZone);
+  const locationModeRef = useRef(locationMode);
 
   useEffect(() => {
+    selectedZoneRef.current = selectedZone;
+    locationModeRef.current = locationMode;
+  }, [selectedZone, locationMode]);
+
+  const checkLocation = useCallback((force = false) => {
     if (!("geolocation" in navigator)) return;
 
-    const checkLocation = () => {
-      // Avoid checking too often (e.g., limit to once every 5 mins)
-      const now = Date.now();
-      if (now - lastCheckTime.current < 5 * 60 * 1000) return;
-      
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          lastCheckTime.current = Date.now();
-          const { latitude, longitude } = position.coords;
-          try {
-            const res = await fetch(
-              `/api/geocode?lat=${latitude}&lng=${longitude}`,
-            );
-            if (!res.ok) return;
+    const now = Date.now();
+    // If not forced, throttle checks to once every 5 minutes
+    if (!force && now - lastCheckTime.current < 5 * 60 * 1000) return;
+    
+    setIsDetecting(true);
+    
+    // If forcing, bust the GPS cache by setting maximumAge to 0
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        lastCheckTime.current = Date.now();
+        const { latitude, longitude } = position.coords;
+        try {
+          const res = await fetch(
+            `/api/geocode?lat=${latitude}&lng=${longitude}`,
+          );
+          if (!res.ok) throw new Error();
 
-            let data;
-            try {
-              data = await res.json();
-            } catch (e) {
-              return;
-            }
+          const data = await res.json();
+          
+          // Correctly extract from the nested API response: { osm: {...}, bdc: {...} }
+          const stateName = extractStateName(data);
+          const locName = extractLocalityName(data);
+          
+          setCurrentLocationName(locName);
 
-            const stateName = data.principalSubdivision || data.city;
-            const locName = data.locality || data.city || data.principalSubdivision || "Kawasan Semasa";
-            setCurrentLocationName(locName);
+          const foundZone = mapStateToZone(stateName);
 
-            let foundZone = "";
-
-            if (stateName) {
-              const s = stateName.toLowerCase();
-              if (s.includes("johor")) foundZone = "JHR02";
-              else if (s.includes("kedah")) foundZone = "KDH01";
-              else if (s.includes("kelantan")) foundZone = "KTN01";
-              else if (s.includes("melaka") || s.includes("malacca")) foundZone = "MLK01";
-              else if (s.includes("negeri sembilan")) foundZone = "NGS02";
-              else if (s.includes("pahang")) foundZone = "PHG02";
-              else if (s.includes("perak")) foundZone = "PRK02";
-              else if (s.includes("perlis")) foundZone = "PLS01";
-              else if (s.includes("pulau pinang") || s.includes("penang")) foundZone = "PNG01";
-              else if (s.includes("sabah")) foundZone = "SBH07";
-              else if (s.includes("sarawak")) foundZone = "SWK08";
-              else if (s.includes("selangor")) foundZone = "SGR01";
-              else if (s.includes("terengganu")) foundZone = "TRG01";
-              else if (
-                s.includes("kuala lumpur") ||
-                s.includes("putrajaya") ||
-                s.includes("federal territory")
-              )
-                foundZone = "WLY01";
-              else if (s.includes("labuan")) foundZone = "WLY02";
-            }
-
-            if (foundZone && foundZone !== selectedZone) {
-              if (locationMode === 'auto') {
+          if (foundZone) {
+            if (locationModeRef.current === 'auto') {
+              // In Auto mode, ALWAYS set the zone to the detected one when forced
+              // This ensures switching back to auto always gets a fresh detection
+              if (force || foundZone !== selectedZoneRef.current) {
                 setSelectedZone(foundZone);
-                setAutoUpdatedZone(foundZone);
-                setAutoUpdatedLocationName(locName);
-                setTimeout(() => {
-                  setAutoUpdatedZone(null);
-                  setAutoUpdatedLocationName(null);
-                }, 5000);
-              } else if (locationMode === 'manual') {
+                
+                // Only show the toast if they actually moved to a new zone while in the background
+                if (!force && foundZone !== selectedZoneRef.current) {
+                  setAutoUpdatedZone(foundZone);
+                  setAutoUpdatedLocationName(locName);
+                  setTimeout(() => {
+                    setAutoUpdatedZone(null);
+                    setAutoUpdatedLocationName(null);
+                  }, 5000);
+                }
+              }
+            } else if (locationModeRef.current === 'manual') {
+              if (foundZone !== selectedZoneRef.current) {
                 setPromptZone(foundZone);
                 setPromptLocationName(locName);
               }
             }
-          } catch (err) {
-            // Ignore
           }
-        },
-        () => {
+        } catch (err) {
           // Ignore
-        },
-        { timeout: 10000, maximumAge: 60000 },
-      );
-    };
+        } finally {
+          setIsDetecting(false);
+        }
+      },
+      () => {
+        setIsDetecting(false);
+      },
+      { timeout: 10000, maximumAge: force ? 0 : 60000 },
+    );
+  }, [setSelectedZone]);
 
-    // Check immediately if auto, otherwise delay a bit
-    checkLocation();
-
-    // Check periodically
-    const intervalId = setInterval(checkLocation, 5 * 60 * 1000);
+  // When locationMode changes to 'auto', FORCE a cache-busting check immediately
+  // Reset lastCheckTime so the throttle doesn't block this critical detection
+  const prevMode = useRef(locationMode);
+  useEffect(() => {
+    const changedToAuto = prevMode.current !== 'auto' && locationMode === 'auto';
+    prevMode.current = locationMode;
     
-    // Also listen to visibility change to check when user returns to app
+    if (changedToAuto) {
+      // Reset throttle so the forced check always goes through
+      lastCheckTime.current = 0;
+      checkLocation(true);
+    }
+  }, [locationMode, checkLocation]);
+
+  // Periodic background checking
+  useEffect(() => {
+    const intervalId = setInterval(() => checkLocation(false), 5 * 60 * 1000);
+    
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        checkLocation();
+        // When tab becomes visible again, force check if in auto mode
+        if (locationModeRef.current === 'auto') {
+          checkLocation(true);
+        } else {
+          checkLocation(false);
+        }
       }
     };
     document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // Initial check on mount — force if in auto mode to always get fresh location
+    if (locationModeRef.current === 'auto') {
+      lastCheckTime.current = 0;
+      checkLocation(true);
+    } else {
+      checkLocation(false);
+    }
 
     return () => {
       clearInterval(intervalId);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [selectedZone, locationMode, setSelectedZone]);
+  }, [checkLocation]);
 
   const acceptPrompt = () => {
     if (promptZone) {
@@ -128,5 +194,5 @@ export function useLocationTracking(
     setPromptLocationName(null);
   };
 
-  return { promptZone, promptLocationName, autoUpdatedZone, autoUpdatedLocationName, currentLocationName, acceptPrompt, dismissPrompt };
+  return { promptZone, promptLocationName, autoUpdatedZone, autoUpdatedLocationName, currentLocationName, isDetecting, acceptPrompt, dismissPrompt };
 }

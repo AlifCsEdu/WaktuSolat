@@ -411,6 +411,8 @@ export const translations = {
     autoModeActive: "Auto Mode Active",
     autoModeActiveDesc: "Your zone will update automatically as you travel.",
     autoModeCurrent: "Current Detected Location:",
+    autoModeDetecting: "Checking GPS signal...",
+    autoModeTracking: "Tracking location...",
     autoModeChangePrompt: "Turn off auto mode to manually select a zone.",
   }
 };

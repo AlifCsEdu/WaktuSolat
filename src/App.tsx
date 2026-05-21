@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
 import { format, parse, isAfter, addDays, startOfDay } from "date-fns";
 import { motion, AnimatePresence } from "motion/react";
 import "@material/web/button/filled-tonal-button.js";
@@ -51,11 +51,27 @@ export default function App() {
     return localStorage.getItem("waktu-solat-zone") || "";
   });
 
-  const { promptZone, promptLocationName, autoUpdatedZone, autoUpdatedLocationName, acceptPrompt, dismissPrompt } = useLocationTracking(
+  const { promptZone, promptLocationName, autoUpdatedZone, autoUpdatedLocationName, currentLocationName, isDetecting, acceptPrompt, dismissPrompt } = useLocationTracking(
     selectedZone,
     setSelectedZone,
     settings.locationMode || 'manual'
   );
+
+  // Track whether a zone change came from auto-detection vs manual selection
+  const isAutoZoneChange = useRef(false);
+
+  // Wrapper around setSelectedZone that tracks the source
+  const handleManualZoneSelect = useCallback((zone: string) => {
+    isAutoZoneChange.current = false;
+    setSelectedZone(zone);
+  }, []);
+
+  // When in auto mode, zone changes come from the tracking hook — mark them
+  useEffect(() => {
+    if (settings.locationMode === 'auto') {
+      isAutoZoneChange.current = true;
+    }
+  }, [settings.locationMode]);
 
   useEffect(() => {
     if (!selectedZone) {
@@ -76,7 +92,8 @@ export default function App() {
                 throw new Error("Invalid geocode JSON");
               }
 
-              const stateName = data.principalSubdivision || data.city;
+              // API returns { osm: {...}, bdc: {...} } — extract state from nested objects
+              const stateName = data?.bdc?.principalSubdivision || data?.bdc?.city || data?.osm?.address?.state || data?.osm?.address?.city || "";
               let foundZone = "SGR01"; // Fallback
 
               if (stateName) {
@@ -132,6 +149,21 @@ export default function App() {
       }
     } else {
       localStorage.setItem("waktu-solat-zone", selectedZone);
+      
+      // Only update recent zones for MANUAL selections (not auto-detected)
+      if (!isAutoZoneChange.current) {
+        try {
+          const recent = JSON.parse(localStorage.getItem("waktu-solat-recent-zones") || "[]");
+          if (Array.isArray(recent)) {
+            const updated = [selectedZone, ...recent.filter((z: string) => z !== selectedZone)].slice(0, 5);
+            localStorage.setItem("waktu-solat-recent-zones", JSON.stringify(updated));
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+      // Reset the flag after processing
+      isAutoZoneChange.current = false;
     }
   }, [selectedZone]);
 
@@ -407,7 +439,9 @@ export default function App() {
             <header className="relative flex items-center gap-3 z-[60] mb-2 flex-wrap shrink-0">
             <ZoneSelector
               selectedZone={selectedZone}
-              onZoneSelect={setSelectedZone}
+              onZoneSelect={handleManualZoneSelect}
+              isAutoDetecting={isDetecting}
+              currentLocationName={currentLocationName}
             />
             <motion.div
               whileHover={{ scale: 1.05 }}
