@@ -1083,68 +1083,92 @@ export function ZoneSelector({
                   </motion.button>
                 </div>
 
-                <div className="relative group">
-                  <div className="absolute inset-y-0 left-6 flex flex-col justify-center pointer-events-none">
-                    <Search
-                      className="text-[var(--md-sys-color-primary)] opacity-60 group-focus-within:opacity-100 group-focus-within:scale-110 transition-all duration-300"
-                      size={28}
-                      strokeWidth={2.5}
-                    />
-                  </div>
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    placeholder={t("searchPlaceholder")}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-16 pr-12 py-5 md:py-7 bg-[var(--md-sys-color-surface-container-high)] rounded-full focus:bg-[var(--md-sys-color-surface-container-highest)] border-[3px] border-transparent focus:border-[var(--md-sys-color-primary)] focus:outline-none transition-all font-black text-xl text-[var(--md-sys-color-on-surface)] placeholder-[var(--md-sys-color-on-surface-variant)]/50 shadow-sm"
-                  />
-                  {searchQuery && (
-                    <motion.button
-                      whileHover={{ scale: 1.1, rotate: 90 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => {
-                        setSearchQuery("");
-                        inputRef.current?.focus();
-                      }}
-                      className="absolute inset-y-0 right-4 flex flex-col justify-center text-[var(--md-sys-color-on-surface-variant)] opacity-70 hover:opacity-100"
-                    >
-                      <X size={18} />
-                    </motion.button>
-                  )}
-                </div>
-
-                <div className="flex flex-col gap-3 mt-1">
-                  <div className="flex items-center justify-between bg-[var(--md-sys-color-surface-container)] px-5 py-4 rounded-3xl shadow-sm border border-[var(--md-sys-color-outline)]/10">
-                    <div className="pr-4">
-                      <h4 className="font-bold text-[var(--md-sys-color-on-surface)] text-sm md:text-base">{t('autoLocationTracking' as any) || "Auto Location Tracking"}</h4>
-                      <p className="text-xs md:text-sm text-[var(--md-sys-color-on-surface-variant)] mt-0.5">{t('autoLocationDesc' as any) || "Automatically update zone when you travel"}</p>
-                    </div>
-                    {/* @ts-ignore */}
-                    <md-switch
-                      selected={settings.locationMode === 'auto' ? true : undefined}
-                      onClick={() => updateSettings({ locationMode: settings.locationMode === 'auto' ? 'manual' : 'auto' })}
-                    ></md-switch>
-                  </div>
-
-                  <AnimatePresence>
-                    {!searchQuery && settings.locationMode !== 'auto' && (
-                      <md-filled-tonal-button
-                        onClick={handleAutoDetect}
-                        disabled={isDetecting}
-                        className="w-full"
-                        style={{ '--md-filled-tonal-button-container-height': '48px', '--md-filled-tonal-button-container-shape': '24px' } as any}
-                      >
-                        <Crosshair
-                          size={20}
-                          slot="icon"
-                          className={isDetecting ? "animate-spin" : ""}
-                        />
-                        {isDetecting ? t("detecting") : t("detectLocation")}
-                      </md-filled-tonal-button>
+                <div className="flex bg-[var(--md-sys-color-surface-container-high)] p-1.5 rounded-[20px] mb-2 shadow-inner">
+                  <button 
+                    onClick={() => updateSettings({ locationMode: 'manual' })}
+                    className={cn(
+                      "flex-1 py-3 rounded-2xl font-bold text-sm md:text-base transition-all duration-300",
+                      settings.locationMode !== 'auto' 
+                        ? "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-md" 
+                        : "text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-highest)]"
                     )}
-                  </AnimatePresence>
+                  >
+                    {t('modeManual' as any) || "Manual Selection"}
+                  </button>
+                  <button 
+                    onClick={() => {
+                      updateSettings({ locationMode: 'auto' });
+                      setSearchQuery("");
+                    }}
+                    className={cn(
+                      "flex-1 py-3 rounded-2xl font-bold text-sm md:text-base transition-all duration-300",
+                      settings.locationMode === 'auto' 
+                        ? "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-md" 
+                        : "text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-highest)]"
+                    )}
+                  >
+                    {t('modeAuto' as any) || "Auto Tracking"}
+                  </button>
                 </div>
+
+                <AnimatePresence mode="wait">
+                  {settings.locationMode !== 'auto' && (
+                    <motion.div 
+                      key="manual-mode"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="flex flex-col gap-4"
+                    >
+                      <div className="relative group">
+                        <div className="absolute inset-y-0 left-6 flex flex-col justify-center pointer-events-none">
+                          <Search
+                            className="text-[var(--md-sys-color-primary)] opacity-60 group-focus-within:opacity-100 group-focus-within:scale-110 transition-all duration-300"
+                            size={28}
+                            strokeWidth={2.5}
+                          />
+                        </div>
+                        <input
+                          ref={inputRef}
+                          type="text"
+                          placeholder={t("searchPlaceholder")}
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="w-full pl-16 pr-12 py-5 md:py-7 bg-[var(--md-sys-color-surface-container-high)] rounded-full focus:bg-[var(--md-sys-color-surface-container-highest)] border-[3px] border-transparent focus:border-[var(--md-sys-color-primary)] focus:outline-none transition-all font-black text-xl text-[var(--md-sys-color-on-surface)] placeholder-[var(--md-sys-color-on-surface-variant)]/50 shadow-sm"
+                        />
+                        {searchQuery && (
+                          <motion.button
+                            whileHover={{ scale: 1.1, rotate: 90 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => {
+                              setSearchQuery("");
+                              inputRef.current?.focus();
+                            }}
+                            className="absolute inset-y-0 right-4 flex flex-col justify-center text-[var(--md-sys-color-on-surface-variant)] opacity-70 hover:opacity-100"
+                          >
+                            <X size={18} />
+                          </motion.button>
+                        )}
+                      </div>
+
+                      {!searchQuery && (
+                        <md-filled-tonal-button
+                          onClick={handleAutoDetect}
+                          disabled={isDetecting}
+                          className="w-full"
+                          style={{ '--md-filled-tonal-button-container-height': '48px', '--md-filled-tonal-button-container-shape': '24px' } as any}
+                        >
+                          <Crosshair
+                            size={20}
+                            slot="icon"
+                            className={isDetecting ? "animate-spin" : ""}
+                          />
+                          {isDetecting ? t("detecting") : t("detectLocation")}
+                        </md-filled-tonal-button>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               <div 
@@ -1156,6 +1180,79 @@ export function ZoneSelector({
                   }
                 }}
               >
+                {settings.locationMode === 'auto' ? (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex flex-col items-center justify-center h-full p-8 text-center space-y-6"
+                  >
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-[var(--md-sys-color-primary)] rounded-full animate-ping opacity-20"></div>
+                      <div className="w-24 h-24 bg-[var(--md-sys-color-primary-container)] rounded-full flex items-center justify-center relative z-10 shadow-lg">
+                        <MapPin size={40} className="text-[var(--md-sys-color-primary)]" />
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-black text-[var(--md-sys-color-on-surface)] mb-2">
+                        {t('autoModeActive' as any) || "Auto Mode Active"}
+                      </h3>
+                      <p className="text-[var(--md-sys-color-on-surface-variant)] max-w-sm mx-auto">
+                        {t('autoModeActiveDesc' as any) || "We are tracking your location in the background. Manual zone selection is disabled."}
+                      </p>
+                    </div>
+                    <div className="bg-[var(--md-sys-color-surface-container)] rounded-[24px] p-6 w-full max-w-sm border border-[var(--md-sys-color-outline)]/10 shadow-sm mt-4">
+                      <p className="text-xs font-bold uppercase tracking-widest text-[var(--md-sys-color-primary)] mb-2 opacity-80">
+                        {t('autoModeCurrent' as any) || "Current Detected Location:"}
+                      </p>
+                      <p className="text-3xl font-black leading-tight text-[var(--md-sys-color-on-surface)] mb-2">
+                        {selectedLabel}
+                      </p>
+                      <div className="inline-flex bg-[var(--md-sys-color-surface-variant)] px-3 py-1 rounded-lg text-sm font-mono font-bold text-[var(--md-sys-color-on-surface-variant)]">
+                        {selectedZone}
+                      </div>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <>
+                    {/* Recent Zones Section */}
+                    {!searchQuery && (() => {
+                      try {
+                        const recent = JSON.parse(localStorage.getItem("waktu-solat-recent-zones") || "[]");
+                        if (Array.isArray(recent) && recent.length > 0) {
+                          return (
+                            <div className="px-6 md:px-8 pt-6 pb-2">
+                              <h3 className="text-xs font-bold uppercase tracking-widest text-[var(--md-sys-color-on-surface-variant)] mb-4">
+                                {t('recentLocations' as any) || "Recent Locations"}
+                              </h3>
+                              <div className="flex flex-wrap gap-2">
+                                {recent.map((code: string) => {
+                                  let l = code;
+                                  for (const state of JAKIM_ZONES) {
+                                    const found = state.zones.find(z => z.v === code);
+                                    if (found) { l = found.l; break; }
+                                  }
+                                  return (
+                                    <button
+                                      key={`recent-${code}`}
+                                      onClick={() => {
+                                        onZoneSelect(code);
+                                        setIsOpen(false);
+                                      }}
+                                      className="bg-[var(--md-sys-color-surface-container)] hover:bg-[var(--md-sys-color-secondary-container)] hover:text-[var(--md-sys-color-on-secondary-container)] text-[var(--md-sys-color-on-surface)] px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition-colors border border-[var(--md-sys-color-outline)]/5"
+                                    >
+                                      {l}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        }
+                      } catch(e) {}
+                      return null;
+                    })()}
+
+                    {/* Active Scroll Indicator & List */}
                 <AnimatePresence>
                   {activeScrollState && (
                     <motion.div
@@ -1280,6 +1377,8 @@ export function ZoneSelector({
                     ))}
                   </div>
                 )}
+                </>
+              )}
               </div>
             </motion.div>
           </motion.div>

@@ -14,12 +14,16 @@ function getZoneName(zoneCode: string) {
 
 export function LocationToast({
   promptZone,
+  promptLocationName,
   autoUpdatedZone,
+  autoUpdatedLocationName,
   onAccept,
   onDismiss,
 }: {
   promptZone: string | null;
+  promptLocationName?: string | null;
   autoUpdatedZone: string | null;
+  autoUpdatedLocationName?: string | null;
   onAccept: () => void;
   onDismiss: () => void;
 }) {
@@ -43,8 +47,8 @@ export function LocationToast({
                 </h4>
                 <p className="text-[var(--md-sys-color-on-surface-variant)] text-sm mt-1">
                   {autoUpdatedZone
-                    ? `Zon telah ditukar secara automatik ke ${getZoneName(autoUpdatedZone)}.`
-                    : `Anda berada di ${getZoneName(promptZone!)}. Tukar zon?`}
+                    ? `Zon telah ditukar secara automatik ke ${getZoneName(autoUpdatedZone)} (${autoUpdatedLocationName || "GPS Semasa"}).`
+                    : `Anda berada di ${promptLocationName || "lokasi baharu"} (${getZoneName(promptZone!)}). Tukar zon?`}
                 </p>
               </div>
             </div>

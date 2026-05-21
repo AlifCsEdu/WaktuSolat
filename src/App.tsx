@@ -51,7 +51,7 @@ export default function App() {
     return localStorage.getItem("waktu-solat-zone") || "";
   });
 
-  const { promptZone, autoUpdatedZone, acceptPrompt, dismissPrompt } = useLocationTracking(
+  const { promptZone, promptLocationName, autoUpdatedZone, autoUpdatedLocationName, acceptPrompt, dismissPrompt } = useLocationTracking(
     selectedZone,
     setSelectedZone,
     settings.locationMode || 'manual'
@@ -396,7 +396,9 @@ export default function App() {
       <main className="flex-1 w-full max-w-[2560px] mx-auto relative z-10 flex flex-col lg:flex-row px-4 sm:px-8 lg:px-12 xl:px-16 py-4 sm:py-6 lg:py-8 gap-8 lg:gap-12 xl:gap-16 lg:overflow-hidden min-h-0">
         <LocationToast 
           promptZone={promptZone}
+          promptLocationName={promptLocationName}
           autoUpdatedZone={autoUpdatedZone}
+          autoUpdatedLocationName={autoUpdatedLocationName}
           onAccept={acceptPrompt}
           onDismiss={dismissPrompt}
         />

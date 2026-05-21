@@ -396,6 +396,13 @@ export const translations = {
     styleSoft: "Soft (Soft UI)",
     autoLocationTracking: "Auto Location Tracking",
     autoLocationDesc: "Automatically update zone when you travel",
+    recentLocations: "Recent Locations",
+    modeManual: "Manual Selection",
+    modeAuto: "Auto Tracking",
+    autoModeActive: "Auto Mode Active",
+    autoModeActiveDesc: "We are tracking your location in the background. Manual zone selection is disabled.",
+    autoModeCurrent: "Current Detected Location:",
+    autoModeChangePrompt: "Turn off auto mode to manually select a zone.",
   }
 };
 

@@ -6,7 +6,13 @@ export function useLocationTracking(
   locationMode: 'auto' | 'manual',
 ) {
   const [promptZone, setPromptZone] = useState<string | null>(null);
+  const [promptLocationName, setPromptLocationName] = useState<string | null>(null);
   const [autoUpdatedZone, setAutoUpdatedZone] = useState<string | null>(null);
+  const [autoUpdatedLocationName, setAutoUpdatedLocationName] = useState<string | null>(null);
+  
+  // Expose current detected name for UI
+  const [currentLocationName, setCurrentLocationName] = useState<string | null>(null);
+
   const lastCheckTime = useRef<number>(0);
 
   useEffect(() => {
@@ -35,6 +41,9 @@ export function useLocationTracking(
             }
 
             const stateName = data.principalSubdivision || data.city;
+            const locName = data.locality || data.city || data.principalSubdivision || "Kawasan Semasa";
+            setCurrentLocationName(locName);
+
             let foundZone = "";
 
             if (stateName) {
@@ -65,9 +74,14 @@ export function useLocationTracking(
               if (locationMode === 'auto') {
                 setSelectedZone(foundZone);
                 setAutoUpdatedZone(foundZone);
-                setTimeout(() => setAutoUpdatedZone(null), 5000);
+                setAutoUpdatedLocationName(locName);
+                setTimeout(() => {
+                  setAutoUpdatedZone(null);
+                  setAutoUpdatedLocationName(null);
+                }, 5000);
               } else if (locationMode === 'manual') {
                 setPromptZone(foundZone);
+                setPromptLocationName(locName);
               }
             }
           } catch (err) {
@@ -105,12 +119,14 @@ export function useLocationTracking(
     if (promptZone) {
       setSelectedZone(promptZone);
       setPromptZone(null);
+      setPromptLocationName(null);
     }
   };
 
   const dismissPrompt = () => {
     setPromptZone(null);
+    setPromptLocationName(null);
   };
 
-  return { promptZone, autoUpdatedZone, acceptPrompt, dismissPrompt };
+  return { promptZone, promptLocationName, autoUpdatedZone, autoUpdatedLocationName, currentLocationName, acceptPrompt, dismissPrompt };
 }
