@@ -1182,32 +1182,28 @@ export function ZoneSelector({
               >
                 {settings.locationMode === 'auto' ? (
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="flex flex-col items-center justify-center h-full p-8 text-center space-y-6"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex flex-col items-center justify-center h-full p-6 text-center"
                   >
-                    <div className="relative">
-                      <div className="absolute inset-0 bg-[var(--md-sys-color-primary)] rounded-full animate-ping opacity-20"></div>
-                      <div className="w-24 h-24 bg-[var(--md-sys-color-primary-container)] rounded-full flex items-center justify-center relative z-10 shadow-lg">
-                        <MapPin size={40} className="text-[var(--md-sys-color-primary)]" />
-                      </div>
+                    <div className="w-16 h-16 bg-[var(--md-sys-color-secondary-container)] rounded-full flex items-center justify-center mb-4 text-[var(--md-sys-color-on-secondary-container)]">
+                      <Crosshair size={28} className="opacity-80" />
                     </div>
-                    <div>
-                      <h3 className="text-2xl font-black text-[var(--md-sys-color-on-surface)] mb-2">
-                        {t('autoModeActive' as any) || "Auto Mode Active"}
-                      </h3>
-                      <p className="text-[var(--md-sys-color-on-surface-variant)] max-w-sm mx-auto">
-                        {t('autoModeActiveDesc' as any) || "We are tracking your location in the background. Manual zone selection is disabled."}
-                      </p>
-                    </div>
-                    <div className="bg-[var(--md-sys-color-surface-container)] rounded-[24px] p-6 w-full max-w-sm border border-[var(--md-sys-color-outline)]/10 shadow-sm mt-4">
-                      <p className="text-xs font-bold uppercase tracking-widest text-[var(--md-sys-color-primary)] mb-2 opacity-80">
+                    <h3 className="text-xl font-bold text-[var(--md-sys-color-on-surface)] mb-1">
+                      {t('autoModeActive' as any) || "Auto Mode Active"}
+                    </h3>
+                    <p className="text-[var(--md-sys-color-on-surface-variant)] text-sm max-w-[250px] mx-auto mb-8 opacity-80">
+                      {t('autoModeActiveDesc' as any) || "Your zone will update automatically as you travel."}
+                    </p>
+                    
+                    <div className="bg-[var(--md-sys-color-surface-container)] rounded-[24px] p-5 w-full max-w-xs border border-[var(--md-sys-color-outline)]/5 shadow-sm">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--md-sys-color-primary)] mb-1.5 opacity-80">
                         {t('autoModeCurrent' as any) || "Current Detected Location:"}
                       </p>
-                      <p className="text-3xl font-black leading-tight text-[var(--md-sys-color-on-surface)] mb-2">
+                      <p className="text-xl font-black leading-tight text-[var(--md-sys-color-on-surface)] mb-1">
                         {selectedLabel}
                       </p>
-                      <div className="inline-flex bg-[var(--md-sys-color-surface-variant)] px-3 py-1 rounded-lg text-sm font-mono font-bold text-[var(--md-sys-color-on-surface-variant)]">
+                      <div className="inline-flex bg-[var(--md-sys-color-surface-variant)]/50 px-2 py-0.5 rounded text-xs font-mono font-bold text-[var(--md-sys-color-on-surface-variant)]">
                         {selectedZone}
                       </div>
                     </div>
