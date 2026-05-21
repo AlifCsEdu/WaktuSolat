@@ -20,6 +20,7 @@ export async function onRequest(context: any) {
       headers: {
         "User-Agent": "Mozilla/5.0 (compatible; WaktuSolatApp/1.0)",
       },
+      // @ts-ignore Cloudflare specific options
       cf: {
         cacheTtl: 3600,
         cacheEverything: true,

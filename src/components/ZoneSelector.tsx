@@ -8,6 +8,7 @@ import "@material/web/iconbutton/filled-icon-button.js";
 import "@material/web/iconbutton/icon-button.js";
 import "@material/web/button/filled-tonal-button.js";
 import "@material/web/ripple/ripple.js";
+import "@material/web/switch/switch.js";
 import { useAppContext } from "../AppContext";
 import { MapModal } from "./MapModal";
 import { useVisualStyle } from "../hooks/useVisualStyle";
@@ -627,7 +628,7 @@ export function ZoneSelector({
   selectedZone: string;
   onZoneSelect: (zone: string) => void;
 }) {
-  const { t } = useAppContext();
+  const { t, settings, updateSettings } = useAppContext();
   const visualStyle = useVisualStyle();
   const [isOpen, setIsOpen] = useState(false);
   const [isMapOpen, setIsMapOpen] = useState(false);

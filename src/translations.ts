@@ -394,6 +394,8 @@ export const translations = {
     styleRetro: "Retro (Neobrutalist)",
     styleGlass: "Glass (Glassmorphism)",
     styleSoft: "Soft (Soft UI)",
+    autoLocationTracking: "Auto Location Tracking",
+    autoLocationDesc: "Automatically update zone when you travel",
   }
 };
 

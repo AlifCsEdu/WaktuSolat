@@ -26,6 +26,8 @@ const WeatherWidget = lazy(() =>
 );
 import { PrayerData, JakimResponse, PrayerKey } from "./types";
 import { usePrayerNotifications } from "./hooks/usePrayerNotifications";
+import { useLocationTracking } from "./hooks/useLocationTracking";
+import { LocationToast } from "./components/LocationToast";
 import { CalendarDays, CalendarRange } from "lucide-react";
 import { useAppContext } from "./AppContext";
 import { useVisualStyle } from "./hooks/useVisualStyle";
@@ -48,6 +50,12 @@ export default function App() {
   const [selectedZone, setSelectedZone] = useState(() => {
     return localStorage.getItem("waktu-solat-zone") || "";
   });
+
+  const { promptZone, autoUpdatedZone, acceptPrompt, dismissPrompt } = useLocationTracking(
+    selectedZone,
+    setSelectedZone,
+    settings.locationMode || 'manual'
+  );
 
   useEffect(() => {
     if (!selectedZone) {
@@ -385,7 +393,13 @@ export default function App() {
           onTestSound={playSound}
         />
       </Suspense>
-      <main className="flex-1 w-full max-w-[1920px] mx-auto relative z-10 flex flex-col lg:flex-row px-4 sm:px-8 lg:px-12 xl:px-16 py-4 sm:py-6 lg:py-8 gap-8 lg:gap-12 xl:gap-16 lg:overflow-hidden min-h-0">
+      <main className="flex-1 w-full max-w-[2560px] mx-auto relative z-10 flex flex-col lg:flex-row px-4 sm:px-8 lg:px-12 xl:px-16 py-4 sm:py-6 lg:py-8 gap-8 lg:gap-12 xl:gap-16 lg:overflow-hidden min-h-0">
+        <LocationToast 
+          promptZone={promptZone}
+          autoUpdatedZone={autoUpdatedZone}
+          onAccept={acceptPrompt}
+          onDismiss={dismissPrompt}
+        />
         {/* Left Side: Clock & Hero */}
         <section className="flex flex-col w-full lg:w-[50%] xl:w-[55%] lg:overflow-visible pb-2 lg:pb-0 min-h-0 relative z-20">
             <header className="relative flex items-center gap-3 z-[60] mb-2 flex-wrap shrink-0">

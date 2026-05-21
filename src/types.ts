@@ -46,6 +46,7 @@ export interface GeneralSettings {
   clockFace?: 'digital' | 'analog' | 'anadigi' | 'chronograph' | 'flip' | 'word' | 'minimal' | 'orbit' | 'typographic' | 'prayer-ring' | 'analog-numeric' | 'analog-roman' | 'analog-arabic' | 'dashboard' | 'abstract' | 'swiss-station' | 'bauhaus' | 'layered';
   clockMovement?: 'tick' | 'sweep';
   visualStyle?: 'default' | 'retro' | 'glass' | 'soft';
+  locationMode?: 'auto' | 'manual';
 }
 
 // Default preferences
@@ -59,4 +60,5 @@ export const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
   clockFace: 'digital',
   clockMovement: 'sweep',
   visualStyle: 'default',
+  locationMode: 'manual',
 };
