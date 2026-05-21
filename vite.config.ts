@@ -22,25 +22,16 @@ export default defineConfig(({mode}) => {
         output: {
           manualChunks(id) {
             if (id.includes('node_modules')) {
-              if (id.includes('react') || id.includes('react-dom')) {
-                return 'vendor-react';
-              }
-              if (id.includes('motion') || id.includes('framer-motion')) {
-                return 'vendor-motion';
+              // Only extract massive isolated libraries to prevent circular dependencies
+              if (id.includes('@material/web')) {
+                return 'vendor-material';
               }
               if (id.includes('leaflet') || id.includes('react-leaflet')) {
                 return 'vendor-map';
               }
-              if (id.includes('@material/web')) {
-                return 'vendor-material';
+              if (id.includes('motion') || id.includes('framer-motion')) {
+                return 'vendor-motion';
               }
-              if (id.includes('lucide-react')) {
-                return 'vendor-icons';
-              }
-              if (id.includes('date-fns')) {
-                return 'vendor-date';
-              }
-              return 'vendor-core'; // all other dependencies
             }
           }
         }
