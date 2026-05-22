@@ -889,6 +889,11 @@ html.dark[data-style="soft"] {
     body {
         @apply bg-[var(--md-sys-color-background)] text-[var(--md-sys-color-on-background)] font-sans antialiased overflow-x-hidden;
     }
+    html[data-wallpaper="true"] body,
+    html[data-wallpaper="true"] #root {
+        background-color: transparent !important;
+        background-image: none !important;
+    }
 }
 
 @layer utilities {

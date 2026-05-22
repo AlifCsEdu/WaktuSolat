@@ -112,7 +112,7 @@ export function ThemeControl() {
     return () => {
       active = false;
     };
-  }, [settings.wallpaperEnabled, settings.wallpaperSource, settings.wallpaperUrl]);
+  }, [settings.wallpaperEnabled, settings.wallpaperSource, settings.wallpaperUrl, settings.wallpaperLastUpdated]);
 
   // Clean up Object URLs for preview
   useEffect(() => {
