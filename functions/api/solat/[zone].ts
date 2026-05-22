@@ -3,7 +3,11 @@ export async function onRequest(context: any) {
   const zone = params.zone;
   const url = new URL(request.url);
   const year = url.searchParams.get("year");
-  const month = url.searchParams.get("month");
+  let month = url.searchParams.get("month");
+  if (month) {
+    // Strip leading zeroes to prevent api.waktusolat.app from failing/redirecting
+    month = String(parseInt(month, 10));
+  }
 
   let apiUrl = `https://api.waktusolat.app/solat/${zone}`;
 

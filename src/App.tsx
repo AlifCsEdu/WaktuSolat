@@ -215,7 +215,7 @@ export default function App() {
       if (settings.offlineCachedRange === 'month') {
         const d = new Date();
         const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const month = String(d.getMonth() + 1);
         url = `/api/solat/${selectedZone}?year=${year}&month=${month}`;
       } else if (settings.offlineCachedRange === 'year') {
         const d = new Date();

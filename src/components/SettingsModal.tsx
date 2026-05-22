@@ -121,7 +121,7 @@ export function SettingsModal({
       if (downloadRange === 'month') {
         const d = new Date();
         const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const month = String(d.getMonth() + 1);
         url = `/api/solat/${selectedZone}?year=${year}&month=${month}`;
       } else if (downloadRange === 'year') {
         const d = new Date();
