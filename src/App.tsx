@@ -30,6 +30,7 @@ import { useLocationTracking } from "./hooks/useLocationTracking";
 import { LocationToast } from "./components/LocationToast";
 import { AzanAlert } from "./components/AzanAlert";
 import { SolatMode } from "./components/SolatMode";
+import { SharePanel } from "./components/SharePanel";
 import { CalendarDays, CalendarRange, Wifi, RefreshCw } from "lucide-react";
 import { useAppContext } from "./AppContext";
 import { useVisualStyle } from "./hooks/useVisualStyle";
@@ -52,6 +53,15 @@ export default function App() {
   const visualStyle = useVisualStyle();
 
   const [selectedZone, setSelectedZone] = useState(() => {
+    // Shared link: ?zone=PRK02
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlZone = urlParams.get("zone");
+    if (urlZone && urlZone.match(/^[A-Z]{3}\d{2}$/)) {
+      // Clean the URL so it doesn't persist after initial load
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, "", cleanUrl);
+      return urlZone;
+    }
     return localStorage.getItem("waktu-solat-zone") || "";
   });
 
@@ -201,6 +211,7 @@ export default function App() {
   });
   const [error, setError] = useState<string | null>(null);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [showSharePanel, setShowSharePanel] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -1001,12 +1012,19 @@ export default function App() {
                 notificationPermission={permission}
                 onRequestPermission={requestPermission}
                 onSettingsClick={() => setShowNotificationSettings(true)}
+                onShareClick={() => setShowSharePanel(true)}
                 currentTime={currentTime}
               />
             </div>
           </div>
         </section>
       </main>
+
+      <SharePanel
+        isOpen={showSharePanel}
+        onClose={() => setShowSharePanel(false)}
+        currentZone={selectedZone}
+      />
 
       <AnimatePresence>
         {showOnlineSyncToast && (

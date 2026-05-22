@@ -16,6 +16,7 @@ import {
   BellOff,
   BellRing,
   Settings,
+  Share2,
 } from "lucide-react";
 import { useAppContext } from "../AppContext";
 import { parse, startOfDay, format } from "date-fns";
@@ -59,6 +60,7 @@ export function PrayerSchedule({
   notificationPermission,
   onRequestPermission,
   onSettingsClick,
+  onShareClick,
   currentTime,
 }: {
   todayData: PrayerData | null;
@@ -69,6 +71,7 @@ export function PrayerSchedule({
   notificationPermission: string;
   onRequestPermission: () => void;
   onSettingsClick: () => void;
+  onShareClick: () => void;
   currentTime: Date;
 }) {
   const { t, settings } = useAppContext();
@@ -154,25 +157,46 @@ export function PrayerSchedule({
         <h3 className="md3-headline-small font-black tracking-[-0.04em] text-[var(--md-sys-color-primary)] opacity-90 drop-shadow-sm">
           {t("schedule")}
         </h3>
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="inline-flex rotate-3 mt-1 w-10 h-10 lg:w-[48px] lg:h-[48px]"
-        >
-          {/* @ts-ignore */}
-          <md-filled-tonal-icon-button
-            onClick={onSettingsClick}
-            title={t("settings")}
-            style={{ '--md-filled-tonal-icon-button-container-shape': '20px', width: '100%', height: '100%' }}
+        <div className="flex items-center gap-1">
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="inline-flex mt-1 w-10 h-10 lg:w-[44px] lg:h-[44px]"
           >
-            <Settings size={20} className={cn(
-              visualStyle === 'retro' && "stroke-[3]",
-              visualStyle === 'glass' && "stroke-[1.5]",
-              visualStyle === 'soft' && "stroke-[1.5]",
-              !(visualStyle === 'retro' || visualStyle === 'glass' || visualStyle === 'soft') && "stroke-[2.5]"
-            )} />
-          </md-filled-tonal-icon-button>
-        </motion.div>
+            {/* @ts-ignore */}
+            <md-icon-button
+              onClick={onShareClick}
+              title={t("share" as any) || "Share"}
+              style={{ width: '100%', height: '100%' }}
+            >
+              <Share2 size={18} className={cn(
+                visualStyle === 'retro' && "stroke-[3]",
+                visualStyle === 'glass' && "stroke-[1.5]",
+                visualStyle === 'soft' && "stroke-[1.5]",
+                !(visualStyle === 'retro' || visualStyle === 'glass' || visualStyle === 'soft') && "stroke-[2]"
+              )} />
+            </md-icon-button>
+          </motion.div>
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="inline-flex rotate-3 mt-1 w-10 h-10 lg:w-[48px] lg:h-[48px]"
+          >
+            {/* @ts-ignore */}
+            <md-filled-tonal-icon-button
+              onClick={onSettingsClick}
+              title={t("settings")}
+              style={{ '--md-filled-tonal-icon-button-container-shape': '20px', width: '100%', height: '100%' }}
+            >
+              <Settings size={20} className={cn(
+                visualStyle === 'retro' && "stroke-[3]",
+                visualStyle === 'glass' && "stroke-[1.5]",
+                visualStyle === 'soft' && "stroke-[1.5]",
+                !(visualStyle === 'retro' || visualStyle === 'glass' || visualStyle === 'soft') && "stroke-[2.5]"
+              )} />
+            </md-filled-tonal-icon-button>
+          </motion.div>
+        </div>
       </div>
 
       <div className="flex gap-2 mb-2 lg:mb-3 px-2 overflow-x-auto no-scrollbar pt-1 pb-1 shrink-0">
