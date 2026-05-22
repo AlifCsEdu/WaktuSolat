@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { format, differenceInSeconds } from "date-fns";
 import { ms, enUS } from "date-fns/locale";
 import { motion, AnimatePresence } from "motion/react";
@@ -7,7 +7,7 @@ import "@material/web/ripple/ripple.js";
 import { Compass, Sunrise, Moon, Calendar, Play, Pause, Plus } from "lucide-react";
 import { useAppContext } from "../AppContext";
 import { getHijriFormatted, HIJRI_MONTHS, HIJRI_MONTHS_EN } from "../lib/holidays";
-import { useVisualStyle, getStyleClasses } from "../hooks/useVisualStyle";
+import { useVisualStyle, useThemeShape, getStyleClasses } from "../hooks/useVisualStyle";
 import { cn } from "../lib/utils";
 import { PrayerData } from "../types";
 
@@ -99,6 +99,28 @@ export function ClockPanel({
 }) {
   const { t, settings } = useAppContext();
   const visualStyle = useVisualStyle();
+  const themeShape = useThemeShape();
+
+  const gregorianCardStyle = useMemo(() => {
+    if (visualStyle === 'retro') return { borderRadius: '0px' };
+    return {
+      borderTopLeftRadius: 'var(--md-sys-shape-corner-extra-large)',
+      borderBottomRightRadius: 'var(--md-sys-shape-corner-extra-large)',
+      borderTopRightRadius: 'var(--md-sys-shape-corner-medium)',
+      borderBottomLeftRadius: 'var(--md-sys-shape-corner-medium)',
+    };
+  }, [visualStyle]);
+
+  const hijriCardStyle = useMemo(() => {
+    if (visualStyle === 'retro') return { borderRadius: '0px' };
+    return {
+      borderTopRightRadius: 'var(--md-sys-shape-corner-extra-large)',
+      borderBottomLeftRadius: 'var(--md-sys-shape-corner-extra-large)',
+      borderTopLeftRadius: 'var(--md-sys-shape-corner-medium)',
+      borderBottomRightRadius: 'var(--md-sys-shape-corner-medium)',
+    };
+  }, [visualStyle]);
+
   const [countdownString, setCountdownString] = useState("");
   const [progress, setProgress] = useState(0);
   const [smoothTime, setSmoothTime] = useState(currentTime);
@@ -178,24 +200,41 @@ export function ClockPanel({
   // Parse Hijri date components for symmetric expressive layout
   let hijriDayNum = "";
   let hijriMonthYear = "";
-  const hijriLabel = settings.language === "ms" ? "Hijriah" : "Hijri";
+  let hijriLabel = settings.language === "ms" ? "Hijriah" : "Hijri";
 
   if (todayHijri) {
     const parts = todayHijri.split("-");
     if (parts.length === 3) {
       const [year, month, day] = parts;
       const mIndex = parseInt(month, 10) - 1;
-      if (mIndex >= 0 && mIndex < 12) {
-        const monthName = settings.language === "ms" ? HIJRI_MONTHS[mIndex] : HIJRI_MONTHS_EN[mIndex];
-        hijriDayNum = String(parseInt(day, 10));
-        hijriMonthYear = `${monthName} ${year}H`;
+      const dayNum = parseInt(day, 10);
+      const monthNum = parseInt(month, 10);
+
+      hijriDayNum = String(dayNum);
+
+      if (settings.hijriFormat === "number") {
+        // Numeric mode
+        hijriMonthYear = `${monthNum} / ${year}H`;
+      } else {
+        // Text mode or both mode
+        if (mIndex >= 0 && mIndex < 12) {
+          const monthName = settings.language === "ms" ? HIJRI_MONTHS[mIndex] : HIJRI_MONTHS_EN[mIndex];
+          hijriMonthYear = `${monthName} ${year}H`;
+        } else {
+          hijriMonthYear = `${monthNum} / ${year}H`;
+        }
+      }
+
+      if (!settings.hijriFormat || settings.hijriFormat === "both") {
+        // Both mode: add numeric date to subtitle label
+        hijriLabel = `${settings.language === "ms" ? "Hijriah" : "Hijri"} • ${dayNum}/${monthNum}/${year}H`;
       }
     }
   }
 
   if (!hijriDayNum && todayHijri) {
     hijriDayNum = "•";
-    hijriMonthYear = getHijriFormatted(todayHijri, "text", settings.language);
+    hijriMonthYear = getHijriFormatted(todayHijri, settings.hijriFormat || "both", settings.language);
   }
 
   return (
@@ -346,10 +385,11 @@ export function ClockPanel({
         </AnimatePresence>
 
         {/* Date & Hijri - Way Material 3 Expressive Row */}
-        <div className="flex flex-col items-center w-full mt-1 sm:mt-1.5 mb-0.5 lg:mb-1 z-10">
-          <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:gap-4 w-full">
+        <div className="flex flex-col items-center w-full mt-1.5 sm:mt-2 mb-0.5 lg:mb-1 z-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-3.5 sm:gap-4 w-full">
             {/* Gregorian Date Card */}
             <motion.div
+              style={gregorianCardStyle}
               whileHover={{ scale: 1.03, y: -3 }}
               whileTap={{ scale: 0.98 }}
               onClick={onCalendarClick}
@@ -357,8 +397,8 @@ export function ClockPanel({
               tabIndex={0}
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onCalendarClick?.(); } }}
               className={cn(
-                "relative overflow-hidden flex items-center gap-2 sm:gap-3 lg:gap-4 p-2.5 sm:p-3 lg:p-3.5 xl:p-4 transition-all duration-500 ease-out cursor-pointer select-none group",
-                "bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] rounded-tl-[32px] rounded-tr-[10px] rounded-br-[32px] rounded-bl-[10px] sm:rounded-tl-[40px] sm:rounded-tr-[12px] sm:rounded-br-[40px] sm:rounded-bl-[12px]",
+                "relative overflow-hidden flex items-center gap-2.5 sm:gap-2 md:gap-3 lg:gap-2 xl:gap-4 p-3 sm:p-2.5 md:p-3.5 lg:p-2.5 xl:p-4 transition-all duration-500 ease-out cursor-pointer select-none group",
+                "bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]",
                 visualStyle === 'retro' && "border-2 border-[var(--md-sys-color-on-surface)] shadow-[4px_4px_0px_0px_var(--md-sys-color-on-surface)] rounded-none",
                 visualStyle === 'glass' && "bg-[var(--glass-bg)]/40 backdrop-blur-[var(--glass-blur)] border border-[var(--glass-border)] text-[var(--md-sys-color-on-surface)]",
                 visualStyle === 'soft' && "shadow-[var(--soft-shadow-light)] border border-white/20 bg-[var(--md-sys-color-primary-container)]"
@@ -371,16 +411,16 @@ export function ClockPanel({
 
               {/* Dynamic Calendar Watermark */}
               <Calendar className={cn(
-                "absolute -right-3 -bottom-3 w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 opacity-[0.06] pointer-events-none transition-all duration-700 ease-out group-hover:rotate-12 group-hover:scale-125 group-hover:opacity-[0.12]",
+                "absolute -right-3 -bottom-3 w-12 h-12 sm:w-10 sm:h-10 md:w-14 md:h-14 lg:w-10 lg:h-10 xl:w-16 xl:h-16 opacity-[0.04] pointer-events-none transition-all duration-700 ease-out group-hover:rotate-12 group-hover:scale-125 group-hover:opacity-[0.08]",
                 "text-[var(--md-sys-color-primary)]",
-                visualStyle === 'retro' && "text-[var(--md-sys-color-on-surface)] opacity-10",
-                visualStyle === 'glass' && "text-[var(--md-sys-color-on-surface)] opacity-10",
-                visualStyle === 'soft' && "text-[var(--md-sys-color-primary)] opacity-[0.08]"
+                visualStyle === 'retro' && "text-[var(--md-sys-color-on-surface)] opacity-5",
+                visualStyle === 'glass' && "text-[var(--md-sys-color-on-surface)] opacity-5",
+                visualStyle === 'soft' && "text-[var(--md-sys-color-primary)] opacity-[0.05]"
               )} />
 
               {/* Gregorian Day Number */}
               <span className={cn(
-                "text-3.5xl sm:text-4.5xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-black font-sans leading-none tracking-tighter select-none shrink-0 tabular-nums z-10 transition-colors duration-300",
+                "text-3.5xl sm:text-2.5xl md:text-3.5xl lg:text-3.5xl xl:text-4xl 2xl:text-4.5xl font-black font-sans leading-none tracking-tighter select-none shrink-0 tabular-nums z-10 transition-colors duration-300",
                 "text-[var(--md-sys-color-primary)]",
                 visualStyle === 'retro' && "text-[var(--md-sys-color-on-surface)]",
                 visualStyle === 'glass' && "text-[var(--md-sys-color-on-surface)]",
@@ -391,13 +431,13 @@ export function ClockPanel({
 
               {/* Month, Year, Day details */}
               <div className="flex flex-col min-w-0 gap-0.5 z-10">
-                <span className="text-[13px] sm:text-[15px] lg:text-[17px] xl:text-xl 2xl:text-2.5xl font-black leading-tight tracking-tight truncate">
+                <span className="text-base sm:text-xs md:text-sm lg:text-base xl:text-sm 2xl:text-base font-black leading-tight tracking-tight truncate">
                   {format(currentTime, "MMMM yyyy", {
                     locale: settings.language === "ms" ? ms : enUS,
                   })}
                 </span>
                 <span className={cn(
-                  "text-[10px] sm:text-xs lg:text-[13px] xl:text-sm 2xl:text-[17px] font-extrabold uppercase tracking-widest leading-none opacity-80 truncate",
+                  "text-xs sm:text-[9px] md:text-[10px] lg:text-xs xl:text-[10px] 2xl:text-xs font-extrabold uppercase tracking-widest leading-none opacity-80 truncate",
                   visualStyle === 'retro' && "opacity-95"
                 )}>
                   {format(currentTime, "EEEE", {
@@ -409,10 +449,12 @@ export function ClockPanel({
 
             {/* Hijri Date Card */}
             <motion.div
+              style={hijriCardStyle}
               whileHover={{ scale: 1.03, y: -3 }}
+              whileTap={{ scale: 0.98 }}
               className={cn(
-                "relative overflow-hidden flex items-center gap-2 sm:gap-3 lg:gap-4 p-2.5 sm:p-3 lg:p-3.5 xl:p-4 transition-all duration-500 ease-out select-none group",
-                "bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)] rounded-tl-[10px] rounded-tr-[32px] rounded-br-[10px] rounded-bl-[32px] sm:rounded-tl-[12px] sm:rounded-tr-[40px] sm:rounded-br-[12px] sm:rounded-bl-[40px]",
+                "relative overflow-hidden flex items-center gap-2.5 sm:gap-2 md:gap-3 lg:gap-2 xl:gap-4 p-3 sm:p-2.5 md:p-3.5 lg:p-2.5 xl:p-4 transition-all duration-500 ease-out select-none group",
+                "bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]",
                 visualStyle === 'retro' && "border-2 border-[var(--md-sys-color-on-surface)] shadow-[4px_4px_0px_0px_var(--md-sys-color-on-surface)] rounded-none text-[var(--md-sys-color-on-surface)]",
                 visualStyle === 'glass' && "bg-[var(--glass-bg)]/40 backdrop-blur-[var(--glass-blur)] border border-[var(--glass-border)] text-[var(--md-sys-color-on-surface)]",
                 visualStyle === 'soft' && "shadow-[var(--soft-shadow-light)] border border-white/20 bg-[var(--md-sys-color-tertiary-container)]"
@@ -420,19 +462,21 @@ export function ClockPanel({
             >
               {/* @ts-ignore */}
               <md-elevation level="1"></md-elevation>
+              {/* @ts-ignore */}
+              <md-ripple></md-ripple>
 
               {/* Dynamic Moon Watermark */}
               <Moon className={cn(
-                "absolute -right-3 -bottom-3 w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 opacity-[0.06] pointer-events-none transition-all duration-700 ease-out group-hover:-rotate-12 group-hover:scale-125 group-hover:opacity-[0.12]",
+                "absolute -right-3 -bottom-3 w-12 h-12 sm:w-10 sm:h-10 md:w-14 md:h-14 lg:w-10 lg:h-10 xl:w-16 xl:h-16 opacity-[0.04] pointer-events-none transition-all duration-700 ease-out group-hover:-rotate-12 group-hover:scale-125 group-hover:opacity-[0.08]",
                 "text-[var(--md-sys-color-tertiary)]",
-                visualStyle === 'retro' && "text-[var(--md-sys-color-on-surface)] opacity-10",
-                visualStyle === 'glass' && "text-[var(--md-sys-color-on-surface)] opacity-10",
-                visualStyle === 'soft' && "text-[var(--md-sys-color-tertiary)] opacity-[0.08]"
+                visualStyle === 'retro' && "text-[var(--md-sys-color-on-surface)] opacity-5",
+                visualStyle === 'glass' && "text-[var(--md-sys-color-on-surface)] opacity-5",
+                visualStyle === 'soft' && "text-[var(--md-sys-color-tertiary)] opacity-[0.05]"
               )} />
 
               {/* Hijri Day Number */}
               <span className={cn(
-                "text-3.5xl sm:text-4.5xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-black font-sans leading-none tracking-tighter select-none shrink-0 tabular-nums z-10 transition-colors duration-300",
+                "text-3.5xl sm:text-2.5xl md:text-3.5xl lg:text-3.5xl xl:text-4xl 2xl:text-4.5xl font-black font-sans leading-none tracking-tighter select-none shrink-0 tabular-nums z-10 transition-colors duration-300",
                 "text-[var(--md-sys-color-tertiary)]",
                 visualStyle === 'retro' && "text-[var(--md-sys-color-on-surface)]",
                 visualStyle === 'glass' && "text-[var(--md-sys-color-on-surface)]",
@@ -443,11 +487,11 @@ export function ClockPanel({
 
               {/* Hijri details */}
               <div className="flex flex-col min-w-0 gap-0.5 z-10">
-                <span className="text-[13px] sm:text-[15px] lg:text-[17px] xl:text-xl 2xl:text-2.5xl font-black leading-tight tracking-tight truncate">
+                <span className="text-base sm:text-xs md:text-sm lg:text-base xl:text-sm 2xl:text-base font-black leading-tight tracking-tight truncate">
                   {hijriMonthYear || "..."}
                 </span>
                 <span className={cn(
-                  "text-[10px] sm:text-xs lg:text-[13px] xl:text-sm 2xl:text-[17px] font-extrabold uppercase tracking-widest leading-none opacity-80 truncate",
+                  "text-xs sm:text-[9px] md:text-[10px] lg:text-xs xl:text-[10px] 2xl:text-xs font-extrabold uppercase tracking-widest leading-none opacity-80 truncate",
                   visualStyle === 'retro' && "opacity-95"
                 )}>
                   {hijriLabel}

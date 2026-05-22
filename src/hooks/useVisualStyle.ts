@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 
 export type VisualStyle = 'default' | 'retro' | 'glass' | 'soft';
+export type ThemeShape = 'rounded' | 'boxy' | 'semi' | 'pill';
 
 export function useVisualStyle(): VisualStyle {
   const [style, setStyle] = useState<VisualStyle>('default');
@@ -20,6 +21,27 @@ export function useVisualStyle(): VisualStyle {
 
   return style;
 }
+
+export function useThemeShape(): ThemeShape {
+  const [shape, setShape] = useState<ThemeShape>('rounded');
+
+  useEffect(() => {
+    const stored = localStorage.getItem('theme_shape') as ThemeShape | null;
+    if (stored) setShape(stored);
+
+    const observer = new MutationObserver(() => {
+      const current = document.documentElement.getAttribute('data-shape') as ThemeShape | null;
+      if (current && current !== shape) setShape(current);
+    });
+
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-shape'] });
+    return () => observer.disconnect();
+  }, [shape]);
+
+  return shape;
+}
+
+
 
 /**
  * Returns the appropriate icon strokeWidth based on the current visual style.

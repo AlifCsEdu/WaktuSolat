@@ -68,7 +68,9 @@ export function SelectedDayModal({ day, onClose, onPrayerSelect }: SelectedDayMo
                    <span className="opacity-40">•</span>
                  )}
                  {(!settings.hijriFormat || settings.hijriFormat === 'both' || settings.hijriFormat === 'number') && (
-                   <span className={settings.hijriFormat === 'both' ? "font-mono text-sm opacity-70" : ""}>{day.hijri}</span>
+                   <span className={settings.hijriFormat === 'both' ? "font-mono text-sm opacity-70" : ""}>
+                     {getHijriFormatted(day.hijri, "number", settings.language)}
+                   </span>
                  )}
                  <span className="opacity-40">•</span>
                  <span>{format(dateObj, "EEEE", { locale: settings.language === 'ms' ? ms : enUS })}</span>

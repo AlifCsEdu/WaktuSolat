@@ -64,7 +64,9 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
                <span className="opacity-40">•</span>
              )}
              {(!settings.hijriFormat || settings.hijriFormat === 'both' || settings.hijriFormat === 'number') && (
-               <span className="font-mono font-medium text-xs md:text-sm opacity-80">{day.hijri}</span>
+               <span className="font-mono font-medium text-xs md:text-sm opacity-80">
+                 {getHijriFormatted(day.hijri, "number", settings.language)}
+               </span>
              )}
           </div>
 
@@ -139,7 +141,7 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
                 <span className="text-xs font-mono opacity-60 mt-1">
                   {(!settings.hijriFormat || settings.hijriFormat === 'both' || settings.hijriFormat === 'text') && getHijriFormatted(day.hijri, "text", settings.language)}
                   {(!settings.hijriFormat || settings.hijriFormat === 'both') && " • "}
-                  {(!settings.hijriFormat || settings.hijriFormat === 'both' || settings.hijriFormat === 'number') && day.hijri}
+                  {(!settings.hijriFormat || settings.hijriFormat === 'both' || settings.hijriFormat === 'number') && getHijriFormatted(day.hijri, "number", settings.language)}
                 </span>
                 
                 {evt && (
@@ -236,7 +238,9 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
                       <span className="text-sm font-black whitespace-nowrap">{getHijriFormatted(day.hijri, "text", settings.language)}</span>
                     )}
                     {(!settings.hijriFormat || settings.hijriFormat === 'both' || settings.hijriFormat === 'number') && (
-                      <span className="text-[10px] font-mono font-black opacity-60 tabular-nums">{day.hijri}</span>
+                      <span className="text-[10px] font-mono font-black opacity-60 tabular-nums">
+                        {getHijriFormatted(day.hijri, "number", settings.language)}
+                      </span>
                     )}
                   </div>
                   {evt && (

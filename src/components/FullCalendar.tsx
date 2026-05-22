@@ -10,6 +10,7 @@ import { PRAYER_NAMES, PRAYER_ICONS } from "./PrayerSchedule";
 import { Moon, Sun, Sunrise, Sunset, SunDim, SunMedium, X, Info, ChevronLeft, ChevronRight, Loader2, Calendar, CalendarDays, CalendarRange, Copy, Check, ListTree, Clock, PartyPopper } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useAppContext } from "../AppContext";
+import { getHijriFormatted } from "../lib/holidays";
 
 import { CalendarGridView } from "./calendar/CalendarGridView";
 import { PrayerTimesListView } from "./calendar/PrayerTimesListView";
@@ -144,7 +145,8 @@ export function FullCalendar({
     let text = `${t("schedule")} - ${selectedZone}\n\n`;
     
     uniqueDisplayData.forEach(day => {
-      text += `${t("date")}: ${day.date.replace(/-/g, " ")} (${day.hijri} - ${day.day})\n`;
+      const formattedHijri = getHijriFormatted(day.hijri, settings.hijriFormat || "both", settings.language);
+      text += `${t("date")}: ${day.date.replace(/-/g, " ")} (${formattedHijri} - ${day.day})\n`;
       timesToDisplay.forEach(k => {
         text += `${t(k)}: ${day[k] ? day[k].substring(0, 5) : "--:--"}\n`;
       });
@@ -366,7 +368,7 @@ export function FullCalendar({
                     {selectedPrayer.time}
                   </div>
                   <div className="text-sm opacity-90 mt-2 font-medium">
-                    {selectedPrayer.dateValue.replace(/-/g, " ")} • {selectedPrayer.hijriValue}
+                    {selectedPrayer.dateValue.replace(/-/g, " ")} • {getHijriFormatted(selectedPrayer.hijriValue, settings.hijriFormat || "both", settings.language)}
                   </div>
                 </div>
                 <div className="absolute -top-24 -right-24 w-48 h-48 bg-white/5 rounded-full pointer-events-none" />

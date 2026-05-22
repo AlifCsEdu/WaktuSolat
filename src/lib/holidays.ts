@@ -165,9 +165,11 @@ export function getHijriFormatted(hijriDateStr: string, formatType: "text" | "nu
     const mIndex = parseInt(month, 10) - 1;
     if (mIndex >= 0 && mIndex < 12) {
       const monthName = language === 'ms' ? HIJRI_MONTHS[mIndex] : HIJRI_MONTHS_EN[mIndex];
-      if (formatType === "text") return `${parseInt(day, 10)} ${monthName} ${year}H`;
-      if (formatType === "number") return hijriDateStr;
-      return `${parseInt(day, 10)} ${monthName} ${year}H (${hijriDateStr})`;
+      const dayNum = parseInt(day, 10);
+      const monthNum = parseInt(month, 10);
+      if (formatType === "text") return `${dayNum} ${monthName} ${year}H`;
+      if (formatType === "number") return `${dayNum}/${monthNum}/${year}H`;
+      return `${dayNum} ${monthName} ${year}H (${dayNum}/${monthNum}/${year}H)`;
     }
   }
   return hijriDateStr;
