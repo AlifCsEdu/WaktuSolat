@@ -292,14 +292,14 @@ export function SettingsModal({
 
             <div className="flex-1 overflow-y-auto px-4 sm:px-8 pb-8 pt-6 space-y-6 no-scrollbar bg-[var(--md-sys-color-surface-container-lowest)]">
               {activeTab === "general" && (
-                <div className="space-y-4 max-w-xl mx-auto">
+                <div className="space-y-6 max-w-2xl mx-auto">
                   {/* Language & Time Format Card */}
-                  <div className="bg-[var(--md-sys-color-surface-container)] rounded-[24px] p-5 border border-[var(--md-sys-color-outline)]/5 shadow-sm space-y-6">
+                  <div className="bg-[var(--md-sys-color-surface-container)] rounded-[32px] p-6 border border-[var(--md-sys-color-outline)]/5 shadow-sm space-y-6">
                     <div className="space-y-3">
-                      <label className="md3-label-large font-bold text-[var(--md-sys-color-primary)] flex items-center gap-2">
+                      <label className="md3-title-medium font-bold text-[var(--md-sys-color-primary)] flex items-center gap-2">
                         {t("language")}
                       </label>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-3">
                         {/* @ts-ignore */}
                         <md-filter-chip
                           label={t("malay" as any)}
@@ -316,10 +316,10 @@ export function SettingsModal({
                     </div>
 
                     <div className="space-y-3">
-                      <label className="md3-label-large font-bold text-[var(--md-sys-color-primary)] flex items-center gap-2">
+                      <label className="md3-title-medium font-bold text-[var(--md-sys-color-primary)] flex items-center gap-2">
                         {t("timeFormat")}
                       </label>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-3">
                         {/* @ts-ignore */}
                         <md-filter-chip
                           label={t("hour12" as any)}
@@ -337,12 +337,12 @@ export function SettingsModal({
                   </div>
 
                   {/* Religion & Formatting Card */}
-                  <div className="bg-[var(--md-sys-color-surface-container)] rounded-[24px] p-5 border border-[var(--md-sys-color-outline)]/5 shadow-sm space-y-6">
+                  <div className="bg-[var(--md-sys-color-surface-container)] rounded-[32px] p-6 border border-[var(--md-sys-color-outline)]/5 shadow-sm space-y-6">
                     <div className="space-y-3">
-                      <label className="md3-label-large font-bold text-[var(--md-sys-color-primary)] flex items-center gap-2">
+                      <label className="md3-title-medium font-bold text-[var(--md-sys-color-primary)] flex items-center gap-2">
                         {t("mazhab")}
                       </label>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-3">
                         {/* @ts-ignore */}
                         <md-filter-chip
                           label={t("mazhabShafii" as any)}
@@ -357,17 +357,17 @@ export function SettingsModal({
                         ></md-filter-chip>
                       </div>
                       {settings.mazhab === "hanafi" && (
-                        <p className="text-xs text-[var(--md-sys-color-error)] mt-2 italic font-bold">
+                        <p className="text-sm text-[var(--md-sys-color-error)] mt-2 italic font-bold">
                           {t("hanafiAsarNote" as any)}
                         </p>
                       )}
                     </div>
 
                     <div className="space-y-3">
-                      <label className="md3-label-large font-bold text-[var(--md-sys-color-primary)] flex items-center gap-2">
+                      <label className="md3-title-medium font-bold text-[var(--md-sys-color-primary)] flex items-center gap-2">
                         {t("hijriFormat")}
                       </label>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-3">
                         {/* @ts-ignore */}
                         <md-filter-chip
                           label={t("hijriBoth")}
@@ -391,16 +391,16 @@ export function SettingsModal({
                   </div>
 
                   {/* Clock Customization Card */}
-                  <div className="bg-[var(--md-sys-color-surface-container)] rounded-[24px] p-0 border border-[var(--md-sys-color-outline)]/5 shadow-sm overflow-hidden flex flex-col">
-                    <div className="p-5 pb-0">
-                      <label className="md3-label-large font-bold text-[var(--md-sys-color-primary)] flex items-center gap-2 mb-3">
+                  <div className="bg-[var(--md-sys-color-surface-container)] rounded-[32px] p-0 border border-[var(--md-sys-color-outline)]/5 shadow-sm overflow-hidden flex flex-col">
+                    <div className="p-6 pb-4 bg-[var(--md-sys-color-surface-container-high)]">
+                      <label className="md3-title-medium font-bold text-[var(--md-sys-color-primary)] flex items-center gap-2">
                         {t("clockStyle" as any)}
                       </label>
                     </div>
-                    {/* Horizontal scroll for clocks to save vertical space on mobile */}
-                    <div className="flex overflow-x-auto gap-2 px-5 pb-5 no-scrollbar snap-x">
+                    {/* Wrap for clocks so they are all visible on desktop and mobile */}
+                    <div className="flex flex-wrap gap-2.5 p-6 bg-[var(--md-sys-color-surface-container)]">
                       {(["digital", "analog", "analog-numeric", "analog-roman", "analog-arabic", "anadigi", "chronograph", "flip", "word", "minimal", "orbit", "typographic", "prayer-ring", "dashboard", "abstract", "swiss-station", "bauhaus", "layered"] as const).map((style) => (
-                        <div key={style} className="snap-start shrink-0">
+                        <div key={style} className="shrink-0">
                           {/* @ts-ignore */}
                           <md-filter-chip
                             label={
