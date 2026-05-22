@@ -163,21 +163,8 @@ export function ClockPanel({
       
       const soundType = settings.iqamahCountdownSound;
       if (soundType === 'chime') {
-        const pitches = [
-          1567.98, // 0s
-          1318.51, // 1s
-          1174.66, // 2s
-          1046.50, // 3s
-          987.77,  // 4s
-          880.00,  // 5s
-          783.99,  // 6s
-          698.46,  // 7s
-          659.25,  // 8s
-          587.33,  // 9s
-          523.25,  // 10s
-        ];
-        const pitch = pitches[iqamahRemainingSeconds] || 587.33;
-        playSynthesizedSound('chime', pitch);
+        // Steady, uniform professional beep (800Hz)
+        playSynthesizedSound('chime', 800);
       } else if (soundType === 'tick') {
         playSynthesizedSound('tick');
       }

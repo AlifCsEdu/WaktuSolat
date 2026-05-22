@@ -152,18 +152,6 @@ export function useLocationTracking(
   // Periodic background checking
   useEffect(() => {
     const intervalId = setInterval(() => checkLocation(false), 5 * 60 * 1000);
-    
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        // When tab becomes visible again, force check if in auto mode
-        if (locationModeRef.current === 'auto') {
-          checkLocation(true);
-        } else {
-          checkLocation(false);
-        }
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     // Initial check on mount — force if in auto mode to always get fresh location
     if (locationModeRef.current === 'auto') {
@@ -175,7 +163,6 @@ export function useLocationTracking(
 
     return () => {
       clearInterval(intervalId);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [checkLocation]);
 

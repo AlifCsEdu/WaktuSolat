@@ -24,9 +24,6 @@ export function SolatMode({
   const [showExitButton, setShowExitButton] = useState(false);
   const [exitTapCount, setExitTapCount] = useState(0);
 
-  // Breathing cue state (4s Inhale, 2s Hold, 4s Exhale)
-  const [breathPhase, setBreathPhase] = useState<'in' | 'hold' | 'out'>('in');
-
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
@@ -50,23 +47,6 @@ export function SolatMode({
       return () => clearTimeout(timeout);
     }
   }, [exitTapCount]);
-
-  // Biological breathing loop
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    const runCycle = () => {
-      setBreathPhase('in');
-      timer = setTimeout(() => {
-        setBreathPhase('hold');
-        timer = setTimeout(() => {
-          setBreathPhase('out');
-          timer = setTimeout(runCycle, 4000);
-        }, 2000);
-      }, 4000);
-    };
-    runCycle();
-    return () => clearTimeout(timer);
-  }, []);
 
   // Dhikr cycling for the Dua stage
   const [dhikrIndex, setDhikrIndex] = useState(0);
@@ -94,18 +74,6 @@ export function SolatMode({
   };
 
   const formattedClock = format(currentTime, "HH:mm");
-
-  // Breathing animation configuration
-  const getScale = () => {
-    if (breathPhase === 'in') return 2.2;
-    if (breathPhase === 'hold') return 2.2;
-    return 1.0;
-  };
-
-  const getTransitionDuration = () => {
-    if (breathPhase === 'hold') return 2;
-    return 4;
-  };
 
   const dhikrs = [
     t("solatModeDuaDhikr1"),
@@ -180,26 +148,8 @@ export function SolatMode({
               {t("solatModeInstruction")}
             </p>
 
-            {/* Biological Breathing Ring */}
-            <div className="flex flex-col items-center gap-4 mt-8">
-              <div className="relative w-20 h-20 flex items-center justify-center">
-                <motion.div
-                  animate={{ scale: getScale(), opacity: breathPhase === 'hold' ? 0.6 : [0.2, 0.5, 0.2] }}
-                  transition={{ duration: getTransitionDuration(), ease: "easeInOut" }}
-                  className="absolute inset-0 rounded-full border-4 border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.2)]"
-                />
-                <div className="w-4 h-4 rounded-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.6)]" />
-              </div>
-              <motion.span
-                key={breathPhase}
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 0.8, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="text-emerald-400/80 font-bold uppercase tracking-widest text-xs mt-1"
-              >
-                {t(breathPhase === 'in' ? 'breathIn' : breathPhase === 'hold' ? 'breathHold' : 'breathOut')}
-              </motion.span>
-            </div>
+            {/* Elegant static divider */}
+            <div className="w-16 h-0.5 rounded bg-emerald-500/30 mt-4" />
           </motion.div>
         ) : (
           <motion.div
@@ -234,15 +184,8 @@ export function SolatMode({
               {t("solatModeDuaInstruction")}
             </p>
 
-            {/* Tranquil breathing ring slowed down for Dua/Remembrance */}
-            <div className="relative w-12 h-12 flex items-center justify-center mt-2">
-              <motion.div
-                animate={{ scale: [1, 1.8, 1], opacity: [0.15, 0.4, 0.15] }}
-                transition={{ repeat: Infinity, duration: 8, ease: "easeInOut" }}
-                className="absolute inset-0 rounded-full border-2 border-emerald-500/20"
-              />
-              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/40" />
-            </div>
+            {/* Elegant static divider */}
+            <div className="w-12 h-0.5 rounded bg-emerald-500/20 mt-2" />
           </motion.div>
         )}
       </AnimatePresence>

@@ -435,12 +435,12 @@ export default function App() {
       const activeModifier = iqamahModifier[prevPrayerKey] || 0;
       const iqamahOffsetMinutes = settings.showIqamah ? ((pref?.iqamahOffset ?? 0) + activeModifier) : 0;
       
-      const solatDurations = settings.solatModeDuration ?? { fajr: 20, dhuhr: 15, asr: 15, maghrib: 10, isha: 20 };
-      const solatDurationMinutes = solatDurations[prevPrayerKey] ?? 15;
+      const solatDurations = settings.solatModeDuration ?? { fajr: 10, dhuhr: 10, asr: 10, maghrib: 10, isha: 10 };
+      const solatDurationMinutes = solatDurations[prevPrayerKey] ?? 10;
       
       const iqamahEndTime = new Date(prevPrayerTime.getTime() + iqamahOffsetMinutes * 60 * 1000);
       const solatEndTime = new Date(iqamahEndTime.getTime() + solatDurationMinutes * 60 * 1000);
-      const duaDurationMinutes = settings.solatModeDuaDuration ?? 3;
+      const duaDurationMinutes = settings.solatModeDuaDuration ?? 0;
       const duaEndTime = new Date(solatEndTime.getTime() + duaDurationMinutes * 60 * 1000);
       
       // 1. Azan Alert Active Check

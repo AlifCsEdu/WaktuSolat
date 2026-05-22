@@ -74,11 +74,11 @@ export const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
   azanAlertStyle: 'standard',
   azanAlertDuration: 20,
   solatModeEnabled: false,
-  solatModeDuration: { fajr: 20, dhuhr: 15, asr: 15, maghrib: 10, isha: 20 },
+  solatModeDuration: { fajr: 10, dhuhr: 10, asr: 10, maghrib: 10, isha: 10 },
   solatModeShowClock: true,
   solatModeShowQibla: true,
   backgroundNotifications: false,
   iqamahCountdownSound: 'chime',
-  solatModeDuaDuration: 3,
+  solatModeDuaDuration: 0,
 };
 

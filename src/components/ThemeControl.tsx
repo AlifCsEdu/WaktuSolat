@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, ChangeEvent, useMemo } from "react";
 import { applyThemeFromHex, applyThemeFromImage, ThemeVariant } from "../lib/theme";
-import { Palette, Image as ImageIcon, Moon, Sun, Check, Contrast, Type } from "lucide-react";
+import { Palette, Image as ImageIcon, Moon, Sun, Check, Contrast, Type, X } from "lucide-react";
 import { cn } from "../lib/utils";
 import { M3_EASING } from "../lib/motion";
 import { motion, AnimatePresence } from "motion/react";
@@ -340,6 +340,20 @@ export function ThemeControl() {
                 style={{ transformOrigin: 'top right' }}
               >
                 <div className="w-12 h-1.5 bg-[var(--md-sys-color-outline)]/20 rounded-full mx-auto mb-4 sm:hidden" />
+                <div className="flex items-center justify-between mb-2 sm:hidden">
+                  <span className="text-sm font-black uppercase tracking-wider text-[var(--md-sys-color-primary)]">
+                    {t("themeSettings")}
+                  </span>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => setIsOpen(false)}
+                    className="w-8 h-8 rounded-full bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline)]/10 flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] transition-all focus:outline-none"
+                    aria-label="Close theme settings"
+                  >
+                    <X size={18} strokeWidth={2.5} />
+                  </motion.button>
+                </div>
             <div className="space-y-5">
               {/* Appearance & Color */}
               <div className="bg-[var(--md-sys-color-surface-container-low)] p-5 rounded-[2rem] space-y-4">

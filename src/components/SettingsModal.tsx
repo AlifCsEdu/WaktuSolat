@@ -821,7 +821,7 @@ export function SettingsModal({
                         <motion.button
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
-                          onClick={() => playSynthesizedSoundLocal('chime', 587.33)}
+                          onClick={() => playSynthesizedSoundLocal('chime', 800)}
                           className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-3xl bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] text-xs font-bold shadow-sm border border-[var(--md-sys-color-outline)]/5 transition-all focus:outline-none"
                         >
                           <Volume2 size={16} />
@@ -925,7 +925,7 @@ export function SettingsModal({
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() =>
                                   updateSettings({
-                                    solatModeDuaDuration: Math.max(0, (settings.solatModeDuaDuration ?? 3) - 1),
+                                    solatModeDuaDuration: Math.max(0, (settings.solatModeDuaDuration ?? 0) - 1),
                                   })
                                 }
                                 className="relative overflow-hidden w-8 h-8 rounded-full flex items-center justify-center bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors"
@@ -933,14 +933,14 @@ export function SettingsModal({
                                 <Minus size={16} />
                               </motion.button>
                               <span className="w-12 flex font-mono font-bold items-center justify-center text-[var(--md-sys-color-primary)] tabular-nums">
-                                {settings.solatModeDuaDuration ?? 3} m
+                                {settings.solatModeDuaDuration ?? 0} m
                               </span>
                               <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() =>
                                   updateSettings({
-                                    solatModeDuaDuration: Math.min(10, (settings.solatModeDuaDuration ?? 3) + 1),
+                                    solatModeDuaDuration: Math.min(10, (settings.solatModeDuaDuration ?? 0) + 1),
                                   })
                                 }
                                 className="relative overflow-hidden w-8 h-8 rounded-full flex items-center justify-center bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors"
@@ -957,7 +957,7 @@ export function SettingsModal({
                             </h4>
                             <div className="space-y-2">
                               {(["fajr", "dhuhr", "asr", "maghrib", "isha"] as const).map((key) => {
-                                const duration = settings.solatModeDuration?.[key] ?? (key === "fajr" || key === "isha" ? 20 : key === "maghrib" ? 10 : 15);
+                                const duration = settings.solatModeDuration?.[key] ?? 10;
                                 return (
                                   <div
                                     key={`solat-dur-${key}`}
@@ -971,7 +971,7 @@ export function SettingsModal({
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
                                         onClick={() => {
-                                          const currentDurations = settings.solatModeDuration ?? { fajr: 20, dhuhr: 15, asr: 15, maghrib: 10, isha: 20 };
+                                          const currentDurations = settings.solatModeDuration ?? { fajr: 10, dhuhr: 10, asr: 10, maghrib: 10, isha: 10 };
                                           updateSettings({
                                             solatModeDuration: {
                                               ...currentDurations,
@@ -990,7 +990,7 @@ export function SettingsModal({
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
                                         onClick={() => {
-                                          const currentDurations = settings.solatModeDuration ?? { fajr: 20, dhuhr: 15, asr: 15, maghrib: 10, isha: 20 };
+                                          const currentDurations = settings.solatModeDuration ?? { fajr: 10, dhuhr: 10, asr: 10, maghrib: 10, isha: 10 };
                                           updateSettings({
                                             solatModeDuration: {
                                               ...currentDurations,

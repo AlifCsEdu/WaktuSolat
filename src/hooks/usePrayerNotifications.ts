@@ -5,12 +5,12 @@ import { useAppContext } from '../AppContext';
 
 const DEFAULT_PREFS: Preferences = {
   imsak: { enabled: false, sound: 'default', preAlert: 0, offset: 0, iqamahOffset: 10 },
-  fajr: { enabled: false, sound: 'default', preAlert: 0, offset: 0, iqamahOffset: 20 },
+  fajr: { enabled: false, sound: 'default', preAlert: 0, offset: 0, iqamahOffset: 10 },
   syuruk: { enabled: false, sound: 'default', preAlert: 0, offset: 0, iqamahOffset: 0 },
-  dhuhr: { enabled: false, sound: 'default', preAlert: 0, offset: 0, iqamahOffset: 15 },
+  dhuhr: { enabled: false, sound: 'default', preAlert: 0, offset: 0, iqamahOffset: 10 },
   asr: { enabled: false, sound: 'default', preAlert: 0, offset: 0, iqamahOffset: 10 },
   maghrib: { enabled: false, sound: 'default', preAlert: 0, offset: 0, iqamahOffset: 5 },
-  isha: { enabled: false, sound: 'default', preAlert: 0, offset: 0, iqamahOffset: 15 }
+  isha: { enabled: false, sound: 'default', preAlert: 0, offset: 0, iqamahOffset: 10 }
 };
 
 export function usePrayerNotifications(
