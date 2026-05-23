@@ -175,10 +175,39 @@ export const HIJRI_MONTHS_EN = [
 
 export function getDynamicHijriDate(
   gregorianDateStr: string,
-  method: 'umalqura' | 'tbla' | 'civil' | 'rgsa' = 'umalqura',
-  adjustment: number = 0
+  method: 'jakim' | 'umalqura' | 'tbla' | 'civil' | 'islamic' = 'jakim',
+  adjustment: number = 0,
+  jakimBaseHijri?: string
 ): string {
   if (!gregorianDateStr) return "";
+
+  if (method === 'jakim' && jakimBaseHijri) {
+    if (adjustment === 0) return jakimBaseHijri;
+    // Simple +/- adjustment for JAKIM (assuming 30 day max for simplicity since it's just +/- 2 days)
+    const parts = jakimBaseHijri.split('-');
+    if (parts.length === 3) {
+      let [year, month, day] = parts.map(Number);
+      day += adjustment;
+      if (day > 30) {
+        day -= 30;
+        month += 1;
+        if (month > 12) {
+          month = 1;
+          year += 1;
+        }
+      } else if (day < 1) {
+        day += 30; // Approximation
+        month -= 1;
+        if (month < 1) {
+          month = 12;
+          year -= 1;
+        }
+      }
+      return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    }
+    return jakimBaseHijri;
+  }
+
   const date = new Date(gregorianDateStr);
   if (isNaN(date.getTime())) return "";
 
@@ -206,12 +235,13 @@ export function getDynamicHijriDate(
 
 export function getHijriFormatted(
   gregorianDateStr: string,
-  method: 'umalqura' | 'tbla' | 'civil' | 'rgsa' = 'umalqura',
+  method: 'jakim' | 'umalqura' | 'tbla' | 'civil' | 'islamic' = 'jakim',
   adjustment: number = 0,
   formatType: "text" | "number" | "both" = "both",
-  language: 'ms' | 'en' = 'ms'
+  language: 'ms' | 'en' = 'ms',
+  jakimBaseHijri?: string
 ) {
-  const dynamicHijriStr = getDynamicHijriDate(gregorianDateStr, method, adjustment);
+  const dynamicHijriStr = getDynamicHijriDate(gregorianDateStr, method, adjustment, jakimBaseHijri);
   if (!dynamicHijriStr) return "";
   
   const parts = dynamicHijriStr.split('-');

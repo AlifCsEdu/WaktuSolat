@@ -194,7 +194,8 @@ export function ClockPanel({
   const dynamicHijriStr = getDynamicHijriDate(
     todayData?.date || currentTime.toISOString(),
     settings.hijriMethod,
-    settings.hijriAdjustment
+    settings.hijriAdjustment,
+    todayData?.hijri
   );
 
   if (dynamicHijriStr) {

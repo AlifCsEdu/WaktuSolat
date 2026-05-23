@@ -87,7 +87,7 @@ export function PrayerSchedule({
 }) {
   const { t, settings } = useAppContext();
   const visualStyle = useVisualStyle();
-  const [filter, setFilter] = useState<"all" | "fardu" | "sunnah">("all");
+  const [filter, setFilter] = useState<"all" | "fardu" | "sunnah">("fardu");
 
   if (!todayData) {
     return (
@@ -103,7 +103,7 @@ export function PrayerSchedule({
           <div className="w-20 h-8 bg-[var(--md-sys-color-surface-variant)]/30 rounded-full"></div>
         </div>
 
-        <div className="flex flex-col gap-1.5 sm:gap-2 flex-1 justify-between px-1 sm:px-2 pb-2 lg:pb-0 min-h-0">
+        <div className="flex flex-col gap-1.5 sm:gap-2 flex-1 justify-start px-1 sm:px-2 pb-2 lg:pb-0 min-h-0 overflow-y-auto no-scrollbar">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div
               key={i}
@@ -315,7 +315,7 @@ export function PrayerSchedule({
         </motion.div>
       )}
 
-      <div className="flex flex-col gap-1.5 sm:gap-2 flex-1 justify-between px-1 sm:px-2 pb-2 lg:pb-0 min-h-0">
+      <div className="flex flex-col gap-1.5 sm:gap-2 flex-1 justify-start px-1 sm:px-2 pb-2 lg:pb-0 min-h-0 overflow-y-auto no-scrollbar">
         {timesToDisplay.map((key, index) => {
           const isNext = key === nextPrayerKey;
           const isCurrent = key === currentPrayerKey;
@@ -357,8 +357,8 @@ export function PrayerSchedule({
                   : isCurrent
                     ? "bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)] shadow-sm px-4 py-3 sm:p-4 lg:py-3 lg:px-5 z-10 flex-[1.05] sm:flex-[1.1] lg:flex-1 shrink-0"
                     : isFardhu
-                      ? "bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] py-2.5 px-4 sm:p-4 lg:py-3 lg:px-4 shadow-sm flex-1 min-h-0"
-                      : "bg-[var(--md-sys-color-surface-container-low)] text-[var(--md-sys-color-on-surface-variant)] py-2.5 px-4 sm:p-4 lg:py-2.5 lg:px-4 flex-1 min-h-0",
+                      ? "bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] py-2.5 px-4 sm:p-4 lg:py-3 lg:px-4 shadow-sm min-h-[56px] lg:min-h-[64px] shrink-0"
+                      : "bg-[var(--md-sys-color-surface-container-low)] text-[var(--md-sys-color-on-surface-variant)] py-2.5 px-4 sm:p-4 lg:py-2.5 lg:px-4 min-h-[56px] lg:min-h-[64px] shrink-0",
                 visualStyle === 'retro' && "border-2 border-[var(--md-sys-color-on-surface)] shadow-[3px_3px_0px_0px_var(--md-sys-color-on-surface)]",
                 visualStyle === 'glass' && "backdrop-blur-[8px] border border-[var(--glass-border)]",
                 visualStyle === 'soft' && "shadow-[var(--soft-shadow-light)] border-0"

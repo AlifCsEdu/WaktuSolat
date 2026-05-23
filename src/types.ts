@@ -58,7 +58,7 @@ export interface GeneralSettings {
   midnightMethod?: 'fajr' | 'sunrise';
   asrEnds?: 'maghrib' | 'sunset';
   // Hijri Calendar Engine
-  hijriMethod?: 'umalqura' | 'tbla' | 'civil' | 'rgsa';
+  hijriMethod?: 'jakim' | 'umalqura' | 'tbla' | 'civil' | 'islamic';
   hijriAdjustment?: number; // -2 to +2
   // Mosque / Surau Mode
   azanAlertStyle?: 'dramatic' | 'standard' | 'modern' | 'subtle' | 'minimal' | 'none';
@@ -114,7 +114,7 @@ export const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
   imsakOffset: 10,
   midnightMethod: 'fajr',
   asrEnds: 'maghrib',
-  hijriMethod: 'umalqura',
+  hijriMethod: 'jakim',
   hijriAdjustment: 0,
   azanAlertStyle: 'dramatic',
   azanAlertDuration: 20,

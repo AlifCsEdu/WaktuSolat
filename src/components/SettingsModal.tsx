@@ -284,8 +284,9 @@ export function SettingsModal({
             </div>
 
             {/* Tabs */}
-            {/* @ts-ignore */}
-            <md-tabs className="w-full shrink-0 border-b border-[var(--md-sys-color-outline)]/10" activeTabIndex={activeTab === 'general' ? 0 : activeTab === 'notifications' ? 1 : activeTab === 'adjustments' ? 2 : activeTab === 'advanced' ? 3 : 4}>
+            <div className="w-full overflow-x-auto no-scrollbar border-b border-[var(--md-sys-color-outline)]/10 shrink-0">
+              {/* @ts-ignore */}
+              <md-tabs className="min-w-max w-full" activeTabIndex={activeTab === 'general' ? 0 : activeTab === 'notifications' ? 1 : activeTab === 'adjustments' ? 2 : activeTab === 'advanced' ? 3 : 4}>
               {/* @ts-ignore */}
               <md-primary-tab onClick={() => setActiveTab("general")}>
                 {t("general")}
@@ -312,6 +313,7 @@ export function SettingsModal({
                 <span slot="icon"><Music size={18} /></span>
               </md-primary-tab>
             </md-tabs>
+            </div>
 
             <div className="flex-1 overflow-y-auto px-4 sm:px-8 pb-8 pt-6 space-y-6 no-scrollbar bg-[var(--md-sys-color-surface-container-lowest)]">
               {activeTab === "general" && (
@@ -1281,13 +1283,13 @@ export function SettingsModal({
                           {t("hijriMethod" as any)}
                         </label>
                         <div className="flex flex-col gap-2">
-                          {(["umalqura", "tbla", "civil", "rgsa"] as const).map((method) => (
+                          {(["jakim", "umalqura", "tbla", "civil", "islamic"] as const).map((method) => (
                             <div key={`hijri-${method}`} className="flex items-center gap-3">
                               {/* @ts-ignore */}
                               <md-radio
                                 name="hijri-method"
                                 value={method}
-                                checked={settings.hijriMethod === method || (!settings.hijriMethod && method === "umalqura")}
+                                checked={settings.hijriMethod === method || (!settings.hijriMethod && method === "jakim")}
                                 onClick={() => updateSettings({ hijriMethod: method })}
                               ></md-radio>
                               <label className="text-sm font-bold cursor-pointer" onClick={() => updateSettings({ hijriMethod: method })}>
