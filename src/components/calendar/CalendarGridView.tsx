@@ -57,12 +57,12 @@ export function CalendarGridView({ currentDate, monthData, onSelectDay, isLoadin
   return (
     <div className={cn("flex flex-col w-full h-full min-h-0 flex-1 transition-opacity duration-300", isLoading && "opacity-40 pointer-events-none")}>
       {/* Week Day Headers */}
-      <div className="grid grid-cols-7 border-b border-[var(--md-sys-color-outline)]/12 mb-2 pb-1 shrink-0">
+      <div className="grid grid-cols-7 border-b border-[var(--md-sys-color-outline)]/12 mb-1 sm:mb-2 pb-0.5 sm:pb-1 shrink-0">
         {dayNames.map((dayName, idx) => {
           const isWeekend = idx >= 5; 
           return (
             <div key={dayName} className={cn(
-              "py-2 text-center text-[9px] sm:text-xs font-black uppercase tracking-widest transition-colors select-none",
+              "py-1.5 sm:py-2 text-center text-[9px] sm:text-xs font-black uppercase tracking-widest transition-colors select-none",
               isWeekend 
                 ? "text-[var(--md-sys-color-error)]" 
                 : "text-[var(--md-sys-color-on-surface-variant)]/70"
@@ -81,7 +81,8 @@ export function CalendarGridView({ currentDate, monthData, onSelectDay, isLoadin
           initial={{ opacity: 0, x: 25 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }} // Highly optimized out-quintic bezier
-          className="grid grid-cols-7 grid-rows-6 gap-1.5 sm:gap-2.5 h-full w-full justify-items-center sm:justify-items-stretch"
+          style={{ willChange: "transform, opacity" }}
+          className="grid grid-cols-7 grid-rows-6 gap-1.5 sm:gap-2.5 h-full w-full justify-items-center items-center sm:justify-items-stretch sm:items-stretch"
         >
           {days.map((d, i) => {
             const isCurrentMonth = isSameMonth(d, monthStart);

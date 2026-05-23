@@ -611,6 +611,7 @@ export function SharePanel({ isOpen, onClose, currentZone, currentZoneData }: Sh
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 60, opacity: 0 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            style={{ willChange: "transform, opacity" }}
             onClick={(e) => e.stopPropagation()}
             className={cn(
               "relative bg-[var(--md-sys-color-surface-container)] w-full sm:max-w-xl rounded-t-[32px] sm:rounded-[32px] overflow-hidden shadow-2xl shadow-black/60 flex flex-col max-h-[96vh] sm:max-h-[88vh] transition-all",
