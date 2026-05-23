@@ -85,6 +85,7 @@ interface SettingsModalProps {
   onRequestPermission: () => void;
   onTestSound: (sound: NotificationSound, message: string) => void;
   selectedZone: string;
+  onPreviewAzanAlert?: (style: string) => void;
 }
 
 export function SettingsModal({
@@ -96,6 +97,7 @@ export function SettingsModal({
   onRequestPermission,
   onTestSound,
   selectedZone,
+  onPreviewAzanAlert,
 }: SettingsModalProps) {
   const { settings, updateSettings, t } = useAppContext();
   const [activeTab, setActiveTab] = useState<
@@ -800,43 +802,57 @@ export function SettingsModal({
                       </div>
 
                       {settings.azanAlertStyle !== "none" && (
-                        <div className="flex items-center justify-between p-4 bg-[var(--md-sys-color-surface)] rounded-[2rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5 mt-4">
-                          <span className="font-bold text-[var(--md-sys-color-on-surface)] text-sm">
-                            {t("azanAlertDuration" as any)}
-                          </span>
-                          <div className="flex items-center gap-3 sm:gap-4">
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() =>
-                                updateSettings({
-                                  azanAlertDuration: Math.max(5, (settings.azanAlertDuration ?? 20) - 5),
-                                })
-                              }
-                              className="relative overflow-hidden w-10 h-10 rounded-full flex items-center justify-center bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)]"
-                            >
-                              {/* @ts-ignore */}
-                              <md-ripple></md-ripple>
-                              <Minus size={20} className="relative z-10" />
-                            </motion.button>
-                            <span className="w-16 flex font-mono text-lg sm:text-2xl font-black items-center justify-center tabular-nums text-[var(--md-sys-color-primary)]">
-                              {settings.azanAlertDuration ?? 20} {t("seconds" as any)}
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-center justify-between p-4 bg-[var(--md-sys-color-surface)] rounded-[2rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5 mt-4">
+                            <span className="font-bold text-[var(--md-sys-color-on-surface)] text-sm">
+                              {t("azanAlertDuration" as any)}
                             </span>
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() =>
-                                updateSettings({
-                                  azanAlertDuration: Math.min(120, (settings.azanAlertDuration ?? 20) + 5),
-                                })
-                              }
-                              className="relative overflow-hidden w-10 h-10 rounded-full flex items-center justify-center bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)]"
-                            >
-                              {/* @ts-ignore */}
-                              <md-ripple></md-ripple>
-                              <Plus size={20} className="relative z-10" />
-                            </motion.button>
+                            <div className="flex items-center gap-3 sm:gap-4">
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() =>
+                                  updateSettings({
+                                    azanAlertDuration: Math.max(5, (settings.azanAlertDuration ?? 20) - 5),
+                                  })
+                                }
+                                className="relative overflow-hidden w-10 h-10 rounded-full flex items-center justify-center bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)]"
+                              >
+                                {/* @ts-ignore */}
+                                <md-ripple></md-ripple>
+                                <Minus size={20} className="relative z-10" />
+                              </motion.button>
+                              <span className="w-16 flex font-mono text-lg sm:text-2xl font-black items-center justify-center tabular-nums text-[var(--md-sys-color-primary)]">
+                                {settings.azanAlertDuration ?? 20} {t("seconds" as any)}
+                              </span>
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() =>
+                                  updateSettings({
+                                    azanAlertDuration: Math.min(120, (settings.azanAlertDuration ?? 20) + 5),
+                                  })
+                                }
+                                className="relative overflow-hidden w-10 h-10 rounded-full flex items-center justify-center bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)]"
+                              >
+                                {/* @ts-ignore */}
+                                <md-ripple></md-ripple>
+                                <Plus size={20} className="relative z-10" />
+                              </motion.button>
+                            </div>
                           </div>
+
+                          <motion.button
+                            whileHover={{ scale: 1.02, y: -0.5 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => {
+                              onPreviewAzanAlert?.(settings.azanAlertStyle || "standard");
+                            }}
+                            className="w-full py-3 px-4 mt-2 bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] font-black text-xs rounded-2xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                          >
+                            <Volume2 size={16} />
+                            <span>{settings.language === "ms" ? "Pratonton Gaya Amaran" : "Preview Alert Style"}</span>
+                          </motion.button>
                         </div>
                       )}
                     </div>
@@ -1102,94 +1118,7 @@ export function SettingsModal({
 
               {activeTab === "mosque" && (
                 <div className="space-y-8 max-w-xl mx-auto pb-6">
-                  {/* SUB-SECTION 1: VISUAL ALERTS */}
-                  <div className="p-6 sm:p-8 rounded-[var(--md-sys-shape-corner-extra-large)] bg-[var(--md-sys-color-surface-container-high)] ring-1 ring-[var(--md-sys-color-outline)]/10 shadow-sm space-y-6">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-2xl bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center">
-                        <Bell size={20} className="stroke-[2.5]" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-black text-[var(--md-sys-color-on-surface)]">
-                          {t("visualAlertSection" as any)}
-                        </h3>
-                        <p className="text-xs text-[var(--md-sys-color-on-surface-variant)]">
-                          Configure visual overlays and adhan announcements.
-                        </p>
-                      </div>
-                    </div>
 
-                    <div className="space-y-4 pt-2 border-t border-[var(--md-sys-color-outline)]/10">
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1">
-                          {t("azanAlertStyle" as any)}
-                        </label>
-                        <div className="flex flex-wrap gap-2">
-                          {(["dramatic", "standard", "modern", "subtle", "minimal", "none"] as const).map((style) => (
-                            /* @ts-ignore */
-                            <md-filter-chip
-                              key={style}
-                              label={
-                                style === "dramatic"
-                                  ? t("styleDramatic" as any)
-                                  : style === "standard"
-                                    ? t("styleStandard" as any)
-                                    : style === "modern"
-                                      ? t("styleModern" as any)
-                                      : style === "subtle"
-                                        ? t("styleSubtle" as any)
-                                        : style === "minimal"
-                                          ? t("styleMinimal" as any)
-                                          : t("none")
-                              }
-                              selected={settings.azanAlertStyle === style || (!settings.azanAlertStyle && style === "standard")}
-                              onClick={() => updateSettings({ azanAlertStyle: style })}
-                            ></md-filter-chip>
-                          ))}
-                        </div>
-                      </div>
-
-                      {settings.azanAlertStyle !== "none" && (
-                        <div className="flex items-center justify-between p-4 bg-[var(--md-sys-color-surface)] rounded-[2rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5 mt-4">
-                          <span className="font-bold text-[var(--md-sys-color-on-surface)] text-sm">
-                            {t("azanAlertDuration" as any)}
-                          </span>
-                          <div className="flex items-center gap-3 sm:gap-4">
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() =>
-                                updateSettings({
-                                  azanAlertDuration: Math.max(5, (settings.azanAlertDuration ?? 20) - 5),
-                                })
-                              }
-                              className="relative overflow-hidden w-10 h-10 rounded-full flex items-center justify-center bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors"
-                            >
-                              {/* @ts-ignore */}
-                              <md-ripple></md-ripple>
-                              <Minus size={20} className="relative z-10" />
-                            </motion.button>
-                            <span className="w-20 flex font-mono text-base font-black items-center justify-center tabular-nums text-[var(--md-sys-color-primary)]">
-                              {settings.azanAlertDuration ?? 20} {t("seconds" as any)}
-                            </span>
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() =>
-                                updateSettings({
-                                  azanAlertDuration: Math.min(120, (settings.azanAlertDuration ?? 20) + 5),
-                                })
-                              }
-                              className="relative overflow-hidden w-10 h-10 rounded-full flex items-center justify-center bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors"
-                            >
-                              {/* @ts-ignore */}
-                              <md-ripple></md-ripple>
-                              <Plus size={20} className="relative z-10" />
-                            </motion.button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
 
                   {/* SUB-SECTION 2: IQAMAH COUNTDOWN SOUNDS */}
                   <div className="p-6 sm:p-8 rounded-[var(--md-sys-shape-corner-extra-large)] bg-[var(--md-sys-color-surface-container-high)] ring-1 ring-[var(--md-sys-color-outline)]/10 shadow-sm space-y-6">

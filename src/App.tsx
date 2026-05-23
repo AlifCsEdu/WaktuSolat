@@ -450,6 +450,26 @@ export default function App() {
   const [manuallyDismissedAzanAlert, setManuallyDismissedAzanAlert] = useState<string | null>(null);
   const [manuallyExitedSolatPrayer, setManuallyExitedSolatPrayer] = useState<string | null>(null);
   
+  // State for mock Azan alerts (visual style previews)
+  const [mockAzanAlert, setMockAzanAlert] = useState<{ prayerName: string; style: string; remainingSeconds: number } | null>(null);
+
+  useEffect(() => {
+    if (!mockAzanAlert) return;
+    
+    const interval = setInterval(() => {
+      setMockAzanAlert(prev => {
+        if (!prev) return null;
+        if (prev.remainingSeconds <= 1) {
+          clearInterval(interval);
+          return null;
+        }
+        return { ...prev, remainingSeconds: prev.remainingSeconds - 1 };
+      });
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [mockAzanAlert]);
+  
   // Mosque Mode administrative controls state
   const [iqamahModifier, setIqamahModifier] = useState<Record<string, number>>({});
   const [iqamahPausedState, setIqamahPausedState] = useState<Record<string, { paused: boolean; remainingSecs: number }>>({});
@@ -893,7 +913,7 @@ export default function App() {
           onClose={() => setShowCalendar(false)}
         />
         <SettingsModal
-          isOpen={showNotificationSettings}
+          isOpen={showNotificationSettings && !mockAzanAlert}
           onClose={() => setShowNotificationSettings(false)}
           preferences={preferences}
           onUpdatePreference={updatePreference}
@@ -901,18 +921,29 @@ export default function App() {
           onRequestPermission={requestPermission}
           onTestSound={playSound}
           selectedZone={selectedZone}
+          onPreviewAzanAlert={(style) => {
+            setMockAzanAlert({
+              prayerName: prevPrayerName || t("fajr"),
+              style,
+              remainingSeconds: settings.azanAlertDuration ?? 20
+            });
+          }}
         />
       </Suspense>
       
       <AnimatePresence>
-        {azanAlertActive && azanAlertPrayerName && prevPrayerTime && (
+        {(azanAlertActive || mockAzanAlert) && (azanAlertPrayerName || mockAzanAlert?.prayerName) && (
           <AzanAlert
-            prayerName={azanAlertPrayerName}
-            prayerTime={prevPrayerTime}
-            remainingSeconds={azanAlertRemainingSeconds}
-            style={settings.azanAlertStyle || 'standard'}
+            prayerName={mockAzanAlert ? mockAzanAlert.prayerName : azanAlertPrayerName!}
+            prayerTime={mockAzanAlert ? new Date() : prevPrayerTime!}
+            remainingSeconds={mockAzanAlert ? mockAzanAlert.remainingSeconds : azanAlertRemainingSeconds}
+            style={(mockAzanAlert ? mockAzanAlert.style : settings.azanAlertStyle || 'standard') as any}
             onDismiss={() => {
-              if (prevPrayerKey) setManuallyDismissedAzanAlert(prevPrayerKey);
+              if (mockAzanAlert) {
+                setMockAzanAlert(null);
+              } else if (prevPrayerKey) {
+                setManuallyDismissedAzanAlert(prevPrayerKey);
+              }
             }}
           />
         )}
