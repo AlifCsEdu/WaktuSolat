@@ -14,7 +14,7 @@ export function AzanAlert({
   prayerName: string;
   prayerTime: Date;
   remainingSeconds: number;
-  style: "dramatic" | "standard" | "subtle";
+  style: "dramatic" | "standard" | "modern" | "subtle" | "minimal";
   onDismiss: () => void;
 }) {
   const { t, settings } = useAppContext();
@@ -68,6 +68,93 @@ export function AzanAlert({
             className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--md-sys-color-primary)]/10 text-[var(--md-sys-color-on-primary-container)] shrink-0"
           >
             <X size={18} />
+          </button>
+        </div>
+      </motion.div>
+    );
+  }
+
+  if (style === "modern") {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: -80, x: "-50%", scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, x: "-50%", scale: 1 }}
+        exit={{ opacity: 0, y: -40, x: "-50%", scale: 0.95 }}
+        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+        className="fixed top-6 left-1/2 -translate-x-1/2 z-[300] w-[92%] max-w-md"
+      >
+        <div className="bg-[var(--md-sys-color-surface-container-highest)]/90 backdrop-blur-2xl border border-[var(--md-sys-color-primary)]/15 shadow-2xl rounded-[32px] p-3.5 pl-5 flex items-center justify-between gap-4 ring-1 ring-black/5 relative overflow-hidden">
+          {/* Subtle slow pulsing background gradient */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[var(--md-sys-color-primary)]/5 via-transparent to-[var(--md-sys-color-primary)]/5 animate-pulse" />
+          
+          <div className="flex items-center gap-3.5 relative z-10 min-w-0 flex-1">
+            {/* Animated ringing bell */}
+            <div className="w-11 h-11 rounded-2xl bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] flex items-center justify-center shrink-0 shadow-md relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
+              <Bell size={22} className="stroke-[2.5] animate-bounce" />
+            </div>
+            
+            <div className="min-w-0 flex-1">
+              <span className="text-[9px] font-black uppercase tracking-widest text-[var(--md-sys-color-primary)]">
+                {t("azanAlertTitle", { prayer: "" }).trim()}
+              </span>
+              <h4 className="font-black text-[var(--md-sys-color-on-surface)] text-base tracking-tight leading-tight truncate">
+                {prayerName} • {formattedTime}
+              </h4>
+              
+              {/* Dynamic visual time remaining progress bar */}
+              <div className="w-full h-1 bg-[var(--md-sys-color-outline-variant)]/30 rounded-full mt-1.5 overflow-hidden">
+                <motion.div 
+                  className="h-full bg-[var(--md-sys-color-primary)]"
+                  initial={{ width: "100%" }}
+                  animate={{ width: `${(remainingSeconds / (settings.azanAlertDuration || 20)) * 100}%` }}
+                  transition={{ duration: 1, ease: "linear" }}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 relative z-10 shrink-0">
+            <button
+              onClick={onDismiss}
+              className="w-9 h-9 flex items-center justify-center rounded-full bg-[var(--md-sys-color-surface-container-high)] hover:bg-[var(--md-sys-color-error-container)] hover:text-[var(--md-sys-color-on-error-container)] text-[var(--md-sys-color-on-surface-variant)] shadow-sm transition-colors cursor-pointer"
+            >
+              <X size={16} strokeWidth={2.5} />
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  if (style === "minimal") {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: -40, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: -20, scale: 0.95 }}
+        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+        className="fixed top-6 right-6 z-[300]"
+      >
+        <div className="bg-black/90 text-white backdrop-blur-md rounded-full px-4 py-2 border border-white/10 shadow-lg flex items-center gap-3 select-none">
+          {/* Pulsing visual dot indicator */}
+          <span className="relative flex h-2.5 w-2.5 shrink-0">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+          </span>
+          
+          <span className="text-[11px] font-black tracking-tight flex items-center gap-1.5 whitespace-nowrap">
+            {prayerName} <span className="opacity-60">{formattedTime}</span>
+            <span className="px-1.5 py-0.5 rounded-md bg-white/10 text-[8px] font-bold tabular-nums">
+              {remainingSeconds}s
+            </span>
+          </span>
+          
+          <button
+            onClick={onDismiss}
+            className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-white/10 text-white/70 hover:text-white shrink-0 transition-colors cursor-pointer"
+          >
+            <X size={12} strokeWidth={3} />
           </button>
         </div>
       </motion.div>

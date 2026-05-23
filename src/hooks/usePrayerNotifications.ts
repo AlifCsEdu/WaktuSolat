@@ -45,6 +45,7 @@ export function usePrayerNotifications(
   );
   
   const notifiedRef = useRef<Record<string, boolean>>({});
+  const prevDateRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (typeof localStorage !== "undefined") {
@@ -126,6 +127,24 @@ export function usePrayerNotifications(
         playTone(440, 'triangle', 0, 1.5, 0.08); // A4
         playTone(329.63, 'triangle', 0.4, 2.0, 0.08); // E4
         playTone(440, 'triangle', 0.8, 1.5, 0.05); // A4
+      } else if (sound === 'bell-echo') {
+        playTone(659.25, 'sine', 0, 2.0, 0.15); // E5
+        playTone(830.61, 'sine', 0.15, 2.0, 0.1); // G#5
+        playTone(987.77, 'sine', 0.3, 2.5, 0.1); // B5
+        playTone(1318.51, 'sine', 0.45, 3.0, 0.15); // E6
+        playTone(659.25, 'sine', 0.8, 1.5, 0.04);
+        playTone(1318.51, 'sine', 1.2, 1.5, 0.03);
+      } else if (sound === 'ambient-gong') {
+        playTone(110.00, 'triangle', 0, 3.5, 0.25); // A2 deep gong resonance
+        playTone(220.00, 'sine', 0.05, 3.0, 0.15); // A3
+        playTone(329.63, 'sine', 0.1, 2.5, 0.1); // E4
+        playTone(440.00, 'sine', 0.15, 2.0, 0.08); // A4
+      } else if (sound === 'digital-sweep') {
+        playTone(523.25, 'sine', 0, 0.25, 0.08); // C5
+        playTone(587.33, 'sine', 0.08, 0.25, 0.08); // D5
+        playTone(659.25, 'sine', 0.16, 0.25, 0.08); // E5
+        playTone(783.99, 'sine', 0.24, 0.5, 0.12); // G5
+        playTone(1046.50, 'sine', 0.32, 1.0, 0.15); // C6
       } else if (sound === 'azan1' || sound === 'azan2') {
         const file = sound === 'azan1' ? '/audio/azan-makkah.mp3' : '/audio/azan-madinah.mp3';
         const audio = new Audio(file);
@@ -155,15 +174,14 @@ export function usePrayerNotifications(
   useEffect(() => {
     if (!todayData || permission !== 'granted') return;
 
-    const timeString = `${currentTime.getHours().toString().padStart(2, '0')}:${currentTime.getMinutes().toString().padStart(2, '0')}`;
-    const secString = currentTime.getSeconds();
-    
-    if (timeString === '00:00' && secString === 0) {
+    // Day rollover cache reset: clean notifiedRef flags when date shifts (background resilient!)
+    if (prevDateRef.current !== todayData.date) {
       notifiedRef.current = {};
+      prevDateRef.current = todayData.date;
     }
 
-    if (secString !== 0) return;
-
+    const timeString = `${currentTime.getHours().toString().padStart(2, '0')}:${currentTime.getMinutes().toString().padStart(2, '0')}`;
+    
     Object.keys(preferences).forEach((key) => {
       const pKey = key as PrayerKey;
       const pref = preferences[pKey];

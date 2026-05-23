@@ -21,7 +21,7 @@ export type JakimResponse = {
   bearing: string;
 };
 
-export type NotificationSound = 'default' | 'voice' | 'beep' | 'azan1' | 'azan2' | 'chime' | 'soft-chime';
+export type NotificationSound = 'default' | 'voice' | 'beep' | 'azan1' | 'azan2' | 'chime' | 'soft-chime' | 'bell-echo' | 'ambient-gong' | 'digital-sweep';
 export type NotificationType = 'push' | 'in-app' | 'both';
 export type PreAlertTime = 0 | 5 | 10 | 15;
 
@@ -50,7 +50,7 @@ export interface GeneralSettings {
   trackImsak?: boolean;
   showJumaat?: boolean;
   // Mosque / Surau Mode
-  azanAlertStyle?: 'dramatic' | 'standard' | 'subtle' | 'none';
+  azanAlertStyle?: 'dramatic' | 'standard' | 'modern' | 'subtle' | 'minimal' | 'none';
   azanAlertDuration?: number; // seconds before auto-dismiss
   solatModeEnabled?: boolean;
   solatModeDuration?: Record<string, number>; // per-prayer minutes
