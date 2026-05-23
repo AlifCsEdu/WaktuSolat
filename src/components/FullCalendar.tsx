@@ -22,6 +22,20 @@ import { useVisualStyle, useIconStroke } from "../hooks/useVisualStyle";
 export type CalendarTab = "grid" | "list" | "public_holidays" | "islamic_events";
 export type ListViewFilter = "daily" | "weekly" | "monthly";
 
+const calendarVariants = {
+  hidden: { opacity: 0, y: 70 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { duration: 0.24, ease: [0.16, 1, 0.3, 1] }
+  },
+  exit: { 
+    opacity: 0, 
+    y: 50,
+    transition: { duration: 0.18, ease: [0.3, 0, 0.8, 0.15] }
+  }
+};
+
 export function FullCalendar({
   isOpen,
   initialMonthData,
@@ -167,7 +181,7 @@ export function FullCalendar({
     <>
       <AnimatePresence>
         <motion.div
-           variants={modalVariants}
+           variants={calendarVariants}
            initial="hidden"
            animate="visible"
            exit="exit"
@@ -319,9 +333,15 @@ export function FullCalendar({
             </div>
           </div>
 
-          {/* SCROLLABLE CONTENT ZONE */}
-          <div className="flex-1 overflow-y-auto w-full p-4 sm:p-5 lg:p-6 custom-scrollbar bg-transparent">
-            <div className="max-w-7xl mx-auto w-full h-full flex flex-col">
+          {/* SCROLLABLE CONTENT ZONE - Dynamically binds grid height to fit viewport without scrolling */}
+          <div className={cn(
+            "flex-1 w-full p-4 sm:p-5 lg:p-6 custom-scrollbar bg-transparent min-h-0",
+            activeTab === "grid" ? "overflow-hidden flex flex-col" : "overflow-y-auto"
+          )}>
+            <div className={cn(
+              "max-w-7xl mx-auto w-full h-full flex flex-col min-h-0",
+              activeTab === "grid" && "flex-1"
+            )}>
               {error && (
                 <div className="w-full p-4 mb-4 text-[var(--md-sys-color-error)] bg-[var(--md-sys-color-error-container)] rounded-2xl font-black text-center shadow-xs text-xs uppercase tracking-wider">
                   {error}
@@ -329,10 +349,13 @@ export function FullCalendar({
               )}
 
               {/* Main Tab Render Switcher */}
-              <div className="flex-1 min-h-0 w-full animate-in fade-in zoom-in duration-200">
+              <div className={cn(
+                "flex-1 min-h-0 w-full animate-in fade-in zoom-in duration-200",
+                activeTab === "grid" && "flex flex-col"
+              )}>
                 {activeTab === "grid" && (
                   <div className={cn(
-                    "bg-[var(--md-sys-color-surface-container-low)] shadow-sm rounded-[32px] border border-[var(--md-sys-color-outline)]/10 p-4 sm:p-5 lg:p-6 h-full flex flex-col transition-all duration-300",
+                    "bg-[var(--md-sys-color-surface-container-low)] shadow-sm rounded-[32px] border border-[var(--md-sys-color-outline)]/10 p-4 sm:p-5 lg:p-6 flex-1 flex flex-col min-h-0 transition-all duration-300",
                     visualStyle === 'glass' && "bg-[var(--glass-bg)]/40 backdrop-blur-md border-[var(--glass-border)] shadow-inner"
                   )}>
                     <CalendarGridView 
