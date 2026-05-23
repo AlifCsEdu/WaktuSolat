@@ -93,6 +93,7 @@ export interface GeneralSettings {
   themeContrast?: number;
   themeFont?: string;
   themeShape?: string;
+  weatherProvider?: 'best_match' | 'ecmwf_ifs04' | 'gfs_seamless' | 'jma_seamless';
 }
 
 // Default preferences
@@ -141,10 +142,10 @@ export const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
   offlineCachedAt: null,
   autoSyncOffline: true,
   themeDark: false,
-  themeColor: '#006C54', // Emerald
+  themeColor: '#006c54',
   themeVariant: 'tonal_spot',
-  themeContrast: 0.0,
-  themeFont: "'Plus Jakarta Sans', sans-serif",
+  themeContrast: 0,
+  themeFont: 'Google Sans',
   themeShape: 'rounded',
+  weatherProvider: 'best_match'
 };
-

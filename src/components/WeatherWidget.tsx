@@ -21,8 +21,28 @@ import { motion, AnimatePresence } from "motion/react";
 import { useAppContext } from "../AppContext";
 import { useVisualStyle } from "../hooks/useVisualStyle";
 import { cn } from "../lib/utils";
+import { JAKIM_ZONES } from "../lib/zones";
+import { FullWeatherModal } from "./FullWeatherModal";
 
-interface WeatherData {
+export interface HourlyForecast {
+  time: string[];
+  temperature_2m: number[];
+  weather_code: number[];
+  precipitation_probability: number[];
+}
+
+export interface DailyForecast {
+  time: string[];
+  weather_code: number[];
+  temperature_2m_max: number[];
+  temperature_2m_min: number[];
+  sunrise: string[];
+  sunset: string[];
+  uv_index_max: number[];
+  precipitation_probability_max: number[];
+}
+
+export interface WeatherData {
   temperature: number;
   weatherCode: number;
   humidity: number;
@@ -31,11 +51,16 @@ interface WeatherData {
   minTemp?: number;
   maxTemp?: number;
   precipitationProb?: number;
+  uvIndex?: number;
+  surfacePressure?: number;
+  hourly?: HourlyForecast;
+  daily?: DailyForecast;
 }
 
 export function WeatherWidget({ selectedZone }: { selectedZone: string }) {
-  const { t } = useAppContext();
+  const { t, settings } = useAppContext();
   const visualStyle = useVisualStyle();
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
   const [isOnline, setIsOnline] = useState(() => typeof navigator !== "undefined" ? navigator.onLine : true);
 
@@ -80,8 +105,9 @@ export function WeatherWidget({ selectedZone }: { selectedZone: string }) {
     const fetchWeather = async () => {
       setIsLoading(true);
       try {
+        const provider = settings.weatherProvider || 'best_match';
         const res = await fetch(
-          `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,is_day,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FSingapore`,
+          `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,is_day,weather_code,wind_speed_10m,surface_pressure,uv_index&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_probability_max&timezone=Asia%2FSingapore&models=${provider}`,
         );
         if (!res.ok) throw new Error("Failed to fetch weather");
 
@@ -93,12 +119,14 @@ export function WeatherWidget({ selectedZone }: { selectedZone: string }) {
         }
 
         if (isMounted && data.current) {
-          const newData = {
+          const newData: WeatherData = {
             temperature: Math.round(data.current.temperature_2m),
             weatherCode: data.current.weather_code,
             humidity: data.current.relative_humidity_2m,
             windSpeed: data.current.wind_speed_10m,
             isDay: data.current.is_day === 1,
+            uvIndex: data.current.uv_index,
+            surfacePressure: data.current.surface_pressure,
             minTemp: data.daily?.temperature_2m_min?.[0]
               ? Math.round(data.daily.temperature_2m_min[0])
               : undefined,
@@ -106,6 +134,8 @@ export function WeatherWidget({ selectedZone }: { selectedZone: string }) {
               ? Math.round(data.daily.temperature_2m_max[0])
               : undefined,
             precipitationProb: data.daily?.precipitation_probability_max?.[0],
+            hourly: data.hourly,
+            daily: data.daily,
           };
           setWeather(newData);
           localStorage.setItem(
@@ -127,7 +157,7 @@ export function WeatherWidget({ selectedZone }: { selectedZone: string }) {
       isMounted = false;
       clearInterval(intervalId);
     };
-  }, [selectedZone]);
+  }, [selectedZone, settings.weatherProvider]);
 
   if (!isOnline) {
     return (
@@ -174,60 +204,24 @@ export function WeatherWidget({ selectedZone }: { selectedZone: string }) {
   if (isLoading && !weather) return null;
   if (!weather) return null;
 
-  const getWeatherDetails = (code: number, isDay: boolean) => {
-    switch (code) {
-      case 0:
-        return {
-          label: isDay ? t("weatherSunny" as any) : t("weatherClear" as any),
-          Icon: isDay ? Sun : Moon,
-        };
-      case 1:
-      case 2:
-      case 3:
-        return {
-          label: t("weatherCloudy" as any),
-          Icon: isDay ? CloudSun : CloudMoon,
-        };
-      case 45:
-      case 48:
-        return { label: t("weatherFoggy" as any), Icon: CloudFog };
-      case 51:
-      case 53:
-      case 55:
-      case 56:
-      case 57:
-        return { label: t("weatherDrizzle" as any), Icon: CloudDrizzle };
-      case 61:
-      case 63:
-      case 65:
-      case 66:
-      case 67:
-      case 80:
-      case 81:
-      case 82:
-        return { label: t("weatherRain" as any), Icon: CloudRain };
-      case 71:
-      case 73:
-      case 75:
-      case 77:
-      case 85:
-      case 86:
-        return { label: t("weatherSnow" as any), Icon: Cloud }; // Very rare in Malaysia but included for completeness
-      case 95:
-      case 96:
-      case 99:
-        return { label: t("weatherThunderstorm" as any), Icon: CloudLightning };
-      default:
-        return { label: t("weatherUnknown" as any), Icon: Cloud };
+  let locationName = selectedZone;
+  for (const state of JAKIM_ZONES) {
+    const zone = state.zones.find(z => z.v === selectedZone);
+    if (zone) {
+      locationName = zone.l.split(',')[0];
+      break;
     }
-  };
+  }
 
-  const { label, Icon } = getWeatherDetails(weather.weatherCode, weather.isDay);
+  const { label, Icon } = getWeatherDetails(weather.weatherCode, weather.isDay, t);
+
 
   return (
-    <motion.div
+    <>
+    <motion.button
+      onClick={() => setIsModalOpen(true)}
       className={cn(
-        "flex w-full items-center justify-between bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] rounded-[var(--md-sys-shape-corner-extra-large)] p-3 sm:p-4 lg:p-3 xl:p-4 relative overflow-hidden shrink-0 cursor-default",
+        "flex w-full items-center justify-between bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] rounded-[var(--md-sys-shape-corner-extra-large)] p-3 sm:p-4 lg:p-3 xl:p-4 relative overflow-hidden shrink-0 cursor-pointer text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-sys-color-primary)]",
         visualStyle === 'retro' && "border-2 border-[var(--md-sys-color-on-surface)] shadow-[3px_3px_0px_0px_var(--md-sys-color-on-surface)]",
         visualStyle === 'glass' && "bg-[var(--glass-bg)] backdrop-blur-[8px] border border-[var(--glass-border)]",
         visualStyle === 'soft' && "shadow-[var(--soft-shadow-light)] border-0"
@@ -313,6 +307,62 @@ export function WeatherWidget({ selectedZone }: { selectedZone: string }) {
           </div>
         </div>
       </div>
-    </motion.div>
+    </motion.button>
+
+    <FullWeatherModal
+      isOpen={isModalOpen}
+      onClose={() => setIsModalOpen(false)}
+      weather={weather}
+      locationName={locationName}
+    />
+    </>
   );
 }
+
+export const getWeatherDetails = (code: number, isDay: boolean, t: any) => {
+  switch (code) {
+    case 0:
+      return {
+        label: isDay ? t("weatherSunny" as any) : t("weatherClear" as any),
+        Icon: isDay ? Sun : Moon,
+      };
+    case 1:
+    case 2:
+    case 3:
+      return {
+        label: t("weatherCloudy" as any),
+        Icon: isDay ? CloudSun : CloudMoon,
+      };
+    case 45:
+    case 48:
+      return { label: t("weatherFoggy" as any), Icon: CloudFog };
+    case 51:
+    case 53:
+    case 55:
+    case 56:
+    case 57:
+      return { label: t("weatherDrizzle" as any), Icon: CloudDrizzle };
+    case 61:
+    case 63:
+    case 65:
+    case 66:
+    case 67:
+    case 80:
+    case 81:
+    case 82:
+      return { label: t("weatherRain" as any), Icon: CloudRain };
+    case 71:
+    case 73:
+    case 75:
+    case 77:
+    case 85:
+    case 86:
+      return { label: t("weatherSnow" as any), Icon: Cloud }; 
+    case 95:
+    case 96:
+    case 99:
+      return { label: t("weatherThunderstorm" as any), Icon: CloudLightning };
+    default:
+      return { label: t("weatherUnknown" as any), Icon: Cloud };
+  }
+};
