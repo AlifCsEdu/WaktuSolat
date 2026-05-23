@@ -1119,9 +1119,11 @@ export function ZoneSelector({
                   {settings.locationMode !== 'auto' && (
                     <motion.div 
                       key="manual-mode"
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
+                      initial={{ opacity: 0, scaleY: 0.95, y: -10 }}
+                      animate={{ opacity: 1, scaleY: 1, y: 0 }}
+                      exit={{ opacity: 0, scaleY: 0.95, y: -10 }}
+                      transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                      style={{ transformOrigin: "top", willChange: "transform, opacity" }}
                       className="flex flex-col gap-4"
                     >
                       <div className="relative group">

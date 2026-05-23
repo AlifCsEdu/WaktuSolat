@@ -241,8 +241,10 @@ export function PrayerSchedule({
 
       {hasAnyNotificationEnabled && notificationPermission === "denied" && (
         <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
+          initial={{ opacity: 0, scaleY: 0.95, y: -8 }}
+          animate={{ opacity: 1, scaleY: 1, y: 0 }}
+          transition={{ duration: 0.18, ease: "easeOut" }}
+          style={{ transformOrigin: "top" }}
           className="mb-4 bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] p-5 rounded-[1.5rem] text-sm font-black shadow-sm"
         >
           {t("blockedNotificationsDesc")}

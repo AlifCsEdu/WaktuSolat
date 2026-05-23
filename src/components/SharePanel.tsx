@@ -8,6 +8,8 @@ import {
   MessageCircle,
   Send,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Link2,
   ExternalLink,
   Search,
@@ -102,6 +104,9 @@ export function SharePanel({ isOpen, onClose, currentZone, currentZoneData }: Sh
   // Copy states
   const [copyImageState, setCopyImageState] = useState<"idle" | "success" | "error">("idle");
 
+  // Day navigation offset
+  const [dayOffset, setDayOffset] = useState(0);
+
   // Dynamic schedule fetching state for selected sharing zone
   const [fetchedData, setFetchedData] = useState<any[] | null>(null);
   const [loadingData, setLoadingData] = useState(false);
@@ -114,16 +119,13 @@ export function SharePanel({ isOpen, onClose, currentZone, currentZoneData }: Sh
       setSearchQuery("");
       setShowZonePicker(false);
       setCopyImageState("idle");
+      setDayOffset(0);
     }
   }, [isOpen, currentZone]);
 
   // Fetch zone schedules dynamically when shareZone changes
   useEffect(() => {
     if (!isOpen) return;
-    if (shareZone === currentZone) {
-      setFetchedData(null);
-      return;
-    }
 
     let active = true;
     const fetchZoneData = async () => {
@@ -158,26 +160,45 @@ export function SharePanel({ isOpen, onClose, currentZone, currentZoneData }: Sh
     return () => {
       active = false;
     };
-  }, [shareZone, currentZone, isOpen]);
+  }, [shareZone, isOpen]);
 
-  // Calculate matching date strings
-  const todayFormatted = useMemo(() => {
+  // Target Date calculations based on Day Offset
+  const targetDate = useMemo(() => {
     const d = new Date();
-    const day = String(d.getDate()).padStart(2, "0");
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const month = months[d.getMonth()];
-    const year = d.getFullYear();
-    return `${day}-${month}-${year}`;
-  }, []);
+    d.setDate(d.getDate() + dayOffset);
+    return d;
+  }, [dayOffset]);
 
-  // Compute active preview data
+  const formattedDateString = useMemo(() => {
+    const day = String(targetDate.getDate()).padStart(2, "0");
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const month = months[targetDate.getMonth()];
+    const year = targetDate.getFullYear();
+    return `${day}-${month}-${year}`;
+  }, [targetDate]);
+
+  // Compute active preview data based on dayOffset
   const previewTodayData = useMemo(() => {
-    if (shareZone === currentZone) {
+    const targetFormatted = formattedDateString;
+    if (fetchedData) {
+      return fetchedData.find((d: any) => d.date === targetFormatted) || null;
+    }
+    if (shareZone === currentZone && dayOffset === 0) {
       return currentZoneData;
     }
-    if (!fetchedData) return null;
-    return fetchedData.find((d: any) => d.date === todayFormatted) || fetchedData[0] || null;
-  }, [shareZone, currentZone, currentZoneData, fetchedData, todayFormatted]);
+    try {
+      const cached = localStorage.getItem(`waktu-solat-data-${shareZone}`);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed && parsed.length > 0) {
+          return parsed.find((d: any) => d.date === targetFormatted) || parsed[0] || null;
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return null;
+  }, [shareZone, currentZone, currentZoneData, fetchedData, formattedDateString, dayOffset]);
 
   const activeKeys = useMemo(() => {
     const rawKeys = ["imsak", "fajr", "syuruk", "dhuhr", "asr", "maghrib", "isha"];
@@ -353,7 +374,7 @@ export function SharePanel({ isOpen, onClose, currentZone, currentZoneData }: Sh
     ctx.stroke();
     ctx.globalAlpha = 1.0;
 
-    const gregDateStr = new Date().toLocaleDateString(isMalay ? "ms-MY" : "en-US", {
+    const gregDateStr = targetDate.toLocaleDateString(isMalay ? "ms-MY" : "en-US", {
       weekday: "short",
       day: "numeric",
       month: "short",
@@ -885,6 +906,37 @@ export function SharePanel({ isOpen, onClose, currentZone, currentZoneData }: Sh
                         )}
                       </div>
 
+                      {/* Day Navigation Controls in Material 3 Style */}
+                      <div className="flex items-center justify-between max-w-[190px] mx-auto mb-2.5 bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline)]/8 rounded-full p-1 shadow-sm">
+                        <motion.button
+                          whileHover={{ scale: 1.15 }}
+                          whileTap={{ scale: 0.85 }}
+                          onClick={() => setDayOffset(prev => prev - 1)}
+                          title={isMalay ? "Hari sebelumnya" : "Previous day"}
+                          className="w-7 h-7 flex items-center justify-center rounded-full text-[var(--md-sys-color-primary)] hover:bg-[var(--md-sys-color-primary)]/10 cursor-pointer transition-colors"
+                        >
+                          <ChevronLeft size={16} strokeWidth={2.5} />
+                        </motion.button>
+                        <span className="text-[10px] font-black uppercase tracking-wider text-[var(--md-sys-color-on-surface)] select-none">
+                          {dayOffset === 0
+                            ? t("today" as any)
+                            : dayOffset === 1
+                              ? (isMalay ? "Esok" : "Tomorrow")
+                              : dayOffset === -1
+                                ? (isMalay ? "Semalam" : "Yesterday")
+                                : targetDate.toLocaleDateString(isMalay ? "ms-MY" : "en-US", { day: "numeric", month: "short" })}
+                        </span>
+                        <motion.button
+                          whileHover={{ scale: 1.15 }}
+                          whileTap={{ scale: 0.85 }}
+                          onClick={() => setDayOffset(prev => prev + 1)}
+                          title={isMalay ? "Hari berikutnya" : "Next day"}
+                          className="w-7 h-7 flex items-center justify-center rounded-full text-[var(--md-sys-color-primary)] hover:bg-[var(--md-sys-color-primary)]/10 cursor-pointer transition-colors"
+                        >
+                          <ChevronRight size={16} strokeWidth={2.5} />
+                        </motion.button>
+                      </div>
+
                       {/* Poster Ticket card - Redesigned to left aligned dynamic dynamic theme layout */}
                       <div
                         className={cn(
@@ -923,7 +975,7 @@ export function SharePanel({ isOpen, onClose, currentZone, currentZoneData }: Sh
                           <div className="inline-flex flex-col items-center py-2 px-4 rounded-2xl bg-[var(--md-sys-color-secondary-container)] border border-[var(--md-sys-color-outline)]/10 min-w-[170px] sm:min-w-[190px] shadow-sm">
                             <span className="text-[10px] sm:text-[11px] font-black text-[var(--md-sys-color-on-secondary-container)] flex items-center gap-1.5 justify-center">
                               <Calendar size={11} className="text-[var(--md-sys-color-on-secondary-container)]/85" />
-                              {new Date().toLocaleDateString(isMalay ? "ms-MY" : "en-US", {
+                              {targetDate.toLocaleDateString(isMalay ? "ms-MY" : "en-US", {
                                 weekday: "short",
                                 day: "numeric",
                                 month: "short",

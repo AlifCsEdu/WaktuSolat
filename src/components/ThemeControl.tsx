@@ -348,9 +348,11 @@ export function ThemeControl() {
                     {/* Manual Mode Secondary Toggle Switch */}
                     {settings.darkThemeMode === "manual" && (
                       <motion.button 
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
+                        initial={{ opacity: 0, scaleY: 0.9, y: -5 }}
+                        animate={{ opacity: 1, scaleY: 1, y: 0 }}
+                        exit={{ opacity: 0, scaleY: 0.9, y: -5 }}
+                        transition={{ duration: 0.15 }}
+                        style={{ transformOrigin: "top", willChange: "transform, opacity" }}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => withTransition(() => updateSettings({ themeDark: !settings.themeDark }))}
@@ -477,10 +479,11 @@ export function ThemeControl() {
                     <AnimatePresence>
                       {settings.wallpaperEnabled && (
                         <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ ease: M3_EASING.emphasizedDecelerate, duration: 0.3 }}
+                          initial={{ opacity: 0, scaleY: 0.96, y: -10 }}
+                          animate={{ opacity: 1, scaleY: 1, y: 0 }}
+                          exit={{ opacity: 0, scaleY: 0.96, y: -10 }}
+                          transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                          style={{ transformOrigin: "top", willChange: "transform, opacity" }}
                           className="space-y-3 overflow-hidden pt-1"
                         >
                           {/* Wallpaper Source Selection: Upload file vs URL Link */}
