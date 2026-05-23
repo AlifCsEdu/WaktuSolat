@@ -1025,53 +1025,56 @@ export function SharePanel({ isOpen, onClose, currentZone, currentZoneData }: Sh
                       </div>
                     </div>
 
-                    {/* Image Action Buttons - Responsive Row of 3 Options */}
-                    <div className="flex flex-col xs:flex-row gap-1.5 w-full">
+                    {/* Image Action Buttons - Premium M3 Expressive Split Layout Row */}
+                    <div className="flex items-center gap-2.5 w-full pt-1">
+                      {/* Primary action capsule button (Copy Poster) */}
                       <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={handleDownloadImage}
-                        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] font-black text-xs cursor-pointer shadow-sm"
-                      >
-                        <Download size={14} strokeWidth={iconStroke} />
-                        {isMalay ? "Muat Turun" : "Download"}
-                      </motion.button>
-
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
+                        whileHover={{ scale: 1.02, y: -1 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={handleCopyImageToClipboard}
                         className={cn(
-                          "flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-black text-xs cursor-pointer shadow-sm transition-all",
+                          "flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-2xl font-black text-xs cursor-pointer shadow-md transition-all select-none",
                           copyImageState === "success"
                             ? "bg-[#25D366] text-white"
                             : copyImageState === "error"
                               ? "bg-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)]"
-                              : "bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] hover:bg-[var(--md-sys-color-primary)] hover:text-white"
+                              : "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] hover:shadow-lg hover:shadow-[var(--md-sys-color-primary)]/20"
                         )}
                       >
                         {copyImageState === "success" ? (
                           <>
-                            <ClipboardCheck size={14} strokeWidth={iconStroke} />
+                            <ClipboardCheck size={16} strokeWidth={iconStroke} />
                             {isMalay ? "Disalin!" : "Copied!"}
                           </>
                         ) : (
                           <>
-                            <Copy size={14} strokeWidth={iconStroke} />
+                            <Copy size={16} strokeWidth={iconStroke} />
                             {isMalay ? "Salin Poster" : "Copy Poster"}
                           </>
                         )}
                       </motion.button>
 
+                      {/* Circular supporting button (Download PNG) */}
                       <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
+                        whileHover={{ scale: 1.08, rotate: 5, y: -1 }}
+                        whileTap={{ scale: 0.92 }}
+                        onClick={handleDownloadImage}
+                        title={isMalay ? "Muat Turun PNG" : "Download PNG"}
+                        className="w-11 h-11 flex items-center justify-center rounded-full bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] border border-[var(--md-sys-color-outline)]/10 shadow-sm cursor-pointer shrink-0 transition-colors"
+                      >
+                        <Download size={16} strokeWidth={iconStroke} />
+                      </motion.button>
+
+                      {/* Circular supporting button (Share) */}
+                      <motion.button
+                        whileHover={{ scale: 1.08, rotate: -5, y: -1 }}
+                        whileTap={{ scale: 0.92 }}
                         onClick={handleSystemShare}
                         disabled={typeof navigator !== "undefined" && !navigator.share}
-                        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-[var(--md-sys-color-surface-container-highest)]/80 text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 font-black text-xs cursor-pointer shadow-sm disabled:opacity-40"
+                        title={isMalay ? "Kongsi Poster" : "Share Poster"}
+                        className="w-11 h-11 flex items-center justify-center rounded-full bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] border border-[var(--md-sys-color-outline)]/10 shadow-sm cursor-pointer shrink-0 disabled:opacity-40 transition-colors"
                       >
-                        <Share2 size={14} strokeWidth={iconStroke} />
-                        {isMalay ? "Kongsi" : "Share"}
+                        <Share2 size={16} strokeWidth={iconStroke} />
                       </motion.button>
                     </div>
                   </motion.div>

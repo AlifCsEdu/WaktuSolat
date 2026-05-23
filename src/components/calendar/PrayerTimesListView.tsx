@@ -1,12 +1,14 @@
+import { useState } from "react";
 import { motion } from "motion/react";
 import { parse, isSameWeek, format } from "date-fns";
 import { ms, enUS } from "date-fns/locale";
-import { CalendarDays, Info } from "lucide-react";
+import { CalendarDays, Info, Copy, Check, Clock } from "lucide-react";
 import { PrayerData, PrayerKey } from "../../types";
 import { PRAYER_NAMES, PRAYER_ICONS } from "../PrayerSchedule";
 import { getIslamicEvent, getHijriFormatted } from "../../lib/holidays";
 import { cn } from "../../lib/utils";
 import { useAppContext } from "../../AppContext";
+import { useVisualStyle, useIconStroke } from "../../hooks/useVisualStyle";
 
 interface PrayerTimesListViewProps {
   data: PrayerData[];
@@ -17,18 +19,41 @@ interface PrayerTimesListViewProps {
 
 export function PrayerTimesListView({ data, view = "monthly", isLoading, onPrayerSelect }: PrayerTimesListViewProps) {
   const { t, settings } = useAppContext();
+  const isMalay = settings.language === "ms";
+  const visualStyle = useVisualStyle();
+  const iconStroke = useIconStroke();
   const timesToDisplay: PrayerKey[] = ["imsak", "fajr", "syuruk", "dhuhr", "asr", "maghrib", "isha"];
+
+  // State to track individual row copying success
+  const [copiedRowDate, setCopiedRowDate] = useState<string | null>(null);
+
+  const handleCopyDaySchedule = (day: PrayerData) => {
+    const formattedHijri = getHijriFormatted(day.hijri, settings.hijriFormat || "both", settings.language);
+    let text = `${day.date.replace(/-/g, " ")} (${formattedHijri} - ${day.day})\n`;
+    timesToDisplay.forEach(k => {
+      text += `${t(k)}: ${day[k] ? day[k].substring(0, 5) : "--:--"}\n`;
+    });
+
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedRowDate(day.date);
+      setTimeout(() => setCopiedRowDate(null), 2000);
+    });
+  };
 
   if (data.length === 0 && !isLoading) {
     return (
-      <div className="p-12 flex items-center justify-center bg-[var(--md-sys-color-surface)] shadow-sm rounded-4xl border border-[var(--md-sys-color-outline)]/20">
-        <p className="text-[var(--md-sys-color-on-surface-variant)] font-medium">
+      <div className={cn(
+        "p-12 flex items-center justify-center bg-[var(--md-sys-color-surface-container)] shadow-sm rounded-3xl border border-[var(--md-sys-color-outline)]/12",
+        visualStyle === "glass" && "bg-[var(--glass-bg)] backdrop-blur-md border-[var(--glass-border)]"
+      )}>
+        <p className="text-[var(--md-sys-color-on-surface-variant)] font-black text-sm uppercase tracking-widest text-center">
           {t("noData")}
         </p>
       </div>
     );
   }
 
+  // Daily View Redesign
   if (view === "daily") {
     const day = data[0];
     if (!day) return null;
@@ -36,48 +61,51 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
     const evt = getIslamicEvent(day.hijri);
 
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6 max-w-4xl mx-auto w-full">
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          transition={{ type: "spring", stiffness: 350, damping: 24 }}
           className={cn(
-            "bg-[var(--md-sys-color-surface)] rounded-[var(--md-sys-shape-corner-extra-large)] p-8 md:p-12 flex flex-col items-center text-center gap-4 relative overflow-hidden",
-            isToday && "bg-[var(--md-sys-color-primary-container)]/40 ring-4 ring-[var(--md-sys-color-primary)]/20"
+            "bg-[var(--md-sys-color-surface-container)] rounded-[28px] p-6 sm:p-10 flex flex-col items-center text-center gap-4 relative overflow-hidden border border-[var(--md-sys-color-outline)]/8 shadow-sm transition-all duration-300",
+            isToday && "bg-gradient-to-br from-[var(--md-sys-color-primary-container)] to-[var(--md-sys-color-primary-container)]/40 ring-4 ring-[var(--md-sys-color-primary)]/20 shadow-md",
+            visualStyle === "glass" && "bg-[var(--glass-bg)] backdrop-blur-md border-[var(--glass-border)]",
+            visualStyle === "retro" && "border-[3px] border-[var(--md-sys-color-on-surface)] rounded-none shadow-[4px_4px_0px_0px_var(--md-sys-color-on-surface)]"
           )}>
-          {isToday && <div className="absolute top-0 left-0 w-full h-2 bg-[var(--md-sys-color-primary)] shadow-[0_0_20px_var(--md-sys-color-primary)]" />}
+          {isToday && <div className="absolute top-0 left-0 w-full h-1.5 bg-[var(--md-sys-color-primary)] shadow-[0_0_12px_var(--md-sys-color-primary)]" />}
           
-          <div className="flex flex-col items-center gap-1">
-             <span className="text-sm md:text-base font-bold text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-widest">
+          <div className="flex flex-col items-center gap-1 select-none">
+             <span className="text-[10px] sm:text-xs font-black text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-widest opacity-85">
                {format(parse(day.date, "dd-MMM-yyyy", new Date()), "EEEE", { locale: settings.language === 'ms' ? ms : enUS })}
              </span>
-             <h3 className="text-3xl md:text-5xl font-black text-[var(--md-sys-color-on-surface)] tracking-tighter">
+             <h3 className="text-2xl sm:text-4xl font-black text-[var(--md-sys-color-on-surface)] tracking-tighter mt-1">
                {format(parse(day.date, "dd-MMM-yyyy", new Date()), "dd MMMM yyyy", { locale: settings.language === 'ms' ? ms : enUS })}
              </h3>
           </div>
           
-          <div className="flex items-center gap-2 mt-2 px-6 py-3 bg-[var(--md-sys-color-surface-variant)] rounded-full border border-[var(--md-sys-color-outline)]/10 text-[var(--md-sys-color-on-surface-variant)] shadow-inner">
+          <div className="flex items-center gap-2 mt-1 px-5 py-2.5 bg-[var(--md-sys-color-surface-container-high)] rounded-full border border-[var(--md-sys-color-outline)]/8 text-[var(--md-sys-color-on-surface-variant)] shadow-inner text-xs font-bold transition-all">
              {(!settings.hijriFormat || settings.hijriFormat === 'both' || settings.hijriFormat === 'text') && (
-               <span className="font-semibold text-sm md:text-base">{getHijriFormatted(day.hijri, "text", settings.language)}</span>
+               <span className="font-black text-xs">{getHijriFormatted(day.hijri, "text", settings.language)}</span>
              )}
              {(!settings.hijriFormat || settings.hijriFormat === 'both') && (
                <span className="opacity-40">•</span>
              )}
              {(!settings.hijriFormat || settings.hijriFormat === 'both' || settings.hijriFormat === 'number') && (
-               <span className="font-mono font-medium text-xs md:text-sm opacity-80">
+               <span className="font-mono font-black text-[10px] opacity-75">
                  {getHijriFormatted(day.hijri, "number", settings.language)}
                </span>
              )}
           </div>
 
           {evt && (
-            <div className={`mt-3 px-4 py-1.5 rounded-full text-xs md:text-sm font-bold text-white uppercase tracking-widest shadow-sm ${evt.color || 'bg-[var(--md-sys-color-primary)]'}`}>
+            <div className={`mt-2 px-4 py-1.5 rounded-full text-[10px] font-black text-white uppercase tracking-widest shadow-sm select-none ${evt.color || 'bg-[var(--md-sys-color-primary)]'}`}>
               {evt.title}
             </div>
           )}
         </motion.div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {/* Daily Grid of Clocks */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 w-full">
           {timesToDisplay.map((k, idx) => {
             const Icon = PRAYER_ICONS[k];
             const timeStr = day[k as keyof PrayerData] as string;
@@ -85,25 +113,27 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
             return (
               <motion.button
                 key={k}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: idx * 0.05, type: "spring", stiffness: 350, damping: 22 }}
-                whileHover={{ scale: 1.06, y: -4 }}
+                initial={{ opacity: 0, scale: 0.94, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ delay: idx * 0.04, type: "spring", stiffness: 350, damping: 24 }}
+                whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => onPrayerSelect({ key: k as PrayerKey, time: timeStr.substring(0, 5), dateValue: day.date, hijriValue: day.hijri })}
                 className={cn(
-                  "relative bg-[var(--md-sys-color-surface-container)] rounded-[var(--md-sys-shape-corner-extra-large)] p-6 flex flex-col items-center gap-3 overflow-hidden focus:outline-none focus:ring-4 focus:ring-[var(--md-sys-color-primary)]",
-                  isToday ? "bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]" : ""
+                  "relative bg-[var(--md-sys-color-surface-container)] rounded-[24px] border border-[var(--md-sys-color-outline)]/8 p-5 flex flex-col items-center gap-3.5 overflow-hidden shadow-xs hover:shadow-md cursor-pointer transition-all duration-350 focus:outline-none focus:ring-2 focus:ring-[var(--md-sys-color-primary)]",
+                  isToday && "bg-[var(--md-sys-color-primary-container)]/10 ring-1 ring-[var(--md-sys-color-primary)]/20",
+                  visualStyle === "glass" && "bg-[var(--glass-bg)] backdrop-blur-md border-[var(--glass-border)]",
+                  visualStyle === "retro" && "border-2 border-[var(--md-sys-color-on-surface)] rounded-none shadow-[2px_2px_0px_0px_var(--md-sys-color-on-surface)]"
                 )}
               >
                 {/* @ts-ignore */}
                 <md-ripple></md-ripple>
-                <div className="p-3 rounded-full bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] relative z-10">
-                  <Icon size={24} />
+                <div className="w-10 h-10 rounded-full bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] flex items-center justify-center relative z-10 shrink-0 shadow-inner">
+                  <Icon size={18} strokeWidth={iconStroke} />
                 </div>
-                <div className="flex flex-col items-center z-10">
-                  <span className="text-sm font-bold opacity-80 uppercase tracking-widest">{t(k)}</span>
-                  <span className="text-2xl md:text-3xl font-black font-mono tracking-tighter mt-1">{timeStr ? timeStr.substring(0, 5) : "--:--"}</span>
+                <div className="flex flex-col items-center z-10 select-none">
+                  <span className="text-[10px] font-black opacity-80 uppercase tracking-widest text-[var(--md-sys-color-on-surface-variant)]">{t(k)}</span>
+                  <span className="text-xl sm:text-2xl font-black font-mono tracking-tighter mt-1 text-[var(--md-sys-color-on-surface)]">{timeStr.substring(0, 5)}</span>
                 </div>
               </motion.button>
             );
@@ -113,53 +143,64 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
     );
   }
 
+  // Weekly List View Redesign
   if (view === "weekly") {
     return (
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 max-w-4xl mx-auto w-full pb-8">
         {data.map((day, idx) => {
           const isToday = day.date === format(new Date(), "dd-MMM-yyyy");
           const evt = getIslamicEvent(day.hijri);
           
           return (
-              <motion.div 
+            <motion.div 
               key={day.date}
-              initial={{ opacity: 0, x: -20 }}
+              initial={{ opacity: 0, x: -15 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: idx * 0.05, type: 'spring', stiffness: 300, damping: 20 }}
+              transition={{ delay: idx * 0.03, type: 'spring', stiffness: 350, damping: 24 }}
               className={cn(
-                 "bg-[var(--md-sys-color-surface-container)] rounded-[var(--md-sys-shape-corner-extra-large)] p-6 lg:p-8 flex flex-col lg:flex-row gap-5 lg:items-center relative overflow-hidden",
-                 isToday ? "bg-[var(--md-sys-color-primary-container)]/30 ring-4 ring-[var(--md-sys-color-primary)]/40" : ""
+                 "bg-[var(--md-sys-color-surface-container)] rounded-[24px] p-5 lg:p-6 flex flex-col lg:flex-row gap-4 lg:items-center relative overflow-hidden border border-[var(--md-sys-color-outline)]/8 shadow-xs hover:shadow-md transition-all duration-300",
+                 isToday && "bg-[var(--md-sys-color-primary-container)]/10 ring-2 ring-[var(--md-sys-color-primary)]/35",
+                 visualStyle === "glass" && "bg-[var(--glass-bg)] backdrop-blur-md border-[var(--glass-border)]",
+                 visualStyle === "retro" && "border-2 border-[var(--md-sys-color-on-surface)] rounded-none shadow-[3px_3px_0px_0px_var(--md-sys-color-on-surface)]"
               )}
             >
-              <div className="flex flex-col min-w-[200px] shrink-0 gap-0.5">
-                <span className={cn("font-black text-xl lg:text-2xl", isToday ? "text-[var(--md-sys-color-primary)]" : "text-[var(--md-sys-color-on-surface)]")}>
+              {isToday && <div className="absolute left-0 top-0 bottom-0 w-1 bg-[var(--md-sys-color-primary)]" />}
+
+              <div className="flex flex-col min-w-[190px] shrink-0 gap-0.5 select-none">
+                <span className={cn("font-black text-lg sm:text-xl tracking-tight flex items-center gap-1.5", isToday ? "text-[var(--md-sys-color-primary)]" : "text-[var(--md-sys-color-on-surface)]")}>
                   {format(parse(day.date, "dd-MMM-yyyy", new Date()), "dd MMMM", { locale: settings.language === 'ms' ? ms : enUS })}
+                  {isToday && (
+                    <span className="px-2 py-0.5 bg-[var(--md-sys-color-primary)] text-white text-[8px] font-black uppercase rounded-md tracking-wider flex items-center gap-1 shadow-sm">
+                      <CalendarDays size={10} /> {t("today")}
+                    </span>
+                  )}
                 </span>
-                <span className="text-sm font-black opacity-80 uppercase tracking-widest text-[var(--md-sys-color-on-surface-variant)]">
+                <span className="text-[10px] font-black opacity-80 uppercase tracking-widest text-[var(--md-sys-color-on-surface-variant)] mt-0.5">
                   {format(parse(day.date, "dd-MMM-yyyy", new Date()), "EEEE", { locale: settings.language === 'ms' ? ms : enUS })}
                 </span>
-                <span className="text-xs font-mono opacity-60 mt-1">
+                <span className="text-[9px] font-mono font-black opacity-55 mt-1">
                   {(!settings.hijriFormat || settings.hijriFormat === 'both' || settings.hijriFormat === 'text') && getHijriFormatted(day.hijri, "text", settings.language)}
                   {(!settings.hijriFormat || settings.hijriFormat === 'both') && " • "}
                   {(!settings.hijriFormat || settings.hijriFormat === 'both' || settings.hijriFormat === 'number') && getHijriFormatted(day.hijri, "number", settings.language)}
                 </span>
                 
                 {evt && (
-                  <span className={`mt-2 inline-flex w-fit px-2.5 py-1 rounded-full text-[10px] font-black text-white uppercase tracking-wider shadow-sm ${evt.color || 'bg-[var(--md-sys-color-primary)]'}`}>
+                  <span className={`mt-2.5 inline-flex w-fit px-2.5 py-0.5 rounded-full text-[9px] font-black text-white uppercase tracking-wider shadow-sm ${evt.color || 'bg-[var(--md-sys-color-primary)]'}`}>
                     {evt.title}
                   </span>
                 )}
               </div>
               
-              <div className="flex flex-wrap gap-2 lg:gap-3 flex-1 lg:justify-end mt-2 lg:mt-0">
+              {/* Horizontal grid list row of times */}
+              <div className="flex flex-wrap gap-2 flex-1 lg:justify-end mt-2 lg:mt-0">
                 {timesToDisplay.map((k) => {
                   const Icon = PRAYER_ICONS[k];
                   return (
                     <motion.button
                       key={k}
-                      whileHover={{ scale: 1.06, y: -3 }}
+                      whileHover={{ scale: 1.05, y: -2 }}
                       whileTap={{ scale: 0.96 }}
-                      transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 24 }}
                       onClick={() => onPrayerSelect({
                         key: k,
                         time: day[k] ? day[k].substring(0, 5) : "--:--",
@@ -167,18 +208,19 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
                         hijriValue: day.hijri
                       })}
                       className={cn(
-                        "relative flex items-center gap-2 p-3 rounded-[var(--md-sys-shape-corner-extra-large)] bg-[var(--md-sys-color-surface-variant)]/30 flex-1 min-w-[90px] justify-center lg:justify-start lg:flex-none overflow-hidden focus:outline-none focus:ring-4 focus:ring-[var(--md-sys-color-primary)]",
-                        isToday && "bg-[var(--md-sys-color-surface)]"
+                        "relative flex items-center gap-2 p-2.5 rounded-2xl bg-[var(--md-sys-color-surface-variant)]/35 border border-[var(--md-sys-color-outline)]/5 flex-1 min-w-[90px] justify-center lg:justify-start lg:flex-none overflow-hidden focus:outline-none focus:ring-2 focus:ring-[var(--md-sys-color-primary)] cursor-pointer",
+                        isToday && "bg-[var(--md-sys-color-surface)]",
+                        visualStyle === "retro" && "border-2 border-[var(--md-sys-color-on-surface)] rounded-none"
                       )}
                     >
                       {/* @ts-ignore */}
                       <md-ripple></md-ripple>
-                      <div className="p-1.5 rounded-full bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] relative z-10">
-                        <Icon size={14} />
+                      <div className="p-1 rounded-full bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] relative z-10 shrink-0">
+                        <Icon size={12} strokeWidth={iconStroke} />
                       </div>
-                      <div className="flex flex-col items-center lg:items-start leading-none z-10">
-                        <span className="text-[10px] font-black uppercase tracking-widest opacity-60">{t(k)}</span>
-                        <span className="font-mono font-black text-sm lg:text-base mt-0.5">{day[k] ? day[k].substring(0, 5) : "--:--"}</span>
+                      <div className="flex flex-col items-center lg:items-start leading-none z-10 select-none">
+                        <span className="text-[9px] font-black uppercase tracking-widest opacity-60 text-[var(--md-sys-color-on-surface-variant)]">{t(k)}</span>
+                        <span className="font-mono font-black text-xs sm:text-sm mt-0.5 text-[var(--md-sys-color-on-surface)]">{day[k] ? day[k].substring(0, 5) : "--:--"}</span>
                       </div>
                     </motion.button>
                   );
@@ -191,21 +233,25 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
     );
   }
 
-  // Monthly View (Table)
+  // Monthly Table Redesign (Visual Masterpiece)
   return (
-    <div className="w-full overflow-x-auto bg-[var(--md-sys-color-surface-container)] rounded-[var(--md-sys-shape-corner-extra-large)] p-3 sm:p-5 md:p-8">
-      <table className="w-full text-left border-collapse min-w-[800px] sm:min-w-[950px]">
+    <div className={cn(
+      "w-full overflow-x-auto bg-[var(--md-sys-color-surface-container)] rounded-[28px] border border-[var(--md-sys-color-outline)]/8 p-3 sm:p-5 shadow-xs transition-all duration-300",
+      visualStyle === "glass" && "bg-[var(--glass-bg)]/35 backdrop-blur-md border-[var(--glass-border)] shadow-inner"
+    )}>
+      <table className="w-full text-left border-collapse min-w-[920px] sm:min-w-[1020px]">
         <thead>
-          <tr className="border-b-2 border-[var(--md-sys-color-primary)]/20 text-[var(--md-sys-color-on-surface)] bg-[var(--md-sys-color-surface-variant)]/30">
-            <th className="py-3 px-3 sm:py-4 sm:px-5 font-black uppercase tracking-wider text-[10px] sm:text-xs w-[120px] sm:w-[140px] rounded-tl-2xl">{t("gregorianDate")}</th>
-            <th className="py-3 px-3 sm:py-4 sm:px-5 font-black uppercase tracking-wider text-[10px] sm:text-xs w-[140px] sm:w-[160px]">{t("hijriDate")}</th>
-            <th className="py-3 px-3 sm:py-4 sm:px-5 font-black uppercase tracking-wider text-[10px] sm:text-xs w-[80px] sm:w-[100px]">{t("day")}</th>
-            {timesToDisplay.map((k, i) => (
-              <th key={k} className={cn("py-4 px-3 font-black uppercase tracking-wider text-xs text-center", i === timesToDisplay.length - 1 && "rounded-tr-2xl")}>{t(k)}</th>
+          <tr className="border-b border-[var(--md-sys-color-outline)]/12 text-[var(--md-sys-color-on-surface)]">
+            <th className="py-4 px-4 font-black uppercase tracking-widest text-[9px] sm:text-xs w-[140px] text-[var(--md-sys-color-primary)]">{t("gregorianDate")}</th>
+            <th className="py-4 px-4 font-black uppercase tracking-widest text-[9px] sm:text-xs w-[150px] text-[var(--md-sys-color-primary)]">{t("hijriDate")}</th>
+            <th className="py-4 px-4 font-black uppercase tracking-widest text-[9px] sm:text-xs w-[100px] text-[var(--md-sys-color-primary)]">{t("day")}</th>
+            {timesToDisplay.map((k) => (
+              <th key={k} className="py-4 px-1 font-black uppercase tracking-widest text-[9px] sm:text-xs text-center text-[var(--md-sys-color-on-surface-variant)]">{t(k)}</th>
             ))}
+            <th className="py-4 px-2 font-black uppercase tracking-widest text-[9px] sm:text-xs w-[60px] text-center text-[var(--md-sys-color-primary)]">{t("copy" as any)}</th>
           </tr>
         </thead>
-        <tbody className={isLoading ? "opacity-50 transition-opacity" : "transition-opacity"}>
+        <tbody className={cn("divide-y divide-[var(--md-sys-color-outline)]/5 transition-opacity duration-300", isLoading && "opacity-40")}>
           {data.map((day, idx) => {
             const isToday = day.date === format(new Date(), "dd-MMM-yyyy");
             const dateObj = parse(day.date, "dd-MMM-yyyy", new Date());
@@ -214,57 +260,69 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
             
             return (
               <motion.tr 
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: Math.min(idx * 0.02, 0.5) }}
+                transition={{ delay: Math.min(idx * 0.015, 0.4), type: "spring", stiffness: 400, damping: 25 }}
                 key={day.date}
                 className={cn(
-              "border-b border-[var(--md-sys-color-outline)]/10 transition-colors group relative hover:shadow-[0_4px_12px_-4px_var(--md-sys-color-primary)] hover:border-transparent hover:rounded-2xl hover:z-10",
-              isToday 
-                ? "bg-[var(--md-sys-color-primary-container)]/50 hover:bg-[var(--md-sys-color-primary-container)]/80 text-[var(--md-sys-color-on-primary-container)] ring-2 ring-[var(--md-sys-color-primary)]/40 hover:ring-2 hover:ring-[var(--md-sys-color-primary)]/40 z-10" 
-                : isCurrentWeekDay
-                  ? "bg-[var(--md-sys-color-secondary-container)]/15 hover:bg-[var(--md-sys-color-secondary-container)]/40" 
-                  : "hover:bg-[var(--md-sys-color-surface-variant)]/60"
+                  "transition-all duration-200 group relative border-b border-[var(--md-sys-color-outline)]/4",
+                  isToday 
+                    ? "bg-[var(--md-sys-color-primary-container)]/30 hover:bg-[var(--md-sys-color-primary-container)]/40 text-[var(--md-sys-color-on-primary-container)] z-[2]" 
+                    : isCurrentWeekDay
+                      ? "bg-[var(--md-sys-color-secondary-container)]/8 hover:bg-[var(--md-sys-color-secondary-container)]/15" 
+                      : "hover:bg-[var(--md-sys-color-surface-container-high)]/50"
                 )}
               >
-                <td className="py-4 px-5 tabular-nums relative">
-                  {isToday && <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[var(--md-sys-color-primary)] rounded-r-full shadow-[0_0_8px_var(--md-sys-color-primary)]"></div>}
-                  <div className={cn("font-black text-sm lg:text-base tracking-tight", isToday && "text-[var(--md-sys-color-primary)] drop-shadow-sm")}>{format(dateObj, "dd MMM yyyy", { locale: settings.language === 'ms' ? ms : enUS })}</div>
-                  {isToday && <span className="mt-1 flex gap-1.5 items-center px-2.5 py-1 bg-[var(--md-sys-color-primary)] text-white text-[10px] rounded-md uppercase tracking-widest font-black w-fit shadow-md"><CalendarDays size={12} strokeWidth={2.5}/> {t("today")}</span>}
+                {/* Gregorian Date Column */}
+                <td className="py-3.5 px-4 tabular-nums relative select-none">
+                  {isToday && <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[var(--md-sys-color-primary)] rounded-r-full shadow-[0_0_8px_var(--md-sys-color-primary)]" />}
+                  <div className={cn("font-black text-xs sm:text-sm tracking-tight", isToday && "text-[var(--md-sys-color-primary)]")}>
+                    {format(dateObj, "dd MMM yyyy", { locale: settings.language === 'ms' ? ms : enUS })}
+                  </div>
+                  {isToday && (
+                    <span className="mt-1 inline-flex gap-1 items-center px-1.5 py-0.5 bg-[var(--md-sys-color-primary)] text-white text-[8px] rounded uppercase tracking-wider font-black w-fit shadow-sm">
+                      <CalendarDays size={10} /> {t("today")}
+                    </span>
+                  )}
                 </td>
-                <td className="py-4 px-5">
+
+                {/* Hijri Date Column */}
+                <td className="py-3.5 px-4 select-none">
                   <div className="flex flex-col gap-0.5">
                     {(!settings.hijriFormat || settings.hijriFormat === 'both' || settings.hijriFormat === 'text') && (
-                      <span className="text-sm font-black whitespace-nowrap">{getHijriFormatted(day.hijri, "text", settings.language)}</span>
+                      <span className="text-xs font-black whitespace-nowrap">{getHijriFormatted(day.hijri, "text", settings.language).split(" (")[0]}</span>
                     )}
                     {(!settings.hijriFormat || settings.hijriFormat === 'both' || settings.hijriFormat === 'number') && (
-                      <span className="text-[10px] font-mono font-black opacity-60 tabular-nums">
+                      <span className="text-[9px] font-mono font-black opacity-55 tabular-nums">
                         {getHijriFormatted(day.hijri, "number", settings.language)}
                       </span>
                     )}
                   </div>
                   {evt && (
-                    <div className="mt-1.5 flex">
-                      <motion.span 
-                        animate={{ scale: [1, 1.05, 1], rotate: [0, 2, -2, 0] }} 
-                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                        className={`inline-flex items-center px-2.5 py-1 rounded-md text-[9px] font-black text-white uppercase tracking-widest shadow-md origin-left ${evt.color || 'bg-[var(--md-sys-color-primary)]'}`}
-                      >
+                    <div className="mt-1 flex">
+                      <span className={cn(
+                        "inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-black text-white uppercase tracking-widest shadow-xs",
+                        evt.color || "bg-[var(--md-sys-color-primary)]"
+                      )}>
                         {evt.title}
-                      </motion.span>
+                      </span>
                     </div>
                   )}
                 </td>
-                <td className="py-4 px-5 text-sm opacity-80 font-black uppercase tracking-widest">
+
+                {/* Day Name Column */}
+                <td className="py-3.5 px-4 text-xs font-black opacity-75 uppercase tracking-wider select-none">
                   {format(dateObj, "EEEE", { locale: settings.language === 'ms' ? ms : enUS })}
                 </td>
+
+                {/* Prayer Times columns */}
                 {timesToDisplay.map((k) => {
                   const Icon = PRAYER_ICONS[k];
                   return (
-                    <td key={k} className="py-1.5 px-0.5 lg:px-1.5 text-center align-middle">
+                    <td key={k} className="py-1.5 px-0.5 text-center align-middle">
                       <motion.button 
-                        whileHover={{ scale: 1.1, rotate: (idx % 2 === 0 ? 3 : -3) }}
-                        whileTap={{ scale: 0.9, rotate: 0 }}
+                        whileHover={{ scale: 1.07 }}
+                        whileTap={{ scale: 0.94 }}
                         onClick={() => onPrayerSelect({
                           key: k,
                           time: day[k] ? day[k].substring(0, 5) : "--:--",
@@ -272,24 +330,42 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
                           hijriValue: day.hijri
                         })}
                         className={cn(
-                          "relative w-full py-2 px-1 lg:py-2.5 flex flex-col xl:flex-row items-center justify-center gap-1 xl:gap-2 rounded-[var(--md-sys-shape-corner-medium)] overflow-hidden focus:outline-none focus:ring-4 focus:ring-[var(--md-sys-color-primary)] focus:ring-offset-1",
+                          "relative w-full py-2 px-1 flex flex-col items-center justify-center gap-0.5 rounded-xl border border-transparent overflow-hidden focus:outline-none focus:ring-2 focus:ring-[var(--md-sys-color-primary)] cursor-pointer transition-all duration-300",
                           isToday 
-                            ? "bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]" 
-                            : "bg-[var(--md-sys-color-surface-container-low)] text-[var(--md-sys-color-on-surface)]"
+                            ? "bg-[var(--md-sys-color-surface)] text-[var(--md-sys-color-primary)]" 
+                            : "bg-[var(--md-sys-color-surface-container-low)]/80 text-[var(--md-sys-color-on-surface)] group-hover:bg-[var(--md-sys-color-surface)] group-hover:border-[var(--md-sys-color-outline)]/8"
                         )}
                         title={t(k)}
                       >
                         {/* @ts-ignore */}
                         <md-ripple></md-ripple>
-                        <Icon size={18} strokeWidth={2.5} className={cn(
-                          "shrink-0",
-                          isToday ? "text-[var(--md-sys-color-primary)]" : "text-[var(--md-sys-color-on-surface-variant)]"
-                        )} />
-                        <span className="tabular-nums font-mono text-[11px] sm:text-xs lg:text-sm xl:text-base font-black whitespace-nowrap">{day[k] ? day[k].substring(0, 5) : "--:--"}</span>
+                        <span className="tabular-nums font-mono text-[11px] sm:text-xs font-black whitespace-nowrap">{day[k] ? day[k].substring(0, 5) : "--:--"}</span>
                       </motion.button>
                     </td>
                   );
                 })}
+
+                {/* Direct Row Copy Button */}
+                <td className="py-1.5 px-2 text-center align-middle">
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => handleCopyDaySchedule(day)}
+                    title={isMalay ? "Salin Jadual Hari Ini" : "Copy Today's Schedule"}
+                    className={cn(
+                      "w-7 h-7 flex items-center justify-center rounded-lg transition-all cursor-pointer shadow-xs",
+                      copiedRowDate === day.date
+                        ? "bg-[#25D366] text-white"
+                        : "bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-primary)] hover:text-white border border-[var(--md-sys-color-outline)]/5"
+                    )}
+                  >
+                    {copiedRowDate === day.date ? (
+                      <Check size={12} strokeWidth={3} />
+                    ) : (
+                      <Copy size={12} strokeWidth={iconStroke} />
+                    )}
+                  </motion.button>
+                </td>
               </motion.tr>
             );
           })}
@@ -297,8 +373,8 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
       </table>
       
       {data.length === 0 && !isLoading && (
-        <div className="p-12 flex items-center justify-center">
-          <p className="text-[var(--md-sys-color-on-surface-variant)] font-medium">
+        <div className="p-12 flex items-center justify-center select-none">
+          <p className="text-[var(--md-sys-color-on-surface-variant)] font-black text-sm uppercase tracking-widest text-center">
             {t("noData")}
           </p>
         </div>
