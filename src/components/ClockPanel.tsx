@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import { format, differenceInSeconds } from "date-fns";
+import { useTime } from "./clocks/useTime";
 import { ms, enUS } from "date-fns/locale";
 import { motion, AnimatePresence } from "motion/react";
 import "@material/web/elevation/elevation.js";
@@ -59,8 +60,35 @@ function playSynthesizedSound(type: 'chime' | 'tick', pitchHz?: number) {
       osc.stop(audioCtx.currentTime + 0.7);
     }
   } catch (e) {
-    // Ignore context errors
+    // AudioContext might be blocked or not supported
   }
+}
+
+function ExternalDigitalComplication() {
+  const { settings } = useAppContext();
+  const time = useTime('tick');
+  const visualStyle = useVisualStyle();
+  
+  const timeString = format(time, settings.timeFormat === '12h' ? "h:mm" : "HH:mm");
+  const ampm = settings.timeFormat === '12h' ? format(time, "a") : "";
+
+  return (
+    <div className={cn(
+      "relative z-10 mt-3 sm:mt-4",
+      "flex flex-col items-center justify-center"
+    )}>
+      <div className={cn(
+        "px-3 py-1 rounded-full font-bold tracking-widest text-[11px] sm:text-xs shadow-sm border border-[var(--md-sys-color-outline-variant)]/20",
+        "bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface)]",
+        visualStyle === 'retro' && "border-[1.5px] border-[var(--md-sys-color-on-surface)] bg-[var(--md-sys-color-surface)] shadow-[2px_2px_0px_0px_var(--md-sys-color-on-surface)] rounded-none text-xs font-black",
+        visualStyle === 'glass' && "bg-[var(--glass-bg)]/60 backdrop-blur-md border-[var(--glass-border)] shadow-[var(--glass-shadow)] text-[var(--md-sys-color-on-surface)]",
+        visualStyle === 'soft' && "bg-[var(--md-sys-color-surface-container-lowest)] shadow-[var(--soft-shadow-light)] border-0"
+      )}>
+        {timeString}
+        {ampm && <span className="ml-1 text-[9px] opacity-70">{ampm}</span>}
+      </div>
+    </div>
+  );
 }
 
 export function ClockPanel({
@@ -362,7 +390,7 @@ export function ClockPanel({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 1.05 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="w-full flex items-center justify-center mt-1 mb-1"
+            className="w-full flex flex-col items-center justify-center mt-1 mb-1 relative"
           >
             {(!settings.clockFace || settings.clockFace === 'digital') && (
               <DigitalClock />
@@ -406,6 +434,11 @@ export function ClockPanel({
             {settings.clockFace === 'swiss-station' && <SwissStationClock movement={settings.clockMovement || 'sweep'} />}
             {settings.clockFace === 'bauhaus' && <BauhausClock movement={settings.clockMovement || 'sweep'} />}
             {settings.clockFace === 'layered' && <LayeredClock movement={settings.clockMovement || 'sweep'} />}
+            
+            {/* External Digital Complication for purely analog faces */}
+            {['analog', 'analog-numeric', 'analog-roman', 'analog-arabic', 'dashboard', 'minimal', 'orbit', 'swiss-station', 'bauhaus', 'layered'].includes(settings.clockFace || '') && (
+              <ExternalDigitalComplication />
+            )}
           </motion.div>
         </AnimatePresence>
 

@@ -62,7 +62,7 @@ export function BauhausClock({ movement }: { movement: 'tick' | 'sweep' }) {
         {/* Hour Hand (Thick black/accent rectangle) */}
         <div
           className={cn(
-            "absolute top-[26%] left-1/2 w-[8px] sm:w-[10px] h-[25%] -ml-[4px] sm:-ml-[5px] origin-bottom z-10 transition-colors",
+            "absolute top-[26%] left-1/2 w-[8px] sm:w-[10px] h-[25%] -ml-[4px] sm:-ml-[5px] origin-bottom z-10 transition-colors shadow-[0_4px_12px_rgba(0,0,0,0.15)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.5)]",
             "bg-[var(--md-sys-color-on-surface)]",
             visualStyle === 'retro' && "bg-[var(--md-sys-color-primary)] border border-[var(--md-sys-color-on-surface)] rounded-none w-2.5 sm:w-3",
             visualStyle === 'glass' && "bg-[var(--md-sys-color-on-surface)]",
@@ -74,7 +74,7 @@ export function BauhausClock({ movement }: { movement: 'tick' | 'sweep' }) {
         {/* Minute Hand (Slightly thinner, very long primary block) */}
         <div
           className={cn(
-            "absolute top-[10%] left-1/2 w-[5px] sm:w-[6px] h-[41%] -ml-[2.5px] sm:-ml-[3px] origin-bottom z-10 transition-colors",
+            "absolute top-[10%] left-1/2 w-[5px] sm:w-[6px] h-[41%] -ml-[2.5px] sm:-ml-[3px] origin-bottom z-10 transition-colors shadow-[0_4px_12px_rgba(0,0,0,0.15)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.5)]",
             "bg-[var(--md-sys-color-primary)]",
             visualStyle === 'retro' && "bg-[var(--md-sys-color-secondary)] border border-[var(--md-sys-color-on-surface)] rounded-none w-1.5 sm:w-2",
             visualStyle === 'glass' && "bg-sky-500",
@@ -86,7 +86,7 @@ export function BauhausClock({ movement }: { movement: 'tick' | 'sweep' }) {
         {/* Second Hand (Very thin line with dot) */}
         <div
           className={cn(
-            "absolute top-[10%] left-1/2 w-0.5 h-[50%] -ml-[1px] origin-[50%_80%] z-20 transition-colors",
+            "absolute top-[10%] left-1/2 w-0.5 h-[50%] -ml-[1px] origin-[50%_80%] z-20 transition-colors shadow-[0_2px_8px_rgba(var(--md-sys-color-tertiary-rgb,0,0,0),0.3)]",
             "bg-[var(--md-sys-color-tertiary)] mix-blend-multiply dark:mix-blend-screen",
             visualStyle === 'retro' && "bg-[var(--md-sys-color-error)] mix-blend-normal dark:mix-blend-normal",
             visualStyle === 'glass' && "bg-[var(--md-sys-color-tertiary)]",

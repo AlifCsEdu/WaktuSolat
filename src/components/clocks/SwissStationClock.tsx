@@ -78,7 +78,7 @@ export function SwissStationClock({ movement }: { movement: 'tick' | 'sweep' }) 
         {/* Hour Hand - Thick rectangular blade */}
         <div
           className={cn(
-            "absolute top-[28%] left-1/2 w-[7px] sm:w-[9px] h-[30%] -ml-[3.5px] sm:-ml-[4.5px] origin-[50%_73.3%] z-10 shadow-sm transition-colors",
+            "absolute top-[28%] left-1/2 w-[7px] sm:w-[9px] h-[30%] -ml-[3.5px] sm:-ml-[4.5px] origin-[50%_73.3%] z-10 transition-colors shadow-[0_4px_12px_rgba(0,0,0,0.15)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.5)]",
             "bg-[var(--md-sys-color-on-surface)]",
             visualStyle === 'retro' && "bg-[var(--md-sys-color-primary)] border border-white rounded-none",
             visualStyle === 'glass' && "bg-[var(--md-sys-color-on-surface)]/95",
@@ -90,7 +90,7 @@ export function SwissStationClock({ movement }: { movement: 'tick' | 'sweep' }) 
         {/* Minute Hand - Longer rectangular blade */}
         <div
           className={cn(
-            "absolute top-[12%] left-1/2 w-[5.5px] sm:w-[7px] h-[48%] -ml-[2.75px] sm:-ml-[3.5px] origin-[50%_79.1%] z-10 shadow-sm transition-colors",
+            "absolute top-[12%] left-1/2 w-[5.5px] sm:w-[7px] h-[48%] -ml-[2.75px] sm:-ml-[3.5px] origin-[50%_79.1%] z-10 transition-colors shadow-[0_4px_12px_rgba(0,0,0,0.15)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.5)]",
             "bg-[var(--md-sys-color-on-surface)]",
             visualStyle === 'retro' && "bg-[var(--md-sys-color-secondary)] border border-white rounded-none",
             visualStyle === 'glass' && "bg-[var(--md-sys-color-on-surface)]/85",
@@ -102,7 +102,7 @@ export function SwissStationClock({ movement }: { movement: 'tick' | 'sweep' }) 
         {/* Iconic Swiss Red sweep second hand with red disc tip */}
         <div
           className={cn(
-            "absolute top-[10%] left-1/2 w-[2px] h-[55%] -ml-[1px] origin-[50%_72.7%] z-20 shadow-sm transition-colors",
+            "absolute top-[10%] left-1/2 w-[2px] h-[55%] -ml-[1px] origin-[50%_72.7%] z-20 transition-colors shadow-[0_4px_12px_rgba(255,0,0,0.2)]",
             "bg-[var(--md-sys-color-error)]",
             visualStyle === 'retro' && "bg-[var(--md-sys-color-error)] w-[2.5px] rounded-none",
             visualStyle === 'glass' && "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]",

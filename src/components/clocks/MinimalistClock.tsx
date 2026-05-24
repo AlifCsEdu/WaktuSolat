@@ -58,7 +58,7 @@ export function MinimalistClock({ movement }: { movement: 'tick' | 'sweep' }) {
         {/* Hour Hand - Thicker and wider */}
         <div
           className={cn(
-            "absolute top-[28%] left-1/2 w-[6px] sm:w-[8px] h-[22%] -ml-[3px] sm:-ml-[4px] origin-bottom z-10 shadow-sm transition-all",
+            "absolute top-[28%] left-1/2 w-[6px] sm:w-[8px] h-[22%] -ml-[3px] sm:-ml-[4px] origin-bottom z-10 shadow-[0_4px_12px_rgba(0,0,0,0.15)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.5)] transition-all",
             "bg-[var(--md-sys-color-on-surface)]",
             visualStyle === 'retro' && "bg-[var(--md-sys-color-primary)] border border-[var(--md-sys-color-on-surface)] rounded-none w-[7px] sm:w-[9px] -ml-[3.5px] sm:-ml-[4.5px]",
             visualStyle === 'glass' && "bg-[var(--md-sys-color-on-surface)]/95 border border-white/10",
@@ -70,7 +70,7 @@ export function MinimalistClock({ movement }: { movement: 'tick' | 'sweep' }) {
         {/* Minute Hand - Thicker and longer */}
         <div
           className={cn(
-            "absolute top-[12%] left-1/2 w-[4px] sm:w-[5px] h-[38%] -ml-[2px] sm:-ml-[2.5px] origin-bottom z-10 opacity-85 transition-all",
+            "absolute top-[12%] left-1/2 w-[4px] sm:w-[5px] h-[38%] -ml-[2px] sm:-ml-[2.5px] origin-bottom z-10 shadow-[0_4px_12px_rgba(0,0,0,0.15)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.5)] opacity-95 transition-all",
             "bg-[var(--md-sys-color-on-surface)]",
             visualStyle === 'retro' && "bg-[var(--md-sys-color-secondary)] border border-[var(--md-sys-color-on-surface)] rounded-none w-[4px] sm:w-[5px] -ml-[2px] sm:-ml-[2.5px]",
             visualStyle === 'glass' && "bg-[var(--md-sys-color-on-surface)]/85 border border-white/10",
@@ -82,7 +82,7 @@ export function MinimalistClock({ movement }: { movement: 'tick' | 'sweep' }) {
         {/* Second Hand - Sleek with red tip or solid accent */}
         <div
           className={cn(
-            "absolute top-[6%] left-1/2 w-[2px] sm:w-[2.5px] h-[48%] -ml-[1px] sm:-ml-[1.25px] origin-[50%_91.6%] z-20 shadow-sm transition-all",
+            "absolute top-[6%] left-1/2 w-[2px] sm:w-[2.5px] h-[48%] -ml-[1px] sm:-ml-[1.25px] origin-[50%_91.6%] z-20 shadow-[0_4px_12px_rgba(var(--md-sys-color-primary-rgb,0,0,0),0.3)] transition-all",
             "bg-[var(--md-sys-color-primary)]",
             visualStyle === 'retro' && "bg-[var(--md-sys-color-error)] w-[2.5px] rounded-none shadow-none",
             visualStyle === 'glass' && "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]",

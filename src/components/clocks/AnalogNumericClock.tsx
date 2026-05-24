@@ -87,20 +87,20 @@ export function AnalogNumericClock({ movement }: { movement: 'tick' | 'sweep' })
 
       {/* Center dot */}
       <div className={cn(
-        "absolute top-1/2 left-1/2 w-4.5 h-4.5 sm:w-5 sm:h-5 -ml-2.25 sm:-ml-2.5 -mt-2.25 sm:-mt-2.5 rounded-full z-20 shadow-md",
+        "absolute top-1/2 left-1/2 w-4.5 h-4.5 sm:w-5 sm:h-5 -ml-2.25 sm:-ml-2.5 -mt-2.25 sm:-mt-2.5 rounded-full z-30 shadow-[0_2px_4px_rgba(0,0,0,0.3)]",
         "bg-[var(--md-sys-color-on-surface)]",
         visualStyle === 'retro' && "bg-[var(--md-sys-color-on-surface)] border-2 border-white shadow-none",
         visualStyle === 'glass' && "bg-[var(--md-sys-color-on-surface)]",
-        visualStyle === 'soft' && "bg-[var(--md-sys-color-primary)]"
+        visualStyle === 'soft' && "bg-[var(--md-sys-color-primary)] shadow-[var(--soft-shadow-light)]"
       )}></div>
-      <div className="absolute top-1/2 left-1/2 w-2.5 h-2.5 -ml-1.25 -mt-1.25 bg-[var(--md-sys-color-error)] rounded-full z-30 pointer-events-none"></div>
+      <div className="absolute top-1/2 left-1/2 w-2.5 h-2.5 -ml-1.25 -mt-1.25 bg-[var(--md-sys-color-error)] rounded-full z-40 pointer-events-none"></div>
 
       {/* Hands */}
       <div className="absolute inset-0 pointer-events-none">
         {/* Hour Hand */}
         <div
           className={cn(
-            "absolute top-[28%] left-1/2 w-3.5 sm:w-4.5 h-[30%] rounded-full -ml-[1.75px] sm:-ml-[2.25px] origin-[50%_73.3%] z-10 shadow-md",
+            "absolute top-[28%] left-1/2 w-3.5 sm:w-4.5 h-[30%] rounded-full -ml-[1.75px] sm:-ml-[2.25px] origin-[50%_73.3%] z-10 shadow-[0_4px_12px_rgba(0,0,0,0.15)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.5)]",
             "bg-[var(--md-sys-color-primary)]",
             visualStyle === 'retro' && "bg-[var(--md-sys-color-primary)] border-2 border-[var(--md-sys-color-on-surface)] rounded-none w-4 sm:w-5 -ml-2 sm:-ml-2.5",
             visualStyle === 'glass' && "bg-[var(--md-sys-color-on-surface)] border border-white/20",
@@ -112,8 +112,8 @@ export function AnalogNumericClock({ movement }: { movement: 'tick' | 'sweep' })
         {/* Minute Hand */}
         <div
           className={cn(
-            "absolute top-[12%] left-1/2 w-2.5 sm:w-3.25 h-[48%] rounded-full -ml-[1.25px] sm:-ml-[1.625px] origin-[50%_79.1%] z-10 shadow-md",
-            "bg-[var(--md-sys-color-on-surface)] opacity-90",
+            "absolute top-[12%] left-1/2 w-2.5 sm:w-3.25 h-[48%] rounded-full -ml-[1.25px] sm:-ml-[1.625px] origin-[50%_79.1%] z-10 shadow-[0_4px_12px_rgba(0,0,0,0.15)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.5)]",
+            "bg-[var(--md-sys-color-on-surface)] opacity-95",
             visualStyle === 'retro' && "bg-[var(--md-sys-color-secondary)] border-2 border-[var(--md-sys-color-on-surface)] rounded-none w-3 sm:w-3.75 -ml-1.5 sm:-ml-[1.875px]",
             visualStyle === 'glass' && "bg-[var(--md-sys-color-on-surface)]/85 border border-white/10",
             visualStyle === 'soft' && "bg-[var(--md-sys-color-secondary)] opacity-80"
@@ -124,7 +124,7 @@ export function AnalogNumericClock({ movement }: { movement: 'tick' | 'sweep' })
         {/* Second Hand */}
         <div
           className={cn(
-            "absolute top-[8%] left-1/2 w-[2px] h-[55%] rounded-full -ml-[1px] origin-[50%_76.3%] z-20 shadow-sm",
+            "absolute top-[8%] left-1/2 w-[2px] h-[55%] rounded-full -ml-[1px] origin-[50%_76.3%] z-20 shadow-[0_4px_12px_rgba(255,0,0,0.2)]",
             "bg-[var(--md-sys-color-error)]",
             visualStyle === 'retro' && "bg-[var(--md-sys-color-error)] w-[2.5px] rounded-none",
             visualStyle === 'glass' && "bg-[var(--md-sys-color-error)] shadow-[0_0_8px_var(--md-sys-color-error)]",
