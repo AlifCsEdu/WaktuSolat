@@ -76,21 +76,21 @@ function ExternalDigitalComplication() {
 
   return (
     <div className={cn(
-      "relative z-10 -mt-4 sm:-mt-6 lg:mt-0 lg:ml-10",
+      "relative z-10 mt-2 sm:mt-4 lg:mt-0 lg:ml-8",
       "flex flex-col items-center justify-center"
     )}>
       <div className={cn(
-        "relative overflow-hidden flex items-center justify-center px-5 py-2 sm:px-6 sm:py-3 lg:px-10 lg:py-6 rounded-[1.5rem] sm:rounded-[2rem] lg:rounded-[3rem] font-black tracking-tighter text-3xl sm:text-4xl md:text-5xl lg:text-7xl xl:text-[6rem] leading-none",
-        "bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]",
-        visualStyle === 'retro' && "border-[3px] border-[var(--md-sys-color-on-surface)] bg-[var(--md-sys-color-surface)] shadow-[4px_4px_0px_0px_var(--md-sys-color-on-surface)] lg:shadow-[6px_6px_0px_0px_var(--md-sys-color-on-surface)] rounded-none",
-        visualStyle === 'glass' && "bg-[var(--glass-bg)]/80 backdrop-blur-2xl border border-[var(--glass-border)] text-[var(--md-sys-color-on-surface)]",
-        visualStyle === 'soft' && "bg-[var(--md-sys-color-surface-container-lowest)] shadow-[var(--soft-shadow-heavy)] border-0"
+        "relative overflow-hidden flex items-baseline justify-center px-6 py-2.5 sm:px-8 sm:py-3 lg:px-10 lg:py-6 rounded-[1.25rem] sm:rounded-[2rem] lg:rounded-[3rem] font-black tracking-tighter text-3xl sm:text-4xl md:text-5xl lg:text-7xl xl:text-[6rem] leading-none",
+        "bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-on-surface)] ring-1 ring-[var(--md-sys-color-outline)]/10 shadow-sm",
+        visualStyle === 'retro' && "border-[3px] border-[var(--md-sys-color-on-surface)] bg-[var(--md-sys-color-surface)] shadow-[4px_4px_0px_0px_var(--md-sys-color-on-surface)] lg:shadow-[6px_6px_0px_0px_var(--md-sys-color-on-surface)] rounded-none ring-0",
+        visualStyle === 'glass' && "bg-[var(--glass-bg)]/60 backdrop-blur-2xl border border-[var(--glass-border)] text-[var(--md-sys-color-on-surface)] ring-0 shadow-lg",
+        visualStyle === 'soft' && "bg-[var(--md-sys-color-surface-container-lowest)] shadow-[var(--soft-shadow-medium)] border-0 ring-0"
       )}>
         {/* @ts-ignore */}
-        <md-elevation level={visualStyle === 'retro' || visualStyle === 'soft' ? '0' : '2'}></md-elevation>
+        <md-elevation level={visualStyle === 'retro' || visualStyle === 'soft' ? '0' : '1'}></md-elevation>
         
         <span className="font-mono drop-shadow-sm tabular-nums">{timeString}</span>
-        {ampm && <span className="ml-1.5 sm:ml-2 lg:ml-4 text-xs sm:text-sm md:text-xl lg:text-3xl xl:text-4xl opacity-75 font-sans font-extrabold uppercase tracking-widest">{ampm}</span>}
+        {ampm && <span className="ml-1.5 sm:ml-2 lg:ml-4 text-[10px] sm:text-xs md:text-base lg:text-2xl xl:text-3xl opacity-70 font-sans font-extrabold uppercase tracking-widest">{ampm}</span>}
       </div>
     </div>
   );
@@ -395,7 +395,12 @@ export function ClockPanel({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 1.05 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="w-full flex flex-col lg:flex-row items-center justify-center mt-1 mb-1 lg:mb-4 relative"
+            className={cn(
+              "w-full flex items-center justify-center relative origin-top transition-all duration-300",
+              settings.showExternalDigitalClock && ['analog', 'analog-numeric', 'analog-roman', 'analog-arabic', 'dashboard', 'minimal', 'orbit', 'swiss-station', 'bauhaus', 'layered'].includes(settings.clockFace || '') 
+                ? "flex-col lg:flex-row scale-90 sm:scale-100 -mb-6 sm:mb-1 lg:mb-4 mt-0 sm:mt-1" 
+                : "flex-col lg:flex-row mt-1 mb-1 lg:mb-4 scale-100"
+            )}
           >
             {(!settings.clockFace || settings.clockFace === 'digital') && (
               <DigitalClock />
@@ -448,8 +453,8 @@ export function ClockPanel({
         </AnimatePresence>
 
         {/* Date & Hijri - Way Material 3 Expressive Row */}
-        <div className="flex flex-col items-center w-full mt-1.5 sm:mt-2 mb-0.5 lg:mb-1 z-10">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-3.5 sm:gap-4 w-full">
+        <div className="flex flex-col items-center w-full mt-0.5 sm:mt-2 mb-0.5 lg:mb-1 z-10">
+          <div className="grid grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-2 sm:gap-4 w-full">
             {/* Gregorian Date Card */}
             <motion.div
               style={gregorianCardStyle}
@@ -460,7 +465,7 @@ export function ClockPanel({
               tabIndex={0}
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onCalendarClick?.(); } }}
               className={cn(
-                "relative overflow-hidden flex items-center gap-2.5 sm:gap-2 md:gap-3 lg:gap-2 xl:gap-4 p-3 sm:p-2.5 md:p-3.5 lg:p-2.5 xl:p-4 transition-all duration-500 ease-out cursor-pointer select-none group",
+                "relative overflow-hidden flex items-center gap-2 sm:gap-2 md:gap-3 lg:gap-2 xl:gap-4 p-2.5 sm:p-2.5 md:p-3.5 lg:p-2.5 xl:p-4 transition-all duration-500 ease-out cursor-pointer select-none group",
                 "bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]",
                 visualStyle === 'retro' && "border-2 border-[var(--md-sys-color-on-surface)] shadow-[4px_4px_0px_0px_var(--md-sys-color-on-surface)] rounded-none",
                 visualStyle === 'glass' && "bg-[var(--glass-bg)]/40 backdrop-blur-[var(--glass-blur)] border border-[var(--glass-border)] text-[var(--md-sys-color-on-surface)]",
@@ -474,7 +479,7 @@ export function ClockPanel({
 
               {/* Dynamic Calendar Watermark */}
               <Calendar className={cn(
-                "absolute -right-3 -bottom-3 w-12 h-12 sm:w-10 sm:h-10 md:w-14 md:h-14 lg:w-10 lg:h-10 xl:w-16 xl:h-16 opacity-[0.04] pointer-events-none transition-all duration-700 ease-out group-hover:rotate-12 group-hover:scale-125 group-hover:opacity-[0.08]",
+                "absolute -right-3 -bottom-3 w-10 h-10 md:w-14 md:h-14 lg:w-10 lg:h-10 xl:w-16 xl:h-16 opacity-[0.04] pointer-events-none transition-all duration-700 ease-out group-hover:rotate-12 group-hover:scale-125 group-hover:opacity-[0.08]",
                 "text-[var(--md-sys-color-primary)]",
                 visualStyle === 'retro' && "text-[var(--md-sys-color-on-surface)] opacity-5",
                 visualStyle === 'glass' && "text-[var(--md-sys-color-on-surface)] opacity-5",
@@ -483,7 +488,7 @@ export function ClockPanel({
 
               {/* Gregorian Day Number */}
               <span className={cn(
-                "text-3.5xl sm:text-2.5xl md:text-3.5xl lg:text-3.5xl xl:text-4xl 2xl:text-4.5xl font-black font-sans leading-none tracking-tighter select-none shrink-0 tabular-nums z-10 transition-colors duration-300",
+                "text-2.5xl sm:text-2.5xl md:text-3.5xl lg:text-3.5xl xl:text-4xl 2xl:text-4.5xl font-black font-sans leading-none tracking-tighter select-none shrink-0 tabular-nums z-10 transition-colors duration-300",
                 "text-[var(--md-sys-color-primary)]",
                 visualStyle === 'retro' && "text-[var(--md-sys-color-on-surface)]",
                 visualStyle === 'glass' && "text-[var(--md-sys-color-on-surface)]",
@@ -494,13 +499,13 @@ export function ClockPanel({
 
               {/* Month, Year, Day details */}
               <div className="flex flex-col min-w-0 gap-0.5 z-10">
-                <span className="text-base sm:text-xs md:text-sm lg:text-base xl:text-sm 2xl:text-base font-black leading-tight tracking-tight truncate">
+                <span className="text-xs md:text-sm lg:text-base xl:text-sm 2xl:text-base font-black leading-tight tracking-tight truncate">
                   {format(currentTime, "MMMM yyyy", {
                     locale: settings.language === "ms" ? ms : enUS,
                   })}
                 </span>
                 <span className={cn(
-                  "text-xs sm:text-[9px] md:text-[10px] lg:text-xs xl:text-[10px] 2xl:text-xs font-extrabold uppercase tracking-widest leading-none opacity-80 truncate",
+                  "text-[9px] md:text-[10px] lg:text-xs xl:text-[10px] 2xl:text-xs font-extrabold uppercase tracking-widest leading-none opacity-80 truncate",
                   visualStyle === 'retro' && "opacity-95"
                 )}>
                   {format(currentTime, "EEEE", {
@@ -516,7 +521,7 @@ export function ClockPanel({
               whileHover={{ scale: 1.03, y: -3 }}
               whileTap={{ scale: 0.98 }}
               className={cn(
-                "relative overflow-hidden flex items-center gap-2.5 sm:gap-2 md:gap-3 lg:gap-2 xl:gap-4 p-3 sm:p-2.5 md:p-3.5 lg:p-2.5 xl:p-4 transition-all duration-500 ease-out select-none group",
+                "relative overflow-hidden flex items-center gap-2 sm:gap-2 md:gap-3 lg:gap-2 xl:gap-4 p-2.5 sm:p-2.5 md:p-3.5 lg:p-2.5 xl:p-4 transition-all duration-500 ease-out select-none group",
                 "bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]",
                 visualStyle === 'retro' && "border-2 border-[var(--md-sys-color-on-surface)] shadow-[4px_4px_0px_0px_var(--md-sys-color-on-surface)] rounded-none text-[var(--md-sys-color-on-surface)]",
                 visualStyle === 'glass' && "bg-[var(--glass-bg)]/40 backdrop-blur-[var(--glass-blur)] border border-[var(--glass-border)] text-[var(--md-sys-color-on-surface)]",
@@ -530,7 +535,7 @@ export function ClockPanel({
 
               {/* Dynamic Moon Watermark */}
               <Moon className={cn(
-                "absolute -right-3 -bottom-3 w-12 h-12 sm:w-10 sm:h-10 md:w-14 md:h-14 lg:w-10 lg:h-10 xl:w-16 xl:h-16 opacity-[0.04] pointer-events-none transition-all duration-700 ease-out group-hover:-rotate-12 group-hover:scale-125 group-hover:opacity-[0.08]",
+                "absolute -right-3 -bottom-3 w-10 h-10 md:w-14 md:h-14 lg:w-10 lg:h-10 xl:w-16 xl:h-16 opacity-[0.04] pointer-events-none transition-all duration-700 ease-out group-hover:-rotate-12 group-hover:scale-125 group-hover:opacity-[0.08]",
                 "text-[var(--md-sys-color-tertiary)]",
                 visualStyle === 'retro' && "text-[var(--md-sys-color-on-surface)] opacity-5",
                 visualStyle === 'glass' && "text-[var(--md-sys-color-on-surface)] opacity-5",
@@ -539,7 +544,7 @@ export function ClockPanel({
 
               {/* Hijri Day Number */}
               <span className={cn(
-                "text-3.5xl sm:text-2.5xl md:text-3.5xl lg:text-3.5xl xl:text-4xl 2xl:text-4.5xl font-black font-sans leading-none tracking-tighter select-none shrink-0 tabular-nums z-10 transition-colors duration-300",
+                "text-2.5xl sm:text-2.5xl md:text-3.5xl lg:text-3.5xl xl:text-4xl 2xl:text-4.5xl font-black font-sans leading-none tracking-tighter select-none shrink-0 tabular-nums z-10 transition-colors duration-300",
                 "text-[var(--md-sys-color-tertiary)]",
                 visualStyle === 'retro' && "text-[var(--md-sys-color-on-surface)]",
                 visualStyle === 'glass' && "text-[var(--md-sys-color-on-surface)]",
@@ -550,11 +555,11 @@ export function ClockPanel({
 
               {/* Hijri details */}
               <div className="flex flex-col min-w-0 gap-0.5 z-10">
-                <span className="text-base sm:text-xs md:text-sm lg:text-base xl:text-sm 2xl:text-base font-black leading-tight tracking-tight truncate">
+                <span className="text-xs md:text-sm lg:text-base xl:text-sm 2xl:text-base font-black leading-tight tracking-tight truncate">
                   {hijriMonthYear || "..."}
                 </span>
                 <span className={cn(
-                  "text-xs sm:text-[9px] md:text-[10px] lg:text-xs xl:text-[10px] 2xl:text-xs font-extrabold uppercase tracking-widest leading-none opacity-80 truncate",
+                  "text-[9px] md:text-[10px] lg:text-xs xl:text-[10px] 2xl:text-xs font-extrabold uppercase tracking-widest leading-none opacity-80 truncate",
                   visualStyle === 'retro' && "opacity-95"
                 )}>
                   {hijriLabel}
