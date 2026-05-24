@@ -165,12 +165,10 @@ export function AzanAlert({
             <span className="text-[10px] font-mono font-black text-[var(--md-sys-color-primary)] bg-[var(--md-sys-color-primary)]/12 px-2.5 py-1.5 rounded-xl border border-[var(--md-sys-color-primary)]/15 tabular-nums">
               {remainingSeconds}s
             </span>
-            <button
-              onClick={onDismiss}
-              className="w-9 h-9 flex items-center justify-center rounded-full bg-white/5 hover:bg-red-500/20 hover:text-red-400 text-zinc-400 hover:scale-105 active:scale-95 shadow-sm transition-all cursor-pointer"
-            >
-              <X size={16} strokeWidth={2.5} />
-            </button>
+            {/* @ts-ignore */}
+            <md-icon-button onClick={onDismiss}>
+              <md-icon>close</md-icon>
+            </md-icon-button>
           </div>
         </div>
       </motion.div>
@@ -202,12 +200,10 @@ export function AzanAlert({
             </span>
           </span>
           
-          <button
-            onClick={onDismiss}
-            className="w-5.5 h-5.5 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/15 text-zinc-400 hover:text-white shrink-0 transition-colors cursor-pointer"
-          >
-            <X size={11} strokeWidth={3} />
-          </button>
+          {/* @ts-ignore */}
+          <md-icon-button onClick={onDismiss} style={{ '--md-icon-button-state-layer-size': '24px', '--md-icon-button-icon-size': '16px' } as any}>
+            <md-icon>close</md-icon>
+          </md-icon-button>
         </div>
       </motion.div>
     );
