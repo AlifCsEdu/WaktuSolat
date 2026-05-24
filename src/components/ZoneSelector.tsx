@@ -11,6 +11,8 @@ import "@material/web/ripple/ripple.js";
 import "@material/web/switch/switch.js";
 import "@material/web/tabs/tabs.js";
 import "@material/web/tabs/primary-tab.js";
+import "@material/web/icon/icon.js";
+import "@material/web/textfield/filled-text-field.js";
 import { useAppContext } from "../AppContext";
 import { MapModal } from "./MapModal";
 import { useVisualStyle } from "../hooks/useVisualStyle";

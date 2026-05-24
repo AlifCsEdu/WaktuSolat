@@ -23,6 +23,10 @@ import {
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { JAKIM_ZONES } from "../lib/zones";
+import "@material/web/iconbutton/icon-button.js";
+import "@material/web/icon/icon.js";
+import "@material/web/textfield/filled-text-field.js";
+import "@material/web/button/text-button.js";
 import { useAppContext } from "../AppContext";
 import { getHijriFormatted } from "../lib/holidays";
 import { useVisualStyle, useIconStroke } from "../hooks/useVisualStyle";
