@@ -110,7 +110,7 @@ export function SelectedDayModal({ day, onClose, onPrayerSelect }: SelectedDayMo
             
             <div className="grid grid-cols-2 gap-2.5">
               {timesToDisplay.map((k) => {
-                const Icon = PRAYER_ICONS[k];
+                const Icon = PRAYER_ICONS[k] as React.ComponentType<any>;
                 return (
                   <motion.button
                     key={k}

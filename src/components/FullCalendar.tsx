@@ -16,7 +16,7 @@ import { CalendarGridView } from "./calendar/CalendarGridView";
 import { PrayerTimesListView } from "./calendar/PrayerTimesListView";
 import { EventsListView } from "./calendar/EventsListView";
 import { SelectedDayModal } from "./calendar/SelectedDayModal";
-import { modalVariants } from "../lib/motion";
+import { modalVariants, M3_EASING } from "../lib/motion";
 import { useVisualStyle, useIconStroke } from "../hooks/useVisualStyle";
 
 export type CalendarTab = "grid" | "list" | "public_holidays" | "islamic_events";
@@ -26,11 +26,11 @@ const calendarVariants = {
   hidden: { opacity: 0 },
   visible: { 
     opacity: 1, 
-    transition: { duration: 0.2, ease: "easeOut" }
+    transition: { duration: 0.2, ease: M3_EASING.emphasizedDecelerate as any }
   },
   exit: { 
     opacity: 0, 
-    transition: { duration: 0.15, ease: "easeIn" }
+    transition: { duration: 0.15, ease: M3_EASING.emphasizedAccelerate as any }
   }
 };
 
@@ -452,7 +452,7 @@ export function FullCalendar({
                 
                 <div className="relative z-10 flex flex-col items-center text-center">
                   {(() => {
-                    const Icon = PRAYER_ICONS[selectedPrayer.key];
+                    const Icon = PRAYER_ICONS[selectedPrayer.key] as any;
                     return <Icon size={42} className="mb-3 opacity-90 drop-shadow-md" />;
                   })()}
                   <h3 className="text-2xl font-black mb-1 drop-shadow-sm">{t(selectedPrayer.key as any)}</h3>
@@ -460,7 +460,7 @@ export function FullCalendar({
                     {selectedPrayer.time}
                   </div>
                   <div className="text-[11px] opacity-85 mt-2 font-black uppercase tracking-wider">
-                    {selectedPrayer.dateValue.replace(/-/g, " ")} • {getHijriFormatted(selectedPrayer.dateValue, settings.hijriMethod, settings.hijriAdjustment, settings.hijriFormat || "both", settings.language, selectedPrayer.hijri).split(" (")[0]}
+                    {selectedPrayer.dateValue.replace(/-/g, " ")} • {getHijriFormatted(selectedPrayer.dateValue, settings.hijriMethod, settings.hijriAdjustment, settings.hijriFormat || "both", settings.language, selectedPrayer.hijriValue).split(" (")[0]}
                   </div>
                 </div>
                 

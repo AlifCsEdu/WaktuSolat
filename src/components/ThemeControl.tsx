@@ -370,7 +370,7 @@ export function ThemeControl() {
 
                     {/* Auto mode description bubble */}
                     <div className="text-[11px] font-medium text-[var(--md-sys-color-on-surface-variant)] text-center italic bg-[var(--md-sys-color-surface-container-highest)]/30 py-1.5 px-3 rounded-lg border border-[var(--md-sys-color-outline)]/5">
-                      {t("activePrayer")}: <span className="font-black text-[var(--md-sys-color-primary)] normal-case">{activeModeText}</span>
+                      {t("activePrayer" as any)}: <span className="font-black text-[var(--md-sys-color-primary)] normal-case">{activeModeText}</span>
                     </div>
                   </div>
 

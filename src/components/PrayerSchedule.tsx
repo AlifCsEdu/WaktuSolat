@@ -77,8 +77,8 @@ export function PrayerSchedule({
   tomorrowData?: PrayerData | null;
   nextPrayerKey: string | null;
   currentPrayerKey?: string | null;
-  preferences: Record<PrayerKey, PrayerPreference>;
-  onTogglePreference: (key: PrayerKey) => void;
+  preferences: Partial<Record<PrayerKey, PrayerPreference>>;
+  onTogglePreference: (key: any) => void;
   notificationPermission: string;
   onRequestPermission: () => void;
   onSettingsClick: () => void;
@@ -127,7 +127,7 @@ export function PrayerSchedule({
 
   const sunnahCalculated = calculateSunnahTimes(todayData, tomorrowData || null, {
     suhoorOffset: settings.suhoorOffset || 30,
-    midnightMethod: settings.midnightMode || 'fajr'
+    midnightMethod: settings.midnightMethod || 'fajr'
   });
 
   const mergedData = { ...baseTimes, ...sunnahCalculated };
@@ -190,7 +190,7 @@ export function PrayerSchedule({
 
   const getPrayerDisplayName = (key: PrayerKey) => {
     if (key === "dhuhr" && isFriday && showJumaat) {
-      return t("jumaat");
+      return t("jumaat" as any);
     }
     return t(key as any);
   };
@@ -202,7 +202,7 @@ export function PrayerSchedule({
     if (isNaN(pTime.getTime())) {
       pTime = parse(mergedData[key as keyof typeof mergedData], "HH:mm", startOfDay(currentTime));
     }
-    const pref = preferences[key as any];
+    const pref = (preferences as any)[key];
     if (pref && pref.offset)
       pTime = new Date(pTime.getTime() + pref.offset * 60000);
     if (key === "asr" && settings.mazhab === "hanafi")
@@ -218,7 +218,7 @@ export function PrayerSchedule({
     if (isNaN(pTime.getTime())) {
       pTime = parse(mergedData[key as keyof typeof mergedData], "HH:mm", startOfDay(currentTime));
     }
-    const pref = preferences[key as any];
+    const pref = (preferences as any)[key];
     if (pref && pref.offset)
       pTime = new Date(pTime.getTime() + pref.offset * 60000);
     if (key === "asr" && settings.mazhab === "hanafi")
@@ -323,8 +323,8 @@ export function PrayerSchedule({
             key,
           );
           const timeLabel = formatTime(key);
-          const Icon = PRAYER_ICONS[key] || Bell;
-          const pref = preferences[key as any] || {
+          const Icon = (PRAYER_ICONS[key] || Bell) as any;
+          const pref = (preferences as any)[key] || {
             enabled: false,
             preAlert: 0,
             sound: "default",

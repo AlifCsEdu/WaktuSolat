@@ -69,14 +69,14 @@ export function usePrayerNotifications(
       }
     }
     
-    setPreferences(prev => ({ 
+    setPreferences((prev: Preferences) => ({ 
       ...prev, 
       [key]: { ...prev[key], enabled: !prev[key].enabled } 
     }));
   };
 
   const updatePreference = (key: PrayerKey, updates: Partial<PrayerPreference>) => {
-    setPreferences(prev => ({
+    setPreferences((prev: Preferences) => ({
       ...prev,
       [key]: { ...prev[key], ...updates }
     }));

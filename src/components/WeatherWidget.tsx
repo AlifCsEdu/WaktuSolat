@@ -23,6 +23,8 @@ import { useVisualStyle } from "../hooks/useVisualStyle";
 import { cn } from "../lib/utils";
 import { JAKIM_ZONES } from "../lib/zones";
 import { FullWeatherModal } from "./FullWeatherModal";
+import { storage } from "../lib/storage";
+import { analytics } from "../lib/analytics";
 
 export interface HourlyForecast {
   time: string[];
@@ -82,16 +84,9 @@ export function WeatherWidget({ selectedZone, userCoords, currentLocationName }:
   }, []);
 
   const [weather, setWeather] = useState<WeatherData | null>(() => {
-    const cached = localStorage.getItem(`weather-${selectedZone}`);
-    if (cached) {
-      try {
-        const parsed = JSON.parse(cached);
-        if (parsed && typeof parsed.temperature === "number") {
-          return parsed;
-        }
-      } catch (e) {
-        // ignore
-      }
+    const parsed = storage.getCachedWeather(selectedZone);
+    if (parsed && typeof parsed.temperature === "number") {
+      return parsed;
     }
     return null;
   });
@@ -109,16 +104,11 @@ export function WeatherWidget({ selectedZone, userCoords, currentLocationName }:
     const fetchWeather = async (force = false) => {
       // Smart caching check (15 mins)
       if (!force) {
-        const cachedStr = localStorage.getItem(`weather-${selectedZone}`);
-        if (cachedStr) {
-          try {
-            const cached: WeatherData = JSON.parse(cachedStr);
-            if (cached && cached.lastUpdated && Date.now() - cached.lastUpdated < 15 * 60 * 1000) {
-              setWeather(cached);
-              setIsLoading(false);
-              return;
-            }
-          } catch (e) {}
+        const cached = storage.getCachedWeather(selectedZone);
+        if (cached && cached.lastUpdated && Date.now() - cached.lastUpdated < 15 * 60 * 1000) {
+          setWeather(cached);
+          setIsLoading(false);
+          return;
         }
       }
 
@@ -155,7 +145,9 @@ export function WeatherWidget({ selectedZone, userCoords, currentLocationName }:
         try {
           const aqiRes = await fetch(aqiUrl);
           if (aqiRes.ok) aqiData = await aqiRes.json();
-        } catch (e) {}
+        } catch (e: any) {
+          analytics.logError(e, { context: "weather_aqi_fetch" });
+        }
 
         if (isMounted && weatherData.current) {
           const newData: WeatherData = {
@@ -177,10 +169,10 @@ export function WeatherWidget({ selectedZone, userCoords, currentLocationName }:
           };
           
           setWeather(newData);
-          localStorage.setItem(`weather-${selectedZone}`, JSON.stringify(newData));
+          storage.setCachedWeather(selectedZone, newData);
         }
-      } catch (err) {
-        console.error("Open-Meteo fetch error:", err);
+      } catch (err: any) {
+        analytics.logError(err, { context: "weather_fetch", zone: selectedZone });
       } finally {
         if (isMounted) {
           setIsLoading(false);

@@ -1,50 +1,11 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-
-/**
- * Extract the state/subdivision name from the geocode API response.
- * The API returns { osm: <nominatim data>, bdc: <bigdatacloud data> }.
- */
-function extractStateName(data: any): string {
-  // Try BigDataCloud first (more reliable for Malaysia)
-  if (data?.bdc?.principalSubdivision) return data.bdc.principalSubdivision;
-  if (data?.bdc?.city) return data.bdc.city;
-  // Fallback to Nominatim/OSM
-  if (data?.osm?.address?.state) return data.osm.address.state;
-  if (data?.osm?.address?.city) return data.osm.address.city;
-  return "";
-}
-
-function extractLocalityName(data: any): string {
-  if (data?.bdc?.locality) return data.bdc.locality;
-  if (data?.bdc?.city) return data.bdc.city;
-  if (data?.osm?.address?.city) return data.osm.address.city;
-  if (data?.osm?.address?.town) return data.osm.address.town;
-  if (data?.osm?.address?.suburb) return data.osm.address.suburb;
-  if (data?.bdc?.principalSubdivision) return data.bdc.principalSubdivision;
-  if (data?.osm?.address?.state) return data.osm.address.state;
-  return "Kawasan Semasa";
-}
-
-function mapStateToZone(stateName: string): string {
-  if (!stateName) return "";
-  const s = stateName.toLowerCase();
-  if (s.includes("johor")) return "JHR02";
-  if (s.includes("kedah")) return "KDH01";
-  if (s.includes("kelantan")) return "KTN01";
-  if (s.includes("melaka") || s.includes("malacca")) return "MLK01";
-  if (s.includes("negeri sembilan")) return "NGS02";
-  if (s.includes("pahang")) return "PHG02";
-  if (s.includes("perak")) return "PRK02";
-  if (s.includes("perlis")) return "PLS01";
-  if (s.includes("pulau pinang") || s.includes("penang")) return "PNG01";
-  if (s.includes("sabah")) return "SBH07";
-  if (s.includes("sarawak")) return "SWK08";
-  if (s.includes("selangor")) return "SGR01";
-  if (s.includes("terengganu")) return "TRG01";
-  if (s.includes("kuala lumpur") || s.includes("putrajaya") || s.includes("federal territory")) return "WLY01";
-  if (s.includes("labuan")) return "WLY02";
-  return "";
-}
+import {
+  fetchReverseGeocode,
+  extractLocalityName,
+  extractStateName,
+  mapStateToZone
+} from "../lib/geocoding";
+import { analytics } from "../lib/analytics";
 
 export function useLocationTracking(
   selectedZone: string,
@@ -87,14 +48,8 @@ export function useLocationTracking(
         const { latitude, longitude } = position.coords;
         setUserCoords({ lat: latitude, lng: longitude });
         try {
-          const res = await fetch(
-            `/api/geocode?lat=${latitude}&lng=${longitude}`,
-          );
-          if (!res.ok) throw new Error();
-
-          const data = await res.json();
+          const data = await fetchReverseGeocode(latitude, longitude);
           
-          // Correctly extract from the nested API response: { osm: {...}, bdc: {...} }
           const stateName = extractStateName(data);
           const locName = extractLocalityName(data);
           
@@ -105,11 +60,10 @@ export function useLocationTracking(
           if (foundZone) {
             if (locationModeRef.current === 'auto') {
               // In Auto mode, ALWAYS set the zone to the detected one when forced
-              // This ensures switching back to auto always gets a fresh detection
               if (force || foundZone !== selectedZoneRef.current) {
                 setSelectedZone(foundZone);
                 
-                // Show the toast if it was a forced check (user action/load) OR if the zone changed
+                // Show the toast
                 setAutoUpdatedZone(foundZone);
                 setAutoUpdatedLocationName(locName);
                 setTimeout(() => {
@@ -124,13 +78,14 @@ export function useLocationTracking(
               }
             }
           }
-        } catch (err) {
-          // Ignore
+        } catch (err: any) {
+          analytics.logError(err, { context: "locationTracking", coords: { latitude, longitude } });
         } finally {
           setIsDetecting(false);
         }
       },
-      () => {
+      (geoError) => {
+        analytics.logError(geoError, { context: "geolocation_getCurrentPosition" });
         setIsDetecting(false);
       },
       { timeout: 10000, maximumAge: force ? 0 : 60000 },
@@ -138,14 +93,12 @@ export function useLocationTracking(
   }, [setSelectedZone]);
 
   // When locationMode changes to 'auto', FORCE a cache-busting check immediately
-  // Reset lastCheckTime so the throttle doesn't block this critical detection
   const prevMode = useRef(locationMode);
   useEffect(() => {
     const changedToAuto = prevMode.current !== 'auto' && locationMode === 'auto';
     prevMode.current = locationMode;
     
     if (changedToAuto) {
-      // Reset throttle so the forced check always goes through
       lastCheckTime.current = 0;
       checkLocation(true);
     }
@@ -155,7 +108,7 @@ export function useLocationTracking(
   useEffect(() => {
     const intervalId = setInterval(() => checkLocation(false), 5 * 60 * 1000);
 
-    // Initial check on mount — force if in auto mode to always get fresh location
+    // Initial check on mount
     if (locationModeRef.current === 'auto') {
       lastCheckTime.current = 0;
       checkLocation(true);
@@ -183,3 +136,4 @@ export function useLocationTracking(
 
   return { promptZone, promptLocationName, autoUpdatedZone, autoUpdatedLocationName, currentLocationName, isDetecting, acceptPrompt, dismissPrompt, userCoords };
 }
+export default useLocationTracking;

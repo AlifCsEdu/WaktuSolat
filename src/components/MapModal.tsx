@@ -164,7 +164,7 @@ export function MapModal({
     }
   };
 
-  const styleFeature = (feature: Feature<Geometry, any>) => {
+  const styleFeature = (feature: any) => {
     const isSelected = selectedZone === feature.properties?.jakim_code;
     
     return {
@@ -240,7 +240,7 @@ export function MapModal({
                     className="bg-[var(--md-sys-color-primary)] shadow-[0_16px_32px_rgba(0,0,0,0.3)] rounded-3xl p-5 flex flex-col items-center justify-center text-center overflow-hidden"
                   >
                     <span className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-[var(--md-sys-color-on-primary)] opacity-90 mb-1">
-                      {t('selectedZone')}
+                      {t('selectedZone' as any)}
                     </span>
                     <span className="text-xl sm:text-3xl font-black text-[var(--md-sys-color-on-primary)] leading-tight drop-shadow-sm truncate w-full px-2">
                       {zoneLabel || selectedZone}

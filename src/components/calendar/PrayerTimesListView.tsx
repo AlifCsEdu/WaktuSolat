@@ -107,7 +107,7 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
         {/* Daily Grid of Clocks */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 w-full">
           {timesToDisplay.map((k, idx) => {
-            const Icon = PRAYER_ICONS[k];
+            const Icon = PRAYER_ICONS[k] as React.ComponentType<any>;
             const timeStr = day[k as keyof PrayerData] as string;
             if (!timeStr || !Icon) return null;
             return (
@@ -195,7 +195,7 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
               {/* Horizontal grid list row of times */}
               <div className="flex flex-wrap gap-2 flex-1 lg:justify-end mt-2 lg:mt-0">
                 {timesToDisplay.map((k) => {
-                  const Icon = PRAYER_ICONS[k];
+                  const Icon = PRAYER_ICONS[k] as React.ComponentType<any>;
                   return (
                     <motion.button
                       key={k}

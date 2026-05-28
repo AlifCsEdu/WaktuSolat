@@ -16,6 +16,9 @@ import "@material/web/textfield/filled-text-field.js";
 import { useAppContext } from "../AppContext";
 import { MapModal } from "./MapModal";
 import { useVisualStyle } from "../hooks/useVisualStyle";
+import { fetchReverseGeocode, matchZoneFromGeocode, ALIASES } from "../lib/geocoding";
+import { analytics } from "../lib/analytics";
+import { storage } from "../lib/storage";
 
 const STATE_FLAGS: Record<string, string> = {
   Johor:
@@ -46,583 +49,6 @@ const STATE_FLAGS: Record<string, string> = {
     "https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Terengganu.svg",
   "Wilayah Persekutuan":
     "https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_the_Federal_Territories.svg",
-};
-
-const ALIASES: Record<string, string> = {
-  ampang: "SGR01",
-  kajang: "SGR01",
-  bangi: "SGR01",
-  semenyih: "SGR01",
-  "hulu langat": "SGR01",
-  cheras: "WLY01",
-  "kelana jaya": "SGR01",
-  puchong: "SGR01",
-  subang: "SGR01",
-  "subang jaya": "SGR01",
-  "petaling jaya": "SGR01",
-  pj: "SGR01",
-  damansara: "SGR01",
-  "bandar utama": "SGR01",
-  cyberjaya: "SGR01",
-  sepang: "SGR01",
-  dengkil: "SGR01",
-  klia: "SGR01",
-  "salak tinggi": "SGR01",
-  banting: "SGR03",
-  jenjarom: "SGR03",
-  "teluk panglima garang": "SGR03",
-  "shah alam": "SGR01",
-  gombak: "SGR01",
-  "batu caves": "SGR01",
-  selayang: "SGR01",
-  rawang: "SGR01",
-  "kuala kubu bharu": "SGR01",
-  "hulu selangor": "SGR01",
-  "sungai buloh": "SGR01",
-  serendah: "SGR01",
-  "batang kali": "SGR01",
-  klang: "SGR03",
-  "port klang": "SGR03",
-  kapar: "SGR03",
-  meru: "SGR03",
-  "kuala langat": "SGR03",
-  "pulau carey": "SGR03",
-  morib: "SGR03",
-  jugra: "SGR03",
-  "kuala selangor": "SGR02",
-  "tanjong karang": "SGR02",
-  "sabak bernam": "SGR02",
-  sekinchan: "SGR02",
-  "sungai besar": "SGR02",
-  ijok: "SGR02",
-  jeram: "SGR02",
-  "bestari jaya": "SGR02",
-  "kuala lumpur": "WLY01",
-  putrajaya: "WLY01",
-  labuan: "WLY02",
-  kepong: "WLY01",
-  "wangsa maju": "WLY01",
-  setapak: "WLY01",
-  sentul: "WLY01",
-  "bukit jalil": "WLY01",
-  "bandar tun razak": "WLY01",
-  titiwangsa: "WLY01",
-  bangsar: "WLY01",
-  "mont kiara": "WLY01",
-  "sri petaling": "WLY01",
-  "sungai besi": "WLY01",
-  "johor bahru": "JHR02",
-  jb: "JHR02",
-  "pasir gudang": "JHR02",
-  skudai: "JHR02",
-  masai: "JHR02",
-  "gelang patah": "JHR02",
-  kulai: "JHR02",
-  senai: "JHR02",
-  "kota tinggi": "JHR02",
-  mersing: "JHR02",
-  "ulu tiram": "JHR02",
-  plentong: "JHR02",
-  kempas: "JHR02",
-  tampoi: "JHR02",
-  "layang-layang": "JHR03",
-  sedili: "JHR02",
-  pengerang: "JHR02",
-  desaru: "JHR02",
-  "batu pahat": "JHR04",
-  "yong peng": "JHR04",
-  muar: "JHR04",
-  pagoh: "JHR04",
-  segamat: "JHR04",
-  tangkak: "JHR04",
-  labis: "JHR04",
-  "parit sulong": "JHR04",
-  "ayer hitam": "JHR04",
-  "sri gading": "JHR04",
-  "parit raja": "JHR04",
-  "bukit gambir": "JHR04",
-  bekok: "JHR04",
-  chaah: "JHR04",
-  "buloh kasap": "JHR04",
-  kluang: "JHR03",
-  "simpang renggam": "JHR03",
-  pontian: "JHR03",
-  "pekan nenas": "JHR03",
-  benut: "JHR03",
-  kukup: "JHR03",
-  mengkibol: "JHR03",
-  paloh: "JHR03",
-  kahang: "JHR03",
-  "pulau aur": "JHR01",
-  "pulau pemanggil": "JHR01",
-  melaka: "MLK01",
-  "ayer keroh": "MLK01",
-  jasin: "MLK01",
-  "alor gajah": "MLK01",
-  "masjid tanah": "MLK01",
-  "sg udang": "MLK01",
-  "batu berendam": "MLK01",
-  merlimau: "MLK01",
-  "pulau sebang": "MLK01",
-  machap: "MLK01",
-  "kuala sungai baru": "MLK01",
-  klebang: "MLK01",
-  bemban: "MLK01",
-  seremban: "NGS03",
-  "port dickson": "NGS03",
-  pd: "NGS03",
-  senawang: "NGS03",
-  nilai: "NGS03",
-  mantin: "NGS03",
-  rantau: "NGS03",
-  lukut: "NGS03",
-  chuah: "NGS03",
-  "bandar sri sendayan": "NGS03",
-  lenggeng: "NGS03",
-  "kuala pilah": "NGS02",
-  rembau: "NGS02",
-  jelebu: "NGS02",
-  "kuala klawang": "NGS02",
-  johol: "NGS02",
-  juasseh: "NGS02",
-  "seri menanti": "NGS02",
-  pedas: "NGS02",
-  kota: "NGS02",
-  pertang: "NGS02",
-  "simpang durian": "NGS02",
-  tampin: "NGS01",
-  jempol: "NGS01",
-  bahau: "NGS01",
-  gemas: "NGS01",
-  gemencheh: "NGS01",
-  "bandar seri jempol": "NGS01",
-  "batu kikir": "NGS01",
-  "rompin negeri sembilan": "NGS01",
-  ipoh: "PRK02",
-  "kuala kangsar": "PRK02",
-  "sungai siput": "PRK02",
-  "batu gajah": "PRK02",
-  kampar: "PRK02",
-  gopeng: "PRK02",
-  tambun: "PRK02",
-  menglembu: "PRK02",
-  jelapang: "PRK02",
-  chemor: "PRK02",
-  "ulu kinta": "PRK02",
-  pusing: "PRK02",
-  tronoh: "PRK02",
-  "malim nawar": "PRK02",
-  "padang rengas": "PRK02",
-  karai: "PRK02",
-  taiping: "PRK06",
-  "bagan serai": "PRK06",
-  "parit buntar": "PRK06",
-  kamunting: "PRK06",
-  selama: "PRK06",
-  matang: "PRK06",
-  "kuala kurau": "PRK06",
-  "simpang empat": "PRK06",
-  "batu kurau": "PRK06",
-  "kuala sepetang": "PRK06",
-  "changkat jering": "PRK06",
-  "teluk intan": "PRK05",
-  manjung: "PRK05",
-  sitiawan: "PRK05",
-  lumut: "PRK05",
-  "seri iskandar": "PRK05",
-  "pulau pangkor": "PRK05",
-  "bagan datuk": "PRK05",
-  "kg gajah": "PRK05",
-  beruas: "PRK05",
-  "pantai remis": "PRK05",
-  "hutan melintang": "PRK05",
-  selekoh: "PRK05",
-  parit: "PRK05",
-  bota: "PRK05",
-  "chenderong balai": "PRK05",
-  tapah: "PRK01",
-  bidor: "PRK01",
-  "slim river": "PRK01",
-  "tanjung malim": "PRK01",
-  sungkai: "PRK01",
-  behrang: "PRK01",
-  banir: "PRK01",
-  temoh: "PRK01",
-  chenderiang: "PRK01",
-  trolak: "PRK01",
-  gerik: "PRK03",
-  grik: "PRK03",
-  lenggong: "PRK03",
-  "pengkalan hulu": "PRK03",
-  lawin: "PRK03",
-  kroh: "PRK03",
-  "kelian intan": "PRK03",
-  temengor: "PRK04",
-  belum: "PRK04",
-  "bukit larut": "PRK07",
-  "maxwell hill": "PRK07",
-  georgetown: "PNG01",
-  "bayan lepas": "PNG01",
-  butterworth: "PNG01",
-  "bukit mertajam": "PNG01",
-  "nibong tebal": "PNG01",
-  perai: "PNG01",
-  "batu kawan": "PNG01",
-  "kepala batas": "PNG01",
-  "balik pulau": "PNG01",
-  "batu ferringhi": "PNG01",
-  "tanjung bungah": "PNG01",
-  gelugor: "PNG01",
-  jelutong: "PNG01",
-  "air itam": "PNG01",
-  "payar terubong": "PNG01",
-  relau: "PNG01",
-  "teluk kumbar": "PNG01",
-  "bayan baru": "PNG01",
-  "mak mandin": "PNG01",
-  "seberang jaya": "PNG01",
-  "kubang semang": "PNG01",
-  penanti: "PNG01",
-  "bukit minyak": "PNG01",
-  juru: "PNG01",
-  "simpang ampat": "PNG01",
-  "sungai bakap": "PNG01",
-  jawi: "PNG01",
-  "alor setar": "KDH01",
-  jitra: "KDH01",
-  "pokok sena": "KDH01",
-  "kubang pasu": "KDH01",
-  "kuala kedah": "KDH01",
-  changlun: "KDH01",
-  "bukit kayu hitam": "KDH01",
-  kodiang: "KDH01",
-  "kepala batas kedah": "KDH01",
-  langgar: "KDH01",
-  pendang: "KDH02",
-  "simpang empat kedah": "KDH01",
-  "kuala nerang": "KDH03",
-  "padang terap": "KDH03",
-  "sungai petani": "KDH02",
-  yan: "KDH02",
-  gurun: "KDH02",
-  bedong: "KDH02",
-  merbok: "KDH02",
-  "tanjung dawai": "KDH02",
-  "tikam batu": "KDH02",
-  "kota kuala muda": "KDH02",
-  "guar chempedak": "KDH02",
-  sala: "KDH02",
-  kulim: "KDH05",
-  lunas: "KDH05",
-  "bandar baharu": "KDH05",
-  "padang serai": "KDH05",
-  karangan: "KDH05",
-  serdang: "KDH05",
-  "selama kedah": "KDH05",
-  baling: "KDH04",
-  kupang: "KDH04",
-  "kuala pegang": "KDH04",
-  malau: "KDH04",
-  sik: "KDH03",
-  gulai: "KDH03",
-  jeneri: "KDH03",
-  langkawi: "KDH06",
-  kuah: "KDH06",
-  "padang matsirat": "KDH06",
-  "ayer hangat": "KDH06",
-  bohor: "KDH06",
-  kedawang: "KDH06",
-  "ulu melaka": "KDH06",
-  "puncak gunung jerai": "KDH07",
-  "gunung jerai": "KDH07",
-  kangar: "PLS01",
-  arau: "PLS01",
-  "padang besar": "PLS01",
-  "kuala perlis": "PLS01",
-  beseri: "PLS01",
-  cuping: "PLS01",
-  bintong: "PLS01",
-  "simpang empat perlis": "PLS01",
-  sanglang: "PLS01",
-  "mata ayer": "PLS01",
-  "kurong anai": "PLS01",
-  "kota bharu": "KTN01",
-  "pasir mas": "KTN01",
-  tumpat: "KTN01",
-  "tanah merah": "KTN01",
-  bachok: "KTN01",
-  "pasir puteh": "KTN01",
-  machang: "KTN01",
-  "kuala krai": "KTN01",
-  ketereh: "KTN01",
-  "pengkalan chepa": "KTN01",
-  "kubang kerian": "KTN01",
-  "wakaf bharu": "KTN01",
-  "rantau panjang": "KTN01",
-  salor: "KTN01",
-  pendek: "KTN01",
-  peringat: "KTN01",
-  jelawat: "KTN01",
-  "awang besut": "KTN01",
-  "kok lanas": "KTN01",
-  melor: "KTN01",
-  kadok: "KTN01",
-  "bukit panau": "KTN01",
-  kusial: "KTN01",
-  jedok: "KTN01",
-  dabung: "KTN01",
-  "manek urai": "KTN01",
-  kemahang: "KTN01",
-  jerek: "KTN01",
-  "gua musang": "KTN02",
-  jeli: "KTN02",
-  bertam: "KTN02",
-  galas: "KTN02",
-  loji: "KTN02",
-  "batu melintang": "KTN02",
-  "kuala balah": "KTN02",
-  "kuala terengganu": "TRG01",
-  "kuala nerus": "TRG01",
-  marang: "TRG01",
-  "batu rakit": "TRG01",
-  "bukit payong": "TRG01",
-  manir: "TRG01",
-  "gong badak": "TRG01",
-  "wakaf tapai": "TRG01",
-  "kuala ibai": "TRG01",
-  chedang: "TRG01",
-  merchang: "TRG01",
-  kemaman: "TRG04",
-  cukai: "TRG04",
-  dungun: "TRG04",
-  kerteh: "TRG04",
-  paka: "TRG04",
-  kijal: "TRG04",
-  kemasik: "TRG04",
-  cheneh: "TRG04",
-  "ketengah jaya": "TRG04",
-  binjai: "TRG04",
-  "kuala abang": "TRG04",
-  besut: "TRG02",
-  jerteh: "TRG02",
-  setiu: "TRG02",
-  "kampung raja": "TRG02",
-  "kuala besut": "TRG02",
-  jabi: "TRG02",
-  permaisuri: "TRG02",
-  chalok: "TRG02",
-  "sungai tong": "TRG02",
-  penarik: "TRG02",
-  "hulu terengganu": "TRG03",
-  "kuala berang": "TRG03",
-  ajit: "TRG03",
-  tersat: "TRG03",
-  "kuala telemong": "TRG03",
-  jenagor: "TRG03",
-  "sungai telemong": "TRG03",
-  kuantan: "PHG02",
-  pekan: "PHG02",
-  "rompin pahang": "PHG02",
-  "muadzam shah": "PHG02",
-  "indera mahkota": "PHG02",
-  gambang: "PHG02",
-  beserah: "PHG02",
-  balok: "PHG02",
-  "sungai lembing": "PHG02",
-  nenasi: "PHG02",
-  chuping: "PHG02",
-  "kuala rompin": "PHG02",
-  endau: "PHG02",
-  temerloh: "PHG03",
-  mentakab: "PHG03",
-  maran: "PHG03",
-  bera: "PHG03",
-  jengka: "PHG03",
-  jerantut: "PHG03",
-  lancang: "PHG03",
-  "kuala krau": "PHG03",
-  chenor: "PHG03",
-  "bandar tun razak pahang": "PHG03",
-  triang: "PHG03",
-  kemayan: "PHG03",
-  mengkarak: "PHG03",
-  "bandar bera": "PHG03",
-  "taman negara": "PHG03",
-  "kuala tahan": "PHG03",
-  bentong: "PHG04",
-  raub: "PHG04",
-  lipis: "PHG04",
-  "kuala lipis": "PHG04",
-  karak: "PHG04",
-  benta: "PHG04",
-  dong: "PHG04",
-  tras: "PHG04",
-  "padang tengku": "PHG04",
-  merapoh: "PHG04",
-  "batu talam": "PHG04",
-  "bukit tinggi": "PHG05",
-  "janda baik": "PHG05",
-  "genting sempah": "PHG05",
-  "cameron highlands": "PHG06",
-  "tanah rata": "PHG06",
-  brinchang: "PHG06",
-  "genting highlands": "PHG06",
-  ringlet: "PHG06",
-  "kampung raja pahang": "PHG06",
-  "fraser's hill": "PHG06",
-  "bukit fraser": "PHG06",
-  "pulau tioman": "PHG01",
-  kuching: "SWK08",
-  bau: "SWK08",
-  lundu: "SWK08",
-  sematan: "SWK08",
-  padawan: "SWK08",
-  "batu kawa": "SWK08",
-  "matang sarawak": "SWK08",
-  santubong: "SWK08",
-  bako: "SWK08",
-  siniawan: "SWK08",
-  miri: "SWK02",
-  marudi: "SWK02",
-  bekenu: "SWK02",
-  niah: "SWK02",
-  sibuti: "SWK02",
-  lutong: "SWK02",
-  pujut: "SWK02",
-  bakam: "SWK02",
-  "long lama": "SWK02",
-  beluru: "SWK02",
-  sibu: "SWK04",
-  kanowit: "SWK04",
-  mukah: "SWK04",
-  dalat: "SWK04",
-  kapit: "SWK04",
-  song: "SWK04",
-  igan: "SWK04",
-  oya: "SWK04",
-  balingian: "SWK04",
-  selangau: "SWK04",
-  belaga: "SWK04",
-  "sungai merah": "SWK04",
-  bintulu: "SWK03",
-  tatau: "SWK03",
-  "belaga swk03": "SWK03",
-  suai: "SWK03",
-  sebauh: "SWK03",
-  pandan: "SWK03",
-  kemena: "SWK03",
-  kidurong: "SWK03",
-  samarahan: "SWK07",
-  serian: "SWK07",
-  simunjan: "SWK07",
-  asanajaya: "SWK07",
-  sebuyau: "SWK07",
-  meludam: "SWK07",
-  siburan: "SWK07",
-  tebedu: "SWK07",
-  "balai ringin": "SWK07",
-  "sri aman": "SWK06",
-  "lubok antu": "SWK06",
-  betong: "SWK06",
-  saratok: "SWK06",
-  spaoh: "SWK06",
-  lingga: "SWK06",
-  engkilili: "SWK06",
-  pusa: "SWK06",
-  roban: "SWK06",
-  debak: "SWK06",
-  kabong: "SWK06",
-  maludam: "SWK06",
-  sarikei: "SWK05",
-  bintangor: "SWK05",
-  julau: "SWK05",
-  daro: "SWK05",
-  matu: "SWK05",
-  "tanjung manis": "SWK05",
-  belawai: "SWK05",
-  rajang: "SWK05",
-  meradong: "SWK05",
-  pakan: "SWK05",
-  limbang: "SWK01",
-  lawas: "SWK01",
-  sundar: "SWK01",
-  trusan: "SWK01",
-  "nanga medamit": "SWK01",
-  merapok: "SWK01",
-  "kota kinabalu": "SBH07",
-  penampang: "SBH07",
-  putatan: "SBH07",
-  papar: "SBH07",
-  tuaran: "SBH07",
-  "kota belud": "SBH07",
-  ranau: "SBH07",
-  inanam: "SBH07",
-  menggatal: "SBH07",
-  telipok: "SBH07",
-  tamparuli: "SBH07",
-  kinarit: "SBH07",
-  bongawan: "SBH07",
-  donggongon: "SBH07",
-  kepayan: "SBH07",
-  likas: "SBH07",
-  tangkarason: "SBH07",
-  sandakan: "SBH01",
-  beluran: "SBH01",
-  kinabatangan: "SBH01",
-  "bukit garam": "SBH01",
-  semawang: "SBH01",
-  temanggong: "SBH01",
-  sukau: "SBH01",
-  "batu sapi": "SBH01",
-  "gum gum": "SBH01",
-  telupid: "SBH02",
-  tongod: "SBH02",
-  pinangah: "SBH02",
-  terusan: "SBH02",
-  kuamut: "SBH02",
-  bohayan: "SBH02",
-  halogilat: "SBH02",
-  paitan: "SBH02",
-  tawau: "SBH03",
-  "lahad datu": "SBH03",
-  semporna: "SBH03",
-  kunak: "SBH03",
-  kalabakan: "SBH04",
-  tambisan: "SBH03",
-  sahabat: "SBH03",
-  tungku: "SBH03",
-  silabukan: "SBH03",
-  balung: "SBH04",
-  merotai: "SBH04",
-  keningau: "SBH08",
-  tambunan: "SBH08",
-  nabawan: "SBH08",
-  pensiangan: "SBH08",
-  bingkor: "SBH08",
-  tambaig: "SBH08",
-  sokid: "SBH08",
-  sook: "SBH08",
-  tulid: "SBH08",
-  tenom: "SBH09",
-  beaufort: "SBH09",
-  "kuala penyu": "SBH09",
-  sipitang: "SBH09",
-  "long pasia": "SBH09",
-  membakut: "SBH09",
-  weston: "SBH09",
-  sindumin: "SBH09",
-  lumadan: "SBH09",
-  kemabong: "SBH09",
-  melalap: "SBH09",
-  kudat: "SBH05",
-  "kota marudu": "SBH05",
-  pitas: "SBH05",
-  "pulau banggi": "SBH05",
-  matunggong: "SBH05",
-  sikuati: "SBH05",
-  tandek: "SBH05",
-  langkon: "SBH05",
-  "gunung kinabalu": "SBH06",
 };
 
 export function ZoneSelector({
@@ -682,220 +108,38 @@ export function ZoneSelector({
           const { latitude, longitude } = position.coords;
           setUserCoords({ lat: latitude, lng: longitude });
           try {
-            const res = await fetch(
-              `/api/geocode?lat=${latitude}&lng=${longitude}`,
-            );
-            if (!res.ok) throw new Error("Failed to fetch geocode");
-
-            let data;
-            try {
-              data = await res.json();
-            } catch (e) {
-              throw new Error("Invalid geocode JSON");
+            const data = await fetchReverseGeocode(latitude, longitude);
+            const match = matchZoneFromGeocode(data);
+            
+            let reasonFound = "";
+            if (match.reasonKey === "alias" || match.reasonKey === "locality") {
+              reasonFound = t(match.reasonKey === "alias" ? "reasonMatchingArea" : "reasonMatchingLocality").replace(
+                match.reasonKey === "alias" ? "{area}" : "{locality}",
+                match.detailVal
+              );
+            } else if (match.reasonKey === "state") {
+              reasonFound = t("reasonStateCapital").replace("{state}", match.detailVal);
+            } else {
+              reasonFound = "Kuala Lumpur (Lalai)";
             }
 
-            const cleanText = (text: string) => {
-              return text
-                .toLowerCase()
-                .replace(
-                  /\b(mukim|daerah|bandar|kampung|pekan|taman|parlimen|dun|kg|kg\.|kpg|kpg\.)\b/g,
-                  "",
-                )
-                .replace(/[^a-z0-9 ]/g, " ")
-                .replace(/\s+/g, " ")
-                .trim();
-            };
-
-            const traverse = (obj: any): string[] => {
-              let strings: string[] = [];
-              if (typeof obj === "string") strings.push(obj.toLowerCase());
-              else if (Array.isArray(obj))
-                obj.forEach((item) => strings.push(...traverse(item)));
-              else if (typeof obj === "object" && obj !== null) {
-                Object.values(obj).forEach((item) =>
-                  strings.push(...traverse(item)),
-                );
-              }
-              return strings;
-            };
-
-            // Prioritized location extraction from OSM and BDC
-            const extractPrioritizedLocations = (): string[] => {
-              const locs: string[] = [];
-              if (data.osm?.address) {
-                const a = data.osm.address;
-                if (a.village) locs.push(a.village);
-                if (a.suburb) locs.push(a.suburb);
-                if (a.city_district) locs.push(a.city_district);
-                if (a.town) locs.push(a.town);
-                if (a.city) locs.push(a.city);
-                if (a.county) locs.push(a.county); // Sometimes county matches district
-                if (a.state_district) locs.push(a.state_district);
-              }
-              if (data.bdc) {
-                if (data.bdc.locality) locs.push(data.bdc.locality);
-                if (data.bdc.city) locs.push(data.bdc.city);
-              }
-              return locs.map(cleanText).filter((s) => s.length > 2);
-            };
-
-            const prioritizedStrings = extractPrioritizedLocations();
-            const allStringsRaw = traverse(data);
-            const allStrings = allStringsRaw
-              .map(cleanText)
-              .filter((s) => s.length > 2);
-            // Combine prioritized ones first, then all strings to give them priority
-            const combinedStrings = [
-              ...new Set([
-                ...prioritizedStrings,
-                ...allStringsRaw.filter((s) => s.length > 2),
-                ...allStrings,
-              ]),
-            ];
-
-            let foundZone = "WLY01"; // Default to KL
-            let reasonFound = "Kuala Lumpur (Lalai)";
-
-            let matched = false;
-
-            // 1. Alias Match
-            for (const str of combinedStrings) {
-              if (ALIASES[str] && !matched) {
-                foundZone = ALIASES[str];
-                const displayName = str
-                  .split(" ")
-                  .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-                  .join(" ");
-                reasonFound = t("reasonMatchingArea").replace(
-                  "{area}",
-                  str
-                    .split(" ")
-                    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-                    .join(" "),
-                );
-                matched = true;
-                break;
-              }
-            }
-
-            // 2. Exact Zone Name Match & Substring Match
-            if (!matched) {
-              // Try exact match on cleaned tokens first, then substring
-              const matches: {
-                zone: string;
-                priority: number;
-                display: string;
-              }[] = [];
-
-              for (const state of JAKIM_ZONES) {
-                for (const z of state.zones) {
-                  const parts = z.l
-                    .toLowerCase()
-                    .split(/[,()\/]/)
-                    .map((p) => cleanText(p))
-                    .filter(Boolean);
-                  for (const part of parts) {
-                    for (const str of combinedStrings) {
-                      if (str === part) {
-                        // Highest priority: exact match with prioritized string
-                        const isPrioritized = prioritizedStrings.includes(str);
-                        matches.push({
-                          zone: z.v,
-                          priority: isPrioritized ? 4 : 3,
-                          display: part,
-                        });
-                      } else if (
-                        (str.includes(` ${part} `) ||
-                          str.startsWith(`${part} `) ||
-                          str.endsWith(` ${part}`)) &&
-                        part.length > 3
-                      ) {
-                        matches.push({ zone: z.v, priority: 2, display: part });
-                      } else if (
-                        (str.includes(part) || part.includes(str)) &&
-                        str.length > 4 &&
-                        part.length > 4
-                      ) {
-                        matches.push({ zone: z.v, priority: 1, display: part });
-                      }
-                    }
-                  }
-                }
-              }
-
-              if (matches.length > 0) {
-                // sort by priority
-                matches.sort((a, b) => b.priority - a.priority);
-                foundZone = matches[0].zone;
-                const displayName = matches[0].display
-                  .split(" ")
-                  .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-                  .join(" ");
-                reasonFound = t("reasonMatchingLocality").replace(
-                  "{locality}",
-                  displayName,
-                );
-                matched = true;
-              }
-            }
-
-            // 3. Fallback to state
-            if (!matched) {
-              // combine both fallback names
-              const stateName = (
-                data.osm?.address?.state ||
-                data.bdc?.principalSubdivision ||
-                data.bdc?.city ||
-                data.osm?.address?.city ||
-                ""
-              ).toLowerCase();
-              if (stateName) {
-                const s = stateName.toLowerCase();
-                reasonFound = t("reasonStateCapital").replace(
-                  "{state}",
-                  stateName
-                    .split(" ")
-                    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-                    .join(" "),
-                );
-                if (s.includes("johor")) foundZone = "JHR02";
-                else if (s.includes("kedah")) foundZone = "KDH01";
-                else if (s.includes("kelantan")) foundZone = "KTN01";
-                else if (s.includes("melaka") || s.includes("malacca"))
-                  foundZone = "MLK01";
-                else if (s.includes("negeri sembilan")) foundZone = "NGS02";
-                else if (s.includes("pahang")) foundZone = "PHG02";
-                else if (s.includes("perak")) foundZone = "PRK02";
-                else if (s.includes("perlis")) foundZone = "PLS01";
-                else if (s.includes("pulau pinang") || s.includes("penang"))
-                  foundZone = "PNG01";
-                else if (s.includes("sabah")) foundZone = "SBH07";
-                else if (s.includes("sarawak")) foundZone = "SWK08";
-                else if (s.includes("selangor")) foundZone = "SGR01";
-                else if (s.includes("terengganu")) foundZone = "TRG01";
-                else if (
-                  s.includes("kuala lumpur") ||
-                  s.includes("putrajaya") ||
-                  s.includes("federal territory")
-                )
-                  foundZone = "WLY01";
-                else if (s.includes("labuan")) foundZone = "WLY02";
-              }
-            }
-
-            onZoneSelect(foundZone);
+            onZoneSelect(match.zone);
             setDetectReason(reasonFound);
             setTimeout(() => setDetectReason(null), 5000);
             setIsOpen(false);
+          } catch (err) {
+            analytics.logError(err, { context: "ZoneSelector_handleAutoDetect" });
+            alert(t("failDetectLocation"));
           } finally {
             setIsDetecting(false);
           }
         },
-        () => {
+        (geoError) => {
+          analytics.logError(geoError, { context: "ZoneSelector_geolocation" });
           setIsDetecting(false);
           alert(t("failDetectLocation"));
         },
-        { timeout: 5000 },
+        { timeout: 5000 }
       );
     } else {
       alert(t("noSupportLocation"));
@@ -1235,61 +479,57 @@ export function ZoneSelector({
                   <>
                     {/* Recent Zones Section */}
                     {!searchQuery && (() => {
-                      try {
-                        const recent = JSON.parse(localStorage.getItem("waktu-solat-recent-zones") || "[]");
-                        // Filter out the currently selected zone and limit to 3
-                        const filtered = Array.isArray(recent) 
-                          ? recent.filter((z: string) => z !== selectedZone).slice(0, 3) 
-                          : [];
-                        if (filtered.length > 0) {
-                          return (
-                            <div className="px-6 md:px-8 pt-6 pb-2">
-                              <h3 className="text-xs font-bold uppercase tracking-widest text-[var(--md-sys-color-on-surface-variant)] mb-4 flex items-center gap-2">
-                                <span className="opacity-60">🕐</span>
-                                {t('recentLocations' as any) || "Recent Locations"}
-                              </h3>
-                              {/* @ts-ignore */}
-                              <md-list className="bg-transparent overflow-visible flex flex-col gap-2 p-0">
-                                {filtered.map((code: string) => {
-                                  let label = code;
-                                  let stateName = "";
-                                  for (const state of JAKIM_ZONES) {
-                                    const found = state.zones.find(z => z.v === code);
-                                    if (found) { label = found.l; stateName = state.state; break; }
-                                  }
-                                  return (
-                                    /* @ts-ignore */
-                                    <md-list-item
-                                      key={`recent-${code}`}
-                                      type="button"
-                                      onClick={() => {
-                                        onZoneSelect(code);
-                                        setIsOpen(false);
-                                      }}
-                                      className="bg-[var(--md-sys-color-surface-container)] rounded-2xl overflow-hidden shadow-sm border border-[var(--md-sys-color-outline)]/5"
-                                    >
-                                      {STATE_FLAGS[stateName] && (
-                                        <div slot="start" className="w-[32px] h-[20px] bg-white overflow-hidden shadow-[0_0_0_1px_rgba(0,0,0,0.1)] shrink-0 rounded-[2px] mr-2">
-                                          <img
-                                            src={STATE_FLAGS[stateName]}
-                                            alt=""
-                                            className="w-full h-full object-cover"
-                                          />
-                                        </div>
-                                      )}
-                                      <div slot="headline" className="font-bold text-sm text-[var(--md-sys-color-on-surface)] truncate">{label}</div>
-                                      <div slot="supporting-text" className="text-[10px] opacity-80 truncate">{stateName}</div>
-                                      <div slot="end" className="text-[11px] font-mono font-black tracking-wider bg-[var(--md-sys-color-surface-variant)]/50 px-2 py-0.5 rounded-md text-[var(--md-sys-color-on-surface-variant)] shrink-0 opacity-70">
-                                        {code}
+                      const filtered = storage.getRecentZones()
+                        .filter((z: string) => z !== selectedZone)
+                        .slice(0, 3);
+                      if (filtered.length > 0) {
+                        return (
+                          <div className="px-6 md:px-8 pt-6 pb-2">
+                            <h3 className="text-xs font-bold uppercase tracking-widest text-[var(--md-sys-color-on-surface-variant)] mb-4 flex items-center gap-2">
+                              <span className="opacity-60">🕐</span>
+                              {t('recentLocations' as any) || "Recent Locations"}
+                            </h3>
+                            {/* @ts-ignore */}
+                            <md-list className="bg-transparent overflow-visible flex flex-col gap-2 p-0">
+                              {filtered.map((code: string) => {
+                                let label = code;
+                                let stateName = "";
+                                for (const state of JAKIM_ZONES) {
+                                  const found = state.zones.find(z => z.v === code);
+                                  if (found) { label = found.l; stateName = state.state; break; }
+                                }
+                                return (
+                                  /* @ts-ignore */
+                                  <md-list-item
+                                    key={`recent-${code}`}
+                                    type="button"
+                                    onClick={() => {
+                                      onZoneSelect(code);
+                                      setIsOpen(false);
+                                    }}
+                                    className="bg-[var(--md-sys-color-surface-container)] rounded-2xl overflow-hidden shadow-sm border border-[var(--md-sys-color-outline)]/5"
+                                  >
+                                    {STATE_FLAGS[stateName] && (
+                                      <div slot="start" className="w-[32px] h-[20px] bg-white overflow-hidden shadow-[0_0_0_1px_rgba(0,0,0,0.1)] shrink-0 rounded-[2px] mr-2">
+                                        <img
+                                          src={STATE_FLAGS[stateName]}
+                                          alt=""
+                                          className="w-full h-full object-cover"
+                                        />
                                       </div>
-                                    </md-list-item>
-                                  );
-                                })}
-                              </md-list>
-                            </div>
-                          );
-                        }
-                      } catch(e) {}
+                                    )}
+                                    <div slot="headline" className="font-bold text-sm text-[var(--md-sys-color-on-surface)] truncate">{label}</div>
+                                    <div slot="supporting-text" className="text-[10px] opacity-80 truncate">{stateName}</div>
+                                    <div slot="end" className="text-[11px] font-mono font-black tracking-wider bg-[var(--md-sys-color-surface-variant)]/50 px-2 py-0.5 rounded-md text-[var(--md-sys-color-on-surface-variant)] shrink-0 opacity-70">
+                                      {code}
+                                    </div>
+                                  </md-list-item>
+                                );
+                              })}
+                            </md-list>
+                          </div>
+                        );
+                      }
                       return null;
                     })()}
 

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 
 export function useTime(movement: 'tick' | 'sweep' = 'sweep') {
   const [time, setTime] = useState(new Date());
-  const requestRef = useRef<number>();
+  const requestRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     if (movement === 'sweep') {

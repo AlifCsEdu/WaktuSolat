@@ -105,6 +105,9 @@ export function SettingsModal({
   const [activeTab, setActiveTab] = useState<
     "general" | "notifications" | "adjustments" | "mosque" | "advanced"
   >("general");
+  const [showAdvancedGeneral, setShowAdvancedGeneral] = useState(false);
+  const [showAdvancedCalculations, setShowAdvancedCalculations] = useState(false);
+  const [showHijriEngine, setShowHijriEngine] = useState(false);
 
   const [downloadRange, setDownloadRange] = useState<'week' | 'month' | 'year'>('month');
   const [isDownloading, setIsDownloading] = useState(false);
@@ -273,10 +276,11 @@ export function SettingsModal({
                   {t("settings")}
                 </h2>
               </div>
-              <motion.button
+               <motion.button
                 whileHover={{ scale: 1.1, rotate: 90 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={onClose}
+                aria-label={t("close") || "Close"}
                 className="w-10 h-10 flex items-center justify-center rounded-full text-[var(--md-sys-color-on-surface)] bg-[var(--md-sys-color-surface-container-high)] hover:bg-[var(--md-sys-color-error-container)] hover:text-[var(--md-sys-color-on-error-container)] shrink-0 shadow-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-sys-color-error)]"
               >
                 <X size={22} className="stroke-[2.5]" />
@@ -514,256 +518,308 @@ export function SettingsModal({
                     )}
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="md3-label-large font-bold text-[var(--md-sys-color-on-surface)]">
-                      {t("hijriFormat")}
-                    </label>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {/* @ts-ignore */}
-                      <md-filter-chip
-                        label={t("hijriBoth")}
-                        selected={!settings.hijriFormat || settings.hijriFormat === "both"}
-                        onClick={() => updateSettings({ hijriFormat: "both" })}
-                      ></md-filter-chip>
-                      {/* @ts-ignore */}
-                      <md-filter-chip
-                        label={t("hijriText")}
-                        selected={settings.hijriFormat === "text"}
-                        onClick={() => updateSettings({ hijriFormat: "text" })}
-                      ></md-filter-chip>
-                      {/* @ts-ignore */}
-                      <md-filter-chip
-                        label={t("hijriNumber")}
-                        selected={settings.hijriFormat === "number"}
-                        onClick={() => updateSettings({ hijriFormat: "number" })}
-                      ></md-filter-chip>
-                    </div>
-                    <div className="flex items-center justify-between p-4 rounded-3xl bg-[var(--md-sys-color-surface)] ring-1 ring-[var(--md-sys-color-outline)]/5 shadow-sm mt-4">
-                      <div>
-                        <label className="md3-label-large font-bold text-[var(--md-sys-color-on-surface)] block mb-0.5">
-                          {t("showIqamah" as any)}
-                        </label>
-                        <p className="md3-body-small text-[var(--md-sys-color-on-surface-variant)] leading-relaxed max-w-[200px] sm:max-w-xs">
-                          {t("iqamahDesc" as any)}
-                        </p>
-                      </div>
-                      {/* @ts-ignore */}
-                      <md-switch
-                        selected={!!settings.showIqamah}
-                        onChange={(e: any) =>
-                          updateSettings({ showIqamah: e.target.selected })
-                        }
-                        icons
-                      ></md-switch>
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 rounded-3xl bg-[var(--md-sys-color-surface)] ring-1 ring-[var(--md-sys-color-outline)]/5 shadow-sm mt-2">
-                      <div>
-                        <label className="md3-label-large font-bold text-[var(--md-sys-color-on-surface)] block mb-0.5">
-                          {t("trackImsak" as any) || "Track Imsak"}
-                        </label>
-                        <p className="md3-body-small text-[var(--md-sys-color-on-surface-variant)] leading-relaxed max-w-[200px] sm:max-w-xs">
-                          {t("trackImsakDesc" as any) || "Show Imsak as the next time after Isha"}
-                        </p>
-                      </div>
-                      {/* @ts-ignore */}
-                      <md-switch
-                        selected={!!settings.trackImsak}
-                        onChange={(e: any) =>
-                          updateSettings({ trackImsak: e.target.selected })
-                        }
-                        icons
-                      ></md-switch>
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 rounded-3xl bg-[var(--md-sys-color-surface)] ring-1 ring-[var(--md-sys-color-outline)]/5 shadow-sm mt-2">
-                      <div>
-                        <label className="md3-label-large font-bold text-[var(--md-sys-color-on-surface)] block mb-0.5">
-                          {t("showJumaat" as any) || "Show Jumu'ah"}
-                        </label>
-                        <p className="md3-body-small text-[var(--md-sys-color-on-surface-variant)] leading-relaxed max-w-[200px] sm:max-w-xs">
-                          {t("showJumaatDesc" as any) || "Replace Dhuhr with Jumu'ah on Fridays"}
-                        </p>
-                      </div>
-                      {/* @ts-ignore */}
-                      <md-switch
-                        selected={settings.showJumaat !== false}
-                        onChange={(e: any) =>
-                          updateSettings({ showJumaat: e.target.selected })
-                        }
-                        icons
-                      ></md-switch>
-                    </div>
-                  </div>
-
-                  {/* Offline Mode section */}
-                  <hr className="border-[var(--md-sys-color-outline)]/10 my-6" />
-
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                      <WifiOff className="text-[var(--md-sys-color-primary)] w-5 h-5" />
-                      <h3 className="md3-title-medium font-bold text-[var(--md-sys-color-on-surface)]">
-                        {t("offlineMode" as any)}
-                      </h3>
-                    </div>
-
-                    <p className="md3-body-small text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
-                      {t("saveOfflineDesc" as any)}
-                    </p>
-
-                    <div className="p-5 rounded-3xl bg-[var(--md-sys-color-surface-container-high)] ring-1 ring-[var(--md-sys-color-outline)]/5 space-y-4">
-                      {/* Cache Status */}
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[var(--md-sys-color-outline)]/10 pb-4">
+                  {/* Collapsible Advanced & Offline Options (Progressive Disclosure) */}
+                  <div className={cn(
+                    "rounded-[32px] overflow-hidden border border-[var(--md-sys-color-outline)]/10 shadow-sm transition-all duration-300 mt-4",
+                    showAdvancedGeneral
+                      ? "bg-[var(--md-sys-color-surface-container)] p-6 space-y-6"
+                      : "bg-[var(--md-sys-color-surface-container-low)] hover:bg-[var(--md-sys-color-surface-container)] p-4 sm:p-5"
+                  )}>
+                    <button
+                      onClick={() => setShowAdvancedGeneral(!showAdvancedGeneral)}
+                      type="button"
+                      className="w-full flex items-center justify-between font-bold text-left cursor-pointer focus:outline-none"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center">
+                          <Sliders size={20} className="stroke-[2.5]" />
+                        </div>
                         <div>
-                          <span className="text-xs uppercase font-black tracking-widest text-[var(--md-sys-color-on-surface-variant)]">
-                            {t("cachingStatus" as any)}
-                          </span>
-                          <div className="font-bold text-sm sm:text-base mt-0.5 text-[var(--md-sys-color-on-surface)]">
-                            {settings.offlineCachedRange ? (
-                              <span className="flex items-center gap-1.5 text-[var(--md-sys-color-primary)]">
-                                <Check size={16} className="stroke-[3]" />
-                                {t("offlineCacheSaved" as any)
-                                  .replace("{zone}", selectedZone)
-                                  .replace("{range}", t(`offline${settings.offlineCachedRange.charAt(0).toUpperCase() + settings.offlineCachedRange.slice(1)}` as any))}
-                              </span>
-                            ) : (
-                              <span className="text-[var(--md-sys-color-outline)]">
-                                {t("offlineCacheNotSaved" as any)}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        {settings.offlineCachedAt && (
-                          <div className="text-right">
-                            <span className="text-[10px] sm:text-xs text-[var(--md-sys-color-on-surface-variant)] block">
-                              {t("offlineCacheAtLabel" as any).replace(
-                                "{date}",
-                                new Date(settings.offlineCachedAt).toLocaleDateString(
-                                  settings.language === "ms" ? "ms-MY" : "en-US",
-                                  { dateStyle: "medium" }
-                                )
-                              )}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Cache Duration */}
-                      <div className="space-y-2">
-                        <label className="md3-label-large font-bold text-[var(--md-sys-color-on-surface)] block">
-                          {t("offlineDuration" as any)}
-                        </label>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {(["week", "month", "year"] as const).map((range) => (
-                            /* @ts-ignore */
-                            <md-filter-chip
-                              key={range}
-                              label={t(`offline${range.charAt(0).toUpperCase() + range.slice(1)}` as any)}
-                              selected={downloadRange === range}
-                              onClick={() => setDownloadRange(range)}
-                            ></md-filter-chip>
-                          ))}
+                          <h3 className="text-base sm:text-lg font-black text-[var(--md-sys-color-on-surface)]">
+                            {settings.language === "ms" ? "Pilihan Paparan & Luar Talian Lanjutan" : "Advanced View & Offline Options"}
+                          </h3>
+                          <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] mt-0.5">
+                            {settings.language === "ms" 
+                              ? "Format Hijri, tetapan Iqamah, Imsak, Jumaat, dan mod luar talian." 
+                              : "Hijri formatting, Iqamah, Imsak, Jumu'ah, and offline caching."}
+                          </p>
                         </div>
                       </div>
+                      <motion.div
+                        animate={{ rotate: showAdvancedGeneral ? 180 : 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="text-[var(--md-sys-color-on-surface-variant)]"
+                      >
+                        <ChevronDown size={20} />
+                      </motion.div>
+                    </button>
 
-                      {/* Save & Clear Buttons */}
-                      <div className="flex flex-wrap items-center gap-3 pt-2">
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          disabled={isDownloading}
-                          onClick={handleSaveOffline}
-                          className={cn(
-                            "flex-1 sm:flex-none px-6 py-3 rounded-full font-bold flex items-center justify-center gap-2 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[var(--md-sys-color-primary)]",
-                            isDownloading
-                              ? "bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-outline)] cursor-not-allowed"
-                              : "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-sm hover:opacity-95"
-                          )}
+                    <AnimatePresence initial={false}>
+                      {showAdvancedGeneral && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.25, ease: "easeInOut" }}
+                          className="overflow-hidden space-y-6 pt-4 border-t border-[var(--md-sys-color-outline)]/10"
                         >
-                          {isDownloading ? (
-                            <>
-                              <RefreshCw size={16} className="animate-spin" />
-                              {t("syncing" as any)}
-                            </>
-                          ) : (
-                            <>
-                              <Download size={16} />
-                              {t("saveOfflineBtn" as any)}
-                            </>
-                          )}
-                        </motion.button>
+                          <div className="space-y-2">
+                            <label className="md3-label-large font-bold text-[var(--md-sys-color-on-surface)]">
+                              {t("hijriFormat")}
+                            </label>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {/* @ts-ignore */}
+                              <md-filter-chip
+                                label={t("hijriBoth")}
+                                selected={!settings.hijriFormat || settings.hijriFormat === "both"}
+                                onClick={() => updateSettings({ hijriFormat: "both" })}
+                              ></md-filter-chip>
+                              {/* @ts-ignore */}
+                              <md-filter-chip
+                                label={t("hijriText")}
+                                selected={settings.hijriFormat === "text"}
+                                onClick={() => updateSettings({ hijriFormat: "text" })}
+                              ></md-filter-chip>
+                              {/* @ts-ignore */}
+                              <md-filter-chip
+                                label={t("hijriNumber")}
+                                selected={settings.hijriFormat === "number"}
+                                onClick={() => updateSettings({ hijriFormat: "number" })}
+                              ></md-filter-chip>
+                            </div>
+                          </div>
 
-                        {settings.offlineCachedRange && (
-                          <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            disabled={isClearing}
-                            onClick={handleClearCache}
-                            className={cn(
-                              "flex-1 sm:flex-none px-5 py-3 rounded-full font-bold flex items-center justify-center gap-2 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[var(--md-sys-color-error)]",
-                              isClearing
-                                ? "bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-outline)] cursor-not-allowed"
-                                : "bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] shadow-sm hover:opacity-90"
-                            )}
-                          >
-                            {isClearing ? (
-                              <>
-                                <RefreshCw size={16} className="animate-spin" />
-                                {settings.language === "ms" ? "Membersih..." : "Clearing..."}
-                              </>
-                            ) : (
-                              <>
-                                <Trash2 size={16} />
-                                {settings.language === "ms" ? "Padam Cache" : "Clear Cache"}
-                              </>
-                            )}
-                          </motion.button>
-                        )}
-                      </div>
+                          <div className="flex items-center justify-between p-4 rounded-3xl bg-[var(--md-sys-color-surface)] ring-1 ring-[var(--md-sys-color-outline)]/5 shadow-sm mt-4">
+                            <div>
+                              <label className="md3-label-large font-bold text-[var(--md-sys-color-on-surface)] block mb-0.5">
+                                {t("showIqamah" as any)}
+                              </label>
+                              <p className="md3-body-small text-[var(--md-sys-color-on-surface-variant)] leading-relaxed max-w-[200px] sm:max-w-xs">
+                                {t("iqamahDesc" as any)}
+                              </p>
+                            </div>
+                            {/* @ts-ignore */}
+                            <md-switch
+                              selected={!!settings.showIqamah}
+                              onChange={(e: any) =>
+                                updateSettings({ showIqamah: e.target.selected })
+                              }
+                              icons
+                            ></md-switch>
+                          </div>
 
-                      {/* Feedback Messages */}
-                      <div className="min-h-[20px]">
-                        {downloadError && (
-                          <span className="text-xs text-[var(--md-sys-color-error)] font-bold flex items-center gap-1">
-                            <AlertCircle size={14} />
-                            {downloadError}
-                          </span>
-                        )}
-                        {downloadSuccess && (
-                          <span className="text-xs text-[var(--md-sys-color-primary)] font-bold flex items-center gap-1">
-                            <Check size={14} className="stroke-[3]" />
-                            {t("saveOfflineSuccess" as any)}
-                          </span>
-                        )}
-                        {clearSuccess && (
-                          <span className="text-xs text-[var(--md-sys-color-primary)] font-bold flex items-center gap-1">
-                            <Check size={14} className="stroke-[3]" />
-                            {settings.language === "ms" ? "Cache berjaya dipadam" : "Cache cleared successfully"}
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                          <div className="flex items-center justify-between p-4 rounded-3xl bg-[var(--md-sys-color-surface)] ring-1 ring-[var(--md-sys-color-outline)]/5 shadow-sm mt-2">
+                            <div>
+                              <label className="md3-label-large font-bold text-[var(--md-sys-color-on-surface)] block mb-0.5">
+                                {t("trackImsak" as any) || "Track Imsak"}
+                              </label>
+                              <p className="md3-body-small text-[var(--md-sys-color-on-surface-variant)] leading-relaxed max-w-[200px] sm:max-w-xs">
+                                {t("trackImsakDesc" as any) || "Show Imsak as the next time after Isha"}
+                              </p>
+                            </div>
+                            {/* @ts-ignore */}
+                            <md-switch
+                              selected={!!settings.trackImsak}
+                              onChange={(e: any) =>
+                                updateSettings({ trackImsak: e.target.selected })
+                              }
+                              icons
+                            ></md-switch>
+                          </div>
 
-                    {/* Auto Sync Offline Toggle */}
-                    <div className="flex items-center justify-between p-4 rounded-3xl bg-[var(--md-sys-color-surface)] ring-1 ring-[var(--md-sys-color-outline)]/5 shadow-sm">
-                      <div className="pr-4">
-                        <label className="md3-label-large font-bold text-[var(--md-sys-color-on-surface)] block mb-0.5">
-                          {t("autoSyncOffline" as any)}
-                        </label>
-                        <p className="md3-body-small text-[var(--md-sys-color-on-surface-variant)] leading-relaxed max-w-[200px] sm:max-w-xs">
-                          {t("autoSyncOfflineDesc" as any)}
-                        </p>
-                      </div>
-                      {/* @ts-ignore */}
-                      <md-switch
-                        selected={!!settings.autoSyncOffline}
-                        onChange={(e: any) =>
-                          updateSettings({ autoSyncOffline: e.target.selected })
-                        }
-                        icons
-                      ></md-switch>
-                    </div>
+                          <div className="flex items-center justify-between p-4 rounded-3xl bg-[var(--md-sys-color-surface)] ring-1 ring-[var(--md-sys-color-outline)]/5 shadow-sm mt-2">
+                            <div>
+                              <label className="md3-label-large font-bold text-[var(--md-sys-color-on-surface)] block mb-0.5">
+                                {t("showJumaat" as any) || "Show Jumu'ah"}
+                              </label>
+                              <p className="md3-body-small text-[var(--md-sys-color-on-surface-variant)] leading-relaxed max-w-[200px] sm:max-w-xs">
+                                {t("showJumaatDesc" as any) || "Replace Dhuhr with Jumu'ah on Fridays"}
+                              </p>
+                            </div>
+                            {/* @ts-ignore */}
+                            <md-switch
+                              selected={settings.showJumaat !== false}
+                              onChange={(e: any) =>
+                                updateSettings({ showJumaat: e.target.selected })
+                              }
+                              icons
+                            ></md-switch>
+                          </div>
+
+                          {/* Offline Mode section */}
+                          <hr className="border-[var(--md-sys-color-outline)]/10 my-4" />
+
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                              <WifiOff className="text-[var(--md-sys-color-primary)] w-5 h-5" />
+                              <h3 className="md3-title-medium font-bold text-[var(--md-sys-color-on-surface)]">
+                                {t("offlineMode" as any)}
+                              </h3>
+                            </div>
+
+                            <p className="md3-body-small text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
+                              {t("saveOfflineDesc" as any)}
+                            </p>
+
+                            <div className="p-5 rounded-3xl bg-[var(--md-sys-color-surface-container-high)] ring-1 ring-[var(--md-sys-color-outline)]/5 space-y-4">
+                              {/* Cache Status */}
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[var(--md-sys-color-outline)]/10 pb-4">
+                                <div>
+                                  <span className="text-xs uppercase font-black tracking-widest text-[var(--md-sys-color-on-surface-variant)]">
+                                    {t("cachingStatus" as any)}
+                                  </span>
+                                  <div className="font-bold text-sm sm:text-base mt-0.5 text-[var(--md-sys-color-on-surface)]">
+                                    {settings.offlineCachedRange ? (
+                                      <span className="flex items-center gap-1.5 text-[var(--md-sys-color-primary)]">
+                                        <Check size={16} className="stroke-[3]" />
+                                        {t("offlineCacheSaved" as any)
+                                          .replace("{zone}", selectedZone)
+                                          .replace("{range}", t(`offline${settings.offlineCachedRange.charAt(0).toUpperCase() + settings.offlineCachedRange.slice(1)}` as any))}
+                                      </span>
+                                    ) : (
+                                      <span className="text-[var(--md-sys-color-outline)]">
+                                        {t("offlineCacheNotSaved" as any)}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {settings.offlineCachedAt && (
+                                  <div className="text-right">
+                                    <span className="text-[10px] sm:text-xs text-[var(--md-sys-color-on-surface-variant)] block">
+                                      {t("offlineCacheAtLabel" as any).replace(
+                                        "{date}",
+                                        new Date(settings.offlineCachedAt).toLocaleDateString(
+                                          settings.language === "ms" ? "ms-MY" : "en-US",
+                                          { dateStyle: "medium" }
+                                        )
+                                      )}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Cache Duration */}
+                              <div className="space-y-2">
+                                <label className="md3-label-large font-bold text-[var(--md-sys-color-on-surface)] block">
+                                  {t("offlineDuration" as any)}
+                                </label>
+                                <div className="flex flex-wrap gap-2 mt-1">
+                                  {(["week", "month", "year"] as const).map((range) => (
+                                    /* @ts-ignore */
+                                    <md-filter-chip
+                                      key={range}
+                                      label={t(`offline${range.charAt(0).toUpperCase() + range.slice(1)}` as any)}
+                                      selected={downloadRange === range}
+                                      onClick={() => setDownloadRange(range)}
+                                    ></md-filter-chip>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* Save & Clear Buttons */}
+                              <div className="flex flex-wrap items-center gap-3 pt-2">
+                                <motion.button
+                                  whileHover={{ scale: 1.02 }}
+                                  whileTap={{ scale: 0.98 }}
+                                  disabled={isDownloading}
+                                  onClick={handleSaveOffline}
+                                  type="button"
+                                  className={cn(
+                                    "flex-1 sm:flex-none px-6 py-3 rounded-full font-bold flex items-center justify-center gap-2 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[var(--md-sys-color-primary)]",
+                                    isDownloading
+                                      ? "bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-outline)] cursor-not-allowed"
+                                      : "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-sm hover:opacity-95"
+                                  )}
+                                >
+                                  {isDownloading ? (
+                                    <>
+                                      <RefreshCw size={16} className="animate-spin" />
+                                      {t("syncing" as any)}
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Download size={16} />
+                                      {t("saveOfflineBtn" as any)}
+                                    </>
+                                  )}
+                                </motion.button>
+
+                                {settings.offlineCachedRange && (
+                                  <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    disabled={isClearing}
+                                    onClick={handleClearCache}
+                                    type="button"
+                                    className={cn(
+                                      "flex-1 sm:flex-none px-5 py-3 rounded-full font-bold flex items-center justify-center gap-2 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[var(--md-sys-color-error)]",
+                                      isClearing
+                                        ? "bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-outline)] cursor-not-allowed"
+                                        : "bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] shadow-sm hover:opacity-90"
+                                    )}
+                                  >
+                                    {isClearing ? (
+                                      <>
+                                        <RefreshCw size={16} className="animate-spin" />
+                                        {settings.language === "ms" ? "Membersih..." : "Clearing..."}
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Trash2 size={16} />
+                                        {settings.language === "ms" ? "Padam Cache" : "Clear Cache"}
+                                      </>
+                                    )}
+                                  </motion.button>
+                                )}
+                              </div>
+
+                              {/* Feedback Messages */}
+                              <div className="min-h-[20px]">
+                                {downloadError && (
+                                  <span className="text-xs text-[var(--md-sys-color-error)] font-bold flex items-center gap-1">
+                                    <AlertCircle size={14} />
+                                    {downloadError}
+                                  </span>
+                                )}
+                                {downloadSuccess && (
+                                  <span className="text-xs text-[var(--md-sys-color-primary)] font-bold flex items-center gap-1">
+                                    <Check size={14} className="stroke-[3]" />
+                                    {t("saveOfflineSuccess" as any)}
+                                  </span>
+                                )}
+                                {clearSuccess && (
+                                  <span className="text-xs text-[var(--md-sys-color-primary)] font-bold flex items-center gap-1">
+                                    <Check size={14} className="stroke-[3]" />
+                                    {settings.language === "ms" ? "Cache berjaya dipadam" : "Cache cleared successfully"}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Auto Sync Offline Toggle */}
+                            <div className="flex items-center justify-between p-4 rounded-3xl bg-[var(--md-sys-color-surface)] ring-1 ring-[var(--md-sys-color-outline)]/5 shadow-sm">
+                              <div className="pr-4">
+                                <label className="md3-label-large font-bold text-[var(--md-sys-color-on-surface)] block mb-0.5">
+                                  {t("autoSyncOffline" as any)}
+                                </label>
+                                <p className="md3-body-small text-[var(--md-sys-color-on-surface-variant)] leading-relaxed max-w-[200px] sm:max-w-xs">
+                                  {t("autoSyncOfflineDesc" as any)}
+                                </p>
+                              </div>
+                              {/* @ts-ignore */}
+                              <md-switch
+                                selected={!!settings.autoSyncOffline}
+                                onChange={(e: any) =>
+                                  updateSettings({ autoSyncOffline: e.target.selected })
+                                }
+                                icons
+                              ></md-switch>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
               )}
@@ -1184,154 +1240,231 @@ export function SettingsModal({
                     </div>
                   </div>
 
-                  {/* Advanced Calculation Rules */}
-                  <div className="bg-[var(--md-sys-color-surface-container)] rounded-[32px] p-6 sm:p-8 border border-[var(--md-sys-color-outline)]/5 shadow-sm space-y-6">
-                    <div>
-                      <h3 className="text-lg font-black text-[var(--md-sys-color-on-surface)]">
-                        {t("advancedCalculationRules" as any)}
-                      </h3>
-                    </div>
+                  {/* Advanced Calculation Rules (Collapsible) */}
+                  <div className={cn(
+                    "rounded-[32px] overflow-hidden border border-[var(--md-sys-color-outline)]/10 shadow-sm transition-all duration-300",
+                    showAdvancedCalculations
+                      ? "bg-[var(--md-sys-color-surface-container)] p-6 space-y-6"
+                      : "bg-[var(--md-sys-color-surface-container-low)] hover:bg-[var(--md-sys-color-surface-container)] p-4 sm:p-5"
+                  )}>
+                    <button
+                      onClick={() => setShowAdvancedCalculations(!showAdvancedCalculations)}
+                      type="button"
+                      className="w-full flex items-center justify-between font-bold text-left cursor-pointer focus:outline-none"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center">
+                          <Sliders size={20} className="stroke-[2.5]" />
+                        </div>
+                        <div>
+                          <h3 className="text-base sm:text-lg font-black text-[var(--md-sys-color-on-surface)]">
+                            {t("advancedCalculationRules" as any)}
+                          </h3>
+                          <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] mt-0.5">
+                            {settings.language === "ms" 
+                              ? "Ubahsuai offset Imsak/Sahur, kaedah Tengah Malam & Asar." 
+                              : "Modify Suhoor/Imsak offsets, Midnight & Asar methods."}
+                          </p>
+                        </div>
+                      </div>
+                      <motion.div
+                        animate={{ rotate: showAdvancedCalculations ? 180 : 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="text-[var(--md-sys-color-on-surface-variant)]"
+                      >
+                        <ChevronDown size={20} />
+                      </motion.div>
+                    </button>
 
-                    <div className="space-y-6">
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1">
-                          {t("suhoorOffset" as any)}
-                        </label>
-                        <div className="flex flex-wrap gap-2">
-                          {[15, 30, 45, 60].map((mins) => (
-                            /* @ts-ignore */
-                            <md-filter-chip
-                              key={`suhoor-${mins}`}
-                              label={`${mins} min`}
-                              selected={settings.suhoorOffset === mins || (!settings.suhoorOffset && mins === 30)}
-                              onClick={() => updateSettings({ suhoorOffset: mins })}
-                            ></md-filter-chip>
-                          ))}
-                        </div>
-                      </div>
+                    <AnimatePresence initial={false}>
+                      {showAdvancedCalculations && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.25, ease: "easeInOut" }}
+                          className="overflow-hidden space-y-6 pt-4 border-t border-[var(--md-sys-color-outline)]/10"
+                        >
+                          <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1">
+                              {t("suhoorOffset" as any)}
+                            </label>
+                            <div className="flex flex-wrap gap-2 animate-in fade-in duration-200">
+                              {[15, 30, 45, 60].map((mins) => (
+                                /* @ts-ignore */
+                                <md-filter-chip
+                                  key={`suhoor-${mins}`}
+                                  label={`${mins} min`}
+                                  selected={settings.suhoorOffset === mins || (!settings.suhoorOffset && mins === 30)}
+                                  onClick={() => updateSettings({ suhoorOffset: mins })}
+                                ></md-filter-chip>
+                              ))}
+                            </div>
+                          </div>
 
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1">
-                          {t("imsakOffset" as any)}
-                        </label>
-                        <div className="flex flex-wrap gap-2">
-                          {[2, 5, 10, 15].map((mins) => (
-                            /* @ts-ignore */
-                            <md-filter-chip
-                              key={`imsak-${mins}`}
-                              label={`${mins} min`}
-                              selected={settings.imsakOffset === mins || (!settings.imsakOffset && mins === 10)}
-                              onClick={() => updateSettings({ imsakOffset: mins })}
-                            ></md-filter-chip>
-                          ))}
-                        </div>
-                      </div>
+                          <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1">
+                              {t("imsakOffset" as any)}
+                            </label>
+                            <div className="flex flex-wrap gap-2">
+                              {[2, 5, 10, 15].map((mins) => (
+                                /* @ts-ignore */
+                                <md-filter-chip
+                                  key={`imsak-${mins}`}
+                                  label={`${mins} min`}
+                                  selected={settings.imsakOffset === mins || (!settings.imsakOffset && mins === 10)}
+                                  onClick={() => updateSettings({ imsakOffset: mins })}
+                                ></md-filter-chip>
+                              ))}
+                            </div>
+                          </div>
 
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1">
-                          {t("midnightMethod" as any)}
-                        </label>
-                        <div className="flex flex-wrap gap-2">
-                          {/* @ts-ignore */}
-                          <md-filter-chip
-                            label={t("midnightFajr" as any)}
-                            selected={!settings.midnightMode || settings.midnightMode === "fajr"}
-                            onClick={() => updateSettings({ midnightMode: "fajr" })}
-                          ></md-filter-chip>
-                          {/* @ts-ignore */}
-                          <md-filter-chip
-                            label={t("midnightSunrise" as any)}
-                            selected={settings.midnightMode === "sunrise"}
-                            onClick={() => updateSettings({ midnightMode: "sunrise" })}
-                          ></md-filter-chip>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1">
-                          {t("asrEnds" as any)}
-                        </label>
-                        <div className="flex flex-wrap gap-2">
-                          {/* @ts-ignore */}
-                          <md-filter-chip
-                            label={t("asrEndsMaghrib" as any)}
-                            selected={!settings.asrEndsMode || settings.asrEndsMode === "maghrib"}
-                            onClick={() => updateSettings({ asrEndsMode: "maghrib" })}
-                          ></md-filter-chip>
-                          {/* @ts-ignore */}
-                          <md-filter-chip
-                            label={t("asrEndsSunset" as any)}
-                            selected={settings.asrEndsMode === "sunset"}
-                            onClick={() => updateSettings({ asrEndsMode: "sunset" })}
-                          ></md-filter-chip>
-                        </div>
-                      </div>
-                    </div>
+                          <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1">
+                              {t("midnightMethod" as any)}
+                            </label>
+                            <div className="flex flex-wrap gap-2">
+                              {/* @ts-ignore */}
+                              <md-filter-chip
+                                label={t("midnightFajr" as any)}
+                                selected={!settings.midnightMethod || settings.midnightMethod === "fajr"}
+                                onClick={() => updateSettings({ midnightMethod: "fajr" })}
+                              ></md-filter-chip>
+                              {/* @ts-ignore */}
+                              <md-filter-chip
+                                label={t("midnightSunrise" as any)}
+                                selected={settings.midnightMethod === "sunrise"}
+                                onClick={() => updateSettings({ midnightMethod: "sunrise" })}
+                              ></md-filter-chip>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1">
+                              {t("asrEnds" as any)}
+                            </label>
+                            <div className="flex flex-wrap gap-2">
+                              {/* @ts-ignore */}
+                              <md-filter-chip
+                                label={t("asrEndsMaghrib" as any)}
+                                selected={!settings.asrEnds || settings.asrEnds === "maghrib"}
+                                onClick={() => updateSettings({ asrEnds: "maghrib" })}
+                              ></md-filter-chip>
+                              {/* @ts-ignore */}
+                              <md-filter-chip
+                                label={t("asrEndsSunset" as any)}
+                                selected={settings.asrEnds === "sunset"}
+                                onClick={() => updateSettings({ asrEnds: "sunset" })}
+                              ></md-filter-chip>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
 
-                  {/* Hijri Calendar Engine */}
-                  <div className="bg-[var(--md-sys-color-surface-container)] rounded-[32px] p-6 sm:p-8 border border-[var(--md-sys-color-outline)]/5 shadow-sm space-y-6">
-                    <div>
-                      <h3 className="text-lg font-black text-[var(--md-sys-color-on-surface)]">
-                        {t("hijriCalendarEngine" as any)}
-                      </h3>
-                    </div>
-
-                    <div className="space-y-6">
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1">
-                          {t("hijriMethod" as any)}
-                        </label>
-                        <div className="w-full">
-                          {/* @ts-ignore */}
-                          <md-outlined-select
-                            value={settings.hijriMethod || "jakim"}
-                            onInput={(e: any) => updateSettings({ hijriMethod: e.target.value })}
-                            style={{ width: "100%" }}
-                          >
-                            {(["jakim", "umalqura", "tbla", "civil", "islamic"] as const).map((method) => (
-                              /* @ts-ignore */
-                              <md-select-option key={`hijri-${method}`} value={method}>
-                                <div slot="headline">{t(`method${method.charAt(0).toUpperCase() + method.slice(1)}` as any)}</div>
-                              </md-select-option>
-                            ))}
-                          </md-outlined-select>
+                  {/* Hijri Calendar Engine (Collapsible) */}
+                  <div className={cn(
+                    "rounded-[32px] overflow-hidden border border-[var(--md-sys-color-outline)]/10 shadow-sm transition-all duration-300 mt-4",
+                    showHijriEngine
+                      ? "bg-[var(--md-sys-color-surface-container)] p-6 space-y-6"
+                      : "bg-[var(--md-sys-color-surface-container-low)] hover:bg-[var(--md-sys-color-surface-container)] p-4 sm:p-5"
+                  )}>
+                    <button
+                      onClick={() => setShowHijriEngine(!showHijriEngine)}
+                      type="button"
+                      className="w-full flex items-center justify-between font-bold text-left cursor-pointer focus:outline-none"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center">
+                          <Sliders size={20} className="stroke-[2.5]" />
+                        </div>
+                        <div>
+                          <h3 className="text-base sm:text-lg font-black text-[var(--md-sys-color-on-surface)]">
+                            {t("hijriCalendarEngine" as any)}
+                          </h3>
+                          <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] mt-0.5">
+                            {settings.language === "ms" 
+                              ? "Tetapkan kaedah kiraan kalendar Hijri & pelarasan hari." 
+                              : "Configure Hijri calendar calculation methods & day offset."}
+                          </p>
                         </div>
                       </div>
+                      <motion.div
+                        animate={{ rotate: showHijriEngine ? 180 : 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="text-[var(--md-sys-color-on-surface-variant)]"
+                      >
+                        <ChevronDown size={20} />
+                      </motion.div>
+                    </button>
 
-                      <div className="flex items-center justify-between p-4 bg-[var(--md-sys-color-surface)] rounded-[2rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5 mt-4">
-                        <span className="font-bold text-[var(--md-sys-color-on-surface)] text-sm">
-                          {t("hijriAdjustment" as any)}
-                        </span>
-                        <div className="flex items-center gap-3 sm:gap-4">
-                          {/* @ts-ignore */}
-                          <md-filled-tonal-icon-button
-                            onClick={() =>
-                              updateSettings({
-                                hijriAdjustment: Math.max(-2, (settings.hijriAdjustment ?? 0) - 1),
-                              })
-                            }
-                          >
-                            <Minus size={20} />
-                          </md-filled-tonal-icon-button>
-                          <span className="w-16 flex font-mono text-lg sm:text-xl font-black items-center justify-center tabular-nums text-[var(--md-sys-color-primary)]">
-                            {(settings.hijriAdjustment ?? 0) > 0 ? "+" : ""}
-                            {settings.hijriAdjustment ?? 0}
-                          </span>
-                          {/* @ts-ignore */}
-                          <md-filled-tonal-icon-button
-                            onClick={() =>
-                              updateSettings({
-                                hijriAdjustment: Math.min(2, (settings.hijriAdjustment ?? 0) + 1),
-                              })
-                            }
-                          >
-                            <Plus size={20} />
-                          </md-filled-tonal-icon-button>
-                        </div>
-                      </div>
+                    <AnimatePresence initial={false}>
+                      {showHijriEngine && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.25, ease: "easeInOut" }}
+                          className="overflow-hidden space-y-6 pt-4 border-t border-[var(--md-sys-color-outline)]/10"
+                        >
+                          <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1">
+                              {t("hijriMethod" as any)}
+                            </label>
+                            <div className="w-full">
+                              {/* @ts-ignore */}
+                              <md-outlined-select
+                                value={settings.hijriMethod || "jakim"}
+                                onInput={(e: any) => updateSettings({ hijriMethod: e.target.value })}
+                                style={{ width: "100%" }}
+                              >
+                                {(["jakim", "umalqura", "tbla", "civil", "islamic"] as const).map((method) => (
+                                  /* @ts-ignore */
+                                  <md-select-option key={`hijri-${method}`} value={method}>
+                                    <div slot="headline">{t(`method${method.charAt(0).toUpperCase() + method.slice(1)}` as any)}</div>
+                                  </md-select-option>
+                                ))}
+                              </md-outlined-select>
+                            </div>
+                          </div>
 
-                    </div>
+                          <div className="flex items-center justify-between p-4 bg-[var(--md-sys-color-surface)] rounded-[2rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5 mt-4">
+                            <span className="font-bold text-[var(--md-sys-color-on-surface)] text-sm">
+                              {t("hijriAdjustment" as any)}
+                            </span>
+                            <div className="flex items-center gap-3 sm:gap-4">
+                              {/* @ts-ignore */}
+                              <md-filled-tonal-icon-button
+                                onClick={() =>
+                                  updateSettings({
+                                    hijriAdjustment: Math.max(-2, (settings.hijriAdjustment ?? 0) - 1),
+                                  })
+                                }
+                                aria-label={settings.language === "ms" ? "Kurangkan pelarasan Hijri" : "Decrease Hijri adjustment"}
+                              >
+                                <Minus size={20} />
+                              </md-filled-tonal-icon-button>
+                              <span className="w-16 flex font-mono text-lg sm:text-xl font-black items-center justify-center tabular-nums text-[var(--md-sys-color-primary)]">
+                                {(settings.hijriAdjustment ?? 0) > 0 ? "+" : ""}
+                                {settings.hijriAdjustment ?? 0}
+                              </span>
+                              {/* @ts-ignore */}
+                              <md-filled-tonal-icon-button
+                                onClick={() =>
+                                  updateSettings({
+                                    hijriAdjustment: Math.min(2, (settings.hijriAdjustment ?? 0) + 1),
+                                  })
+                                }
+                                aria-label={settings.language === "ms" ? "Tambah pelarasan Hijri" : "Increase Hijri adjustment"}
+                              >
+                                <Plus size={20} />
+                              </md-filled-tonal-icon-button>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
               )}
