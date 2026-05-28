@@ -38,6 +38,7 @@ export function FullScreenToggle() {
       <md-filled-tonal-icon-button
         onClick={toggleFullscreen}
         title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+        aria-label={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
         style={{ '--md-filled-tonal-icon-button-container-shape': '24px', width: '100%', height: '100%' }}
       >
         {isFullscreen ? (

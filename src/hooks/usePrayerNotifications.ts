@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { PrayerData, PrayerKey, Preferences, PrayerPreference, NotificationSound, PreAlertTime } from '../types';
 import { PRAYER_NAMES } from '../components/PrayerSchedule';
 import { useAppContext } from '../AppContext';
+import { StorageManager } from '../lib/StorageManager';
 
 const DEFAULT_PREFS: Preferences = {
   imsak: { enabled: false, sound: 'default', preAlert: 0, offset: 0, iqamahOffset: 10 },
@@ -19,14 +20,18 @@ export function usePrayerNotifications(
 ) {
   const { t } = useAppContext();
   const [preferences, setPreferences] = useState<Preferences>(() => {
-    if (typeof localStorage !== "undefined") {
-      const savedV2 = localStorage.getItem('prayer_notifications_v2');
-      if (savedV2) {
+    const savedV2 = StorageManager.getItem('prayer_notifications_v2');
+    if (savedV2) {
+      try {
         return { ...DEFAULT_PREFS, ...JSON.parse(savedV2) };
+      } catch (e) {
+        // ignore and fallback
       }
-      
-      const savedV1 = localStorage.getItem('prayer_notifications');
-      if (savedV1) {
+    }
+    
+    const savedV1 = StorageManager.getItem('prayer_notifications');
+    if (savedV1) {
+      try {
         // migration from simple boolean
         const oldPref = JSON.parse(savedV1);
         const newPref: Partial<Preferences> = {};
@@ -35,6 +40,8 @@ export function usePrayerNotifications(
           newPref[key] = { enabled: oldPref[key] || false, sound: 'default', preAlert: 0, offset: 0, iqamahOffset: DEFAULT_PREFS[key].iqamahOffset };
         }
         return { ...DEFAULT_PREFS, ...newPref };
+      } catch (e) {
+        // ignore and fallback
       }
     }
     return DEFAULT_PREFS;
@@ -48,9 +55,7 @@ export function usePrayerNotifications(
   const prevDateRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (typeof localStorage !== "undefined") {
-      localStorage.setItem('prayer_notifications_v2', JSON.stringify(preferences));
-    }
+    StorageManager.setItem('prayer_notifications_v2', JSON.stringify(preferences));
   }, [preferences]);
 
   const requestPermission = async () => {

@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { GeneralSettings, DEFAULT_GENERAL_SETTINGS } from "./types";
 import { translations, LangKey } from "./translations";
+import { StorageManager } from "./lib/StorageManager";
 
 interface AppContextType {
   settings: GeneralSettings;
@@ -12,19 +13,11 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<GeneralSettings>(() => {
-    const saved = localStorage.getItem('waktu-solat-settings');
-    if (saved) {
-      try {
-        return { ...DEFAULT_GENERAL_SETTINGS, ...JSON.parse(saved) };
-      } catch (e) {
-        return DEFAULT_GENERAL_SETTINGS;
-      }
-    }
-    return DEFAULT_GENERAL_SETTINGS;
+    return StorageManager.getSettings();
   });
 
   useEffect(() => {
-    localStorage.setItem('waktu-solat-settings', JSON.stringify(settings));
+    StorageManager.setSettings(settings);
   }, [settings]);
 
   const updateSettings = (updates: Partial<GeneralSettings>) => {

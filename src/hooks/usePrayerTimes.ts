@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { PrayerData, JakimResponse } from "../types";
-import { storage } from "../lib/storage";
+import { StorageManager } from "../lib/StorageManager";
 import { getOfflinePrayers, saveOfflinePrayers } from "../lib/db";
 import { fetchWithRetry } from "../lib/api";
 import { analytics } from "../lib/analytics";
@@ -14,14 +14,14 @@ export function usePrayerTimes(
 ) {
   const [weekData, setWeekData] = useState<PrayerData[]>(() => {
     if (selectedZone) {
-      return storage.getCachedPrayerData(selectedZone);
+      return StorageManager.getCachedPrayerData(selectedZone);
     }
     return [];
   });
 
   const [isLoading, setIsLoading] = useState(() => {
     if (!selectedZone) return true;
-    const cached = storage.getCachedPrayerData(selectedZone);
+    const cached = StorageManager.getCachedPrayerData(selectedZone);
     return cached.length === 0;
   });
 
@@ -71,7 +71,7 @@ export function usePrayerTimes(
           offlineCachedAt: Date.now()
         });
         setWeekData(data.prayerTime);
-        storage.setCachedPrayerData(selectedZone, data.prayerTime);
+        StorageManager.setCachedPrayerData(selectedZone, data.prayerTime);
         setIsOfflineModeActive(false);
         setSyncStatus('success');
         
@@ -106,7 +106,7 @@ export function usePrayerTimes(
   useEffect(() => {
     if (!selectedZone) return;
 
-    storage.setZone(selectedZone);
+    StorageManager.setZone(selectedZone);
     let isMounted = true;
 
     const fetchSolat = async () => {
@@ -118,7 +118,7 @@ export function usePrayerTimes(
           if (cached && cached.prayerTime && Array.isArray(cached.prayerTime) && cached.prayerTime.length > 0) {
             if (isMounted) {
               setWeekData(cached.prayerTime);
-              storage.setCachedPrayerData(selectedZone, cached.prayerTime);
+              StorageManager.setCachedPrayerData(selectedZone, cached.prayerTime);
               setIsOfflineModeActive(true);
               setError(null);
               return true;
@@ -152,7 +152,7 @@ export function usePrayerTimes(
             if (data && data.prayerTime) {
               setWeekData(data.prayerTime);
               setIsOfflineModeActive(false);
-              storage.setCachedPrayerData(selectedZone, data.prayerTime);
+              StorageManager.setCachedPrayerData(selectedZone, data.prayerTime);
             }
             setError(null);
           }

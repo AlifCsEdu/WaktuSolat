@@ -5,6 +5,7 @@ import { useVisualStyle } from "../../hooks/useVisualStyle";
 import { cn } from "../../lib/utils";
 import "@material/web/elevation/elevation.js";
 import { PrayerData } from "../../types";
+import { StorageManager } from "../../lib/StorageManager";
 
 const DEFAULT_PREFS = {
   fajr: { offset: 0 },
@@ -29,10 +30,10 @@ export function PrayerRingClock({
   const minutes = time.getMinutes() + seconds / 60;
   const hours = (time.getHours() % 12) + minutes / 60;
 
-  // Load preferences from localStorage for offsets
+  // Load preferences from StorageManager for offsets
   let preferences: any = DEFAULT_PREFS;
   try {
-    const saved = localStorage.getItem('prayer_notifications_v2');
+    const saved = StorageManager.getItem('prayer_notifications_v2');
     if (saved) {
       preferences = JSON.parse(saved);
     }

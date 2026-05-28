@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { StorageManager } from '../lib/StorageManager';
 
 export type VisualStyle = 'default' | 'retro' | 'glass' | 'soft';
 export type ThemeShape = 'rounded' | 'boxy' | 'semi' | 'pill';
@@ -7,7 +8,7 @@ export function useVisualStyle(): VisualStyle {
   const [style, setStyle] = useState<VisualStyle>('default');
 
   useEffect(() => {
-    const stored = localStorage.getItem('theme_visual_style') as VisualStyle | null;
+    const stored = StorageManager.getVisualStyle();
     if (stored) setStyle(stored);
 
     const observer = new MutationObserver(() => {
@@ -26,7 +27,7 @@ export function useThemeShape(): ThemeShape {
   const [shape, setShape] = useState<ThemeShape>('rounded');
 
   useEffect(() => {
-    const stored = localStorage.getItem('theme_shape') as ThemeShape | null;
+    const stored = StorageManager.getThemeShape();
     if (stored) setShape(stored);
 
     const observer = new MutationObserver(() => {

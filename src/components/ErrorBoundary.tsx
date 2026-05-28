@@ -1,7 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { AlertTriangle, RefreshCw, Trash2, Home } from "lucide-react";
 import { analytics } from "../lib/analytics";
-import { storage } from "../lib/storage";
+import { StorageManager } from "../lib/StorageManager";
 
 interface Props {
   children: ReactNode;
@@ -32,11 +32,11 @@ export class ErrorBoundary extends Component<Props, State> {
 
   private handleResetAndReload = () => {
     try {
-      // Clear settings and cached times
-      storage.clearAllCachedPrayerData();
-      storage.removeItem("waktu-solat-settings");
-      storage.removeItem("waktu-solat-zone");
-      storage.removeItem("waktu-solat-recent-zones");
+      // Clear settings and cached times via StorageManager
+      StorageManager.clearAllCachedPrayerData();
+      StorageManager.removeItem("waktu-solat-settings");
+      StorageManager.removeItem("waktu-solat-zone");
+      StorageManager.removeItem("waktu-solat-recent-zones");
       
       // Reload page
       window.location.reload();

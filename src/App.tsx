@@ -37,7 +37,8 @@ import { CalendarRange, Wifi, RefreshCw } from "lucide-react";
 import { useAppContext } from "./AppContext";
 import { useVisualStyle } from "./hooks/useVisualStyle";
 import { cn } from "./lib/utils";
-import { storage } from "./lib/storage";
+import { StorageManager } from "./lib/StorageManager";
+import { OnboardingFlow } from "./components/OnboardingFlow";
 
 // Feature Hooks
 import { useTime } from "./hooks/useTime";
@@ -60,6 +61,11 @@ export default function App() {
   const { settings, updateSettings, t } = useAppContext();
   const visualStyle = useVisualStyle();
 
+  // Onboarding Completed State
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(() => {
+    return StorageManager.getHasCompletedOnboarding();
+  });
+
   // 1. Time Ticking State
   const currentTime = useTime();
 
@@ -73,7 +79,7 @@ export default function App() {
       window.history.replaceState({}, "", cleanUrl);
       return urlZone;
     }
-    return storage.getZone() || "";
+    return StorageManager.getZone() || "";
   });
 
   // 3. Location Auto Detection & Tracking Hook
@@ -107,13 +113,13 @@ export default function App() {
   useEffect(() => {
     if (!selectedZone) {
       setSelectedZone("SGR01");
-      storage.setZone("SGR01");
+      StorageManager.setZone("SGR01");
     } else {
-      storage.setZone(selectedZone);
+      StorageManager.setZone(selectedZone);
       
       // Update recent zones only for manual selections
       if (!isAutoZoneChange.current) {
-        storage.saveRecentZone(selectedZone);
+        StorageManager.saveRecentZone(selectedZone);
       }
       isAutoZoneChange.current = false;
     }
@@ -519,6 +525,7 @@ export default function App() {
               <md-filled-tonal-icon-button
                 onClick={() => setShowCalendar(true)}
                 title={t("calendarLabel")}
+                aria-label={t("calendarLabel")}
                 style={{ '--md-filled-tonal-icon-button-container-shape': '24px', width: '100%', height: '100%' }}
               >
                 <CalendarRange className="w-5 h-5 lg:w-[22px] lg:h-[22px] stroke-[2.5]" />
@@ -661,6 +668,15 @@ export default function App() {
         onConfirm={handlePrePromptConfirm}
         language={settings.language || "ms"}
       />
+      {!hasCompletedOnboarding && (
+        <OnboardingFlow 
+          language={settings.language || "ms"} 
+          onComplete={(zone) => {
+            setSelectedZone(zone);
+            setHasCompletedOnboarding(true);
+          }}
+        />
+      )}
     </div>
   );
 }

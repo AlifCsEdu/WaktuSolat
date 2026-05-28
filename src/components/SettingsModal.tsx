@@ -42,6 +42,7 @@ import { PRAYER_NAMES } from "./PrayerSchedule";
 import { useEffect, useState } from "react";
 import { useAppContext } from "../AppContext";
 import { saveOfflinePrayers, clearAllOfflinePrayers } from "../lib/db";
+import { StorageManager } from "../lib/StorageManager";
 
 function playSynthesizedSoundLocal(type: 'chime' | 'tick', pitchHz?: number) {
   try {
@@ -169,15 +170,8 @@ export function SettingsModal({
       // 1. Clear IndexedDB prayer times
       await clearAllOfflinePrayers();
       
-      // 2. Clear localStorage prayer times cache
-      const keysToRemove: string[] = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith("waktu-solat-data-")) {
-          keysToRemove.push(key);
-        }
-      }
-      keysToRemove.forEach(key => localStorage.removeItem(key));
+      // 2. Clear cached prayer times via StorageManager
+      StorageManager.clearAllCachedPrayerData();
       
       // 3. Reset settings
       updateSettings({

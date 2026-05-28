@@ -1,10 +1,11 @@
 import { GeneralSettings, DEFAULT_GENERAL_SETTINGS, PrayerData } from "../types";
+import { VisualStyle, ThemeShape } from "../hooks/useVisualStyle";
 
 /**
- * A safe centralized storage service wrapper for localStorage.
+ * A type-safe centralized storage service wrapper for localStorage.
  * Automatically catches and logs errors (like storage quota exceeded or disabled cookies).
  */
-export const storage = {
+export const StorageManager = {
   /**
    * Helper to write item safely to localStorage
    */
@@ -152,5 +153,38 @@ export const storage = {
 
   setSettings(settings: GeneralSettings): void {
     this.setItem("waktu-solat-settings", JSON.stringify(settings));
+  },
+
+  /**
+   * Onboarding Flow state tracking
+   */
+  getHasCompletedOnboarding(): boolean {
+    return this.getItem("waktu-solat-onboarding-completed") === "true";
+  },
+
+  setHasCompletedOnboarding(completed: boolean): void {
+    this.setItem("waktu-solat-onboarding-completed", completed ? "true" : "false");
+  },
+
+  /**
+   * Theme Visual Style
+   */
+  getVisualStyle(): VisualStyle | null {
+    return this.getItem("theme_visual_style") as VisualStyle | null;
+  },
+
+  setVisualStyle(style: VisualStyle): void {
+    this.setItem("theme_visual_style", style);
+  },
+
+  /**
+   * Theme Shape
+   */
+  getThemeShape(): ThemeShape | null {
+    return this.getItem("theme_shape") as ThemeShape | null;
+  },
+
+  setThemeShape(shape: ThemeShape): void {
+    this.setItem("theme_shape", shape);
   }
 };

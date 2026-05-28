@@ -18,7 +18,8 @@ import { MapModal } from "./MapModal";
 import { useVisualStyle } from "../hooks/useVisualStyle";
 import { fetchReverseGeocode, matchZoneFromGeocode, ALIASES } from "../lib/geocoding";
 import { analytics } from "../lib/analytics";
-import { storage } from "../lib/storage";
+import { StorageManager } from "../lib/StorageManager";
+import { sanitizeInput } from "../lib/security";
 
 const STATE_FLAGS: Record<string, string> = {
   Johor:
@@ -395,7 +396,7 @@ export function ZoneSelector({
                           type="text"
                           placeholder={t("searchPlaceholder")}
                           value={searchQuery}
-                          onInput={(e: any) => setSearchQuery(e.target.value)}
+                          onInput={(e: any) => setSearchQuery(sanitizeInput(e.target.value))}
                           className="w-full"
                           style={{ 
                             '--md-filled-text-field-container-shape': '28px',
@@ -479,7 +480,7 @@ export function ZoneSelector({
                   <>
                     {/* Recent Zones Section */}
                     {!searchQuery && (() => {
-                      const filtered = storage.getRecentZones()
+                      const filtered = StorageManager.getRecentZones()
                         .filter((z: string) => z !== selectedZone)
                         .slice(0, 3);
                       if (filtered.length > 0) {

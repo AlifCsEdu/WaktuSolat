@@ -5,7 +5,7 @@ import {
   mapStateToZone,
   matchZoneFromGeocode,
   cleanText
-} from "./geocoding";
+} from "../src/lib/geocoding";
 
 describe("Geocoding Service Helpers", () => {
   it("should parse state names correctly from Nominatim or BigDataCloud format", () => {

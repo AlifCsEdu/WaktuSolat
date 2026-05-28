@@ -33,6 +33,8 @@ import { useAppContext } from "../AppContext";
 import { getHijriFormatted } from "../lib/holidays";
 import { useVisualStyle, useIconStroke } from "../hooks/useVisualStyle";
 import { QRCode } from "../lib/qr";
+import { StorageManager } from "../lib/StorageManager";
+import { sanitizeInput } from "../lib/security";
 
 interface SharePanelProps {
   isOpen: boolean;
@@ -137,15 +139,11 @@ export function SharePanel({ isOpen, onClose, currentZone, currentZoneData }: Sh
     const fetchZoneData = async () => {
       setLoadingData(true);
       try {
-        const cacheName = `waktu-solat-data-${shareZone}`;
-        const cached = localStorage.getItem(cacheName);
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (active && parsed && parsed.length > 0) {
-            setFetchedData(parsed);
-            setLoadingData(false);
-            return;
-          }
+        const cached = StorageManager.getCachedPrayerData(shareZone);
+        if (active && cached && cached.length > 0) {
+          setFetchedData(cached);
+          setLoadingData(false);
+          return;
         }
 
         const res = await fetch(`/api/solat/${shareZone}`);
@@ -153,7 +151,7 @@ export function SharePanel({ isOpen, onClose, currentZone, currentZoneData }: Sh
         const data = await res.json();
         if (active && data && data.prayerTime) {
           setFetchedData(data.prayerTime);
-          localStorage.setItem(cacheName, JSON.stringify(data.prayerTime));
+          StorageManager.setCachedPrayerData(shareZone, data.prayerTime);
         }
       } catch (err) {
         console.error("Failed to load preview zone data:", err);
@@ -192,16 +190,9 @@ export function SharePanel({ isOpen, onClose, currentZone, currentZoneData }: Sh
     if (shareZone === currentZone && dayOffset === 0) {
       return currentZoneData;
     }
-    try {
-      const cached = localStorage.getItem(`waktu-solat-data-${shareZone}`);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (parsed && parsed.length > 0) {
-          return parsed.find((d: any) => d.date === targetFormatted) || parsed[0] || null;
-        }
-      }
-    } catch (e) {
-      console.error(e);
+    const cached = StorageManager.getCachedPrayerData(shareZone);
+    if (cached && cached.length > 0) {
+      return cached.find((d: any) => d.date === targetFormatted) || cached[0] || null;
     }
     return null;
   }, [shareZone, currentZone, currentZoneData, fetchedData, formattedDateString, dayOffset]);
@@ -699,7 +690,7 @@ export function SharePanel({ isOpen, onClose, currentZone, currentZoneData }: Sh
                         {/* @ts-ignore */}
                         <md-filled-text-field
                           value={searchQuery}
-                          onInput={(e: any) => setSearchQuery(e.target.value)}
+                          onInput={(e: any) => setSearchQuery(sanitizeInput(e.target.value))}
                           placeholder={t("searchZonePlaceholder" as any)}
                           className="w-full"
                           style={{ 

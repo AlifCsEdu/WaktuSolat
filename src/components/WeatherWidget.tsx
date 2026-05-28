@@ -23,7 +23,7 @@ import { useVisualStyle } from "../hooks/useVisualStyle";
 import { cn } from "../lib/utils";
 import { JAKIM_ZONES } from "../lib/zones";
 import { FullWeatherModal } from "./FullWeatherModal";
-import { storage } from "../lib/storage";
+import { StorageManager } from "../lib/StorageManager";
 import { analytics } from "../lib/analytics";
 
 export interface HourlyForecast {
@@ -84,7 +84,7 @@ export function WeatherWidget({ selectedZone, userCoords, currentLocationName }:
   }, []);
 
   const [weather, setWeather] = useState<WeatherData | null>(() => {
-    const parsed = storage.getCachedWeather(selectedZone);
+    const parsed = StorageManager.getCachedWeather(selectedZone);
     if (parsed && typeof parsed.temperature === "number") {
       return parsed;
     }
@@ -104,7 +104,7 @@ export function WeatherWidget({ selectedZone, userCoords, currentLocationName }:
     const fetchWeather = async (force = false) => {
       // Smart caching check (15 mins)
       if (!force) {
-        const cached = storage.getCachedWeather(selectedZone);
+        const cached = StorageManager.getCachedWeather(selectedZone);
         if (cached && cached.lastUpdated && Date.now() - cached.lastUpdated < 15 * 60 * 1000) {
           setWeather(cached);
           setIsLoading(false);
@@ -169,7 +169,7 @@ export function WeatherWidget({ selectedZone, userCoords, currentLocationName }:
           };
           
           setWeather(newData);
-          storage.setCachedWeather(selectedZone, newData);
+          StorageManager.setCachedWeather(selectedZone, newData);
         }
       } catch (err: any) {
         analytics.logError(err, { context: "weather_fetch", zone: selectedZone });
