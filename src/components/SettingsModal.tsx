@@ -1410,15 +1410,20 @@ export function SettingsModal({
                               {/* @ts-ignore */}
                               <md-outlined-select
                                 value={settings.hijriMethod || "jakim"}
+                                onChange={(e: any) => updateSettings({ hijriMethod: e.target.value })}
                                 onInput={(e: any) => updateSettings({ hijriMethod: e.target.value })}
                                 style={{ width: "100%" }}
                               >
-                                {(["jakim", "umalqura", "tbla", "civil", "islamic"] as const).map((method) => (
+                                {((["jakim", "umalqura", "tbla", "civil", "islamic"] as const).map((method) => (
                                   /* @ts-ignore */
-                                  <md-select-option key={`hijri-${method}`} value={method}>
+                                  <md-select-option 
+                                    key={`hijri-${method}`} 
+                                    value={method}
+                                    onClick={() => updateSettings({ hijriMethod: method })}
+                                  >
                                     <div slot="headline">{t(`method${method.charAt(0).toUpperCase() + method.slice(1)}` as any)}</div>
                                   </md-select-option>
-                                ))}
+                                )))}
                               </md-outlined-select>
                             </div>
                           </div>

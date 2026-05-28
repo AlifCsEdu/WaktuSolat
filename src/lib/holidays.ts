@@ -216,7 +216,8 @@ export function getDynamicHijriDate(
   }
 
   try {
-    const formatter = new Intl.DateTimeFormat('en-US-u-ca-islamic-' + method, {
+    const calendarType = method === 'islamic' ? 'islamic' : 'islamic-' + method;
+    const formatter = new Intl.DateTimeFormat('en-US-u-ca-' + calendarType, {
       day: 'numeric',
       month: 'numeric',
       year: 'numeric'
