@@ -10,19 +10,19 @@ export const FEDERAL_HOLIDAYS_FIXED: Record<string, string> = {
 };
 
 export const ISLAMIC_EVENTS: Record<string, { title: string, color: string, isHoliday: boolean }> = {
-  "01-01": { title: "Awal Muharram", color: "bg-blue-500", isHoliday: true },
-  "03-12": { title: "Maulidur Rasul", color: "bg-green-500", isHoliday: true },
-  "07-27": { title: "Israk & Mikraj", color: "bg-indigo-500", isHoliday: false },
-  "08-15": { title: "Nisfu Syaaban", color: "bg-purple-500", isHoliday: false },
-  "09-01": { title: "Awal Ramadan", color: "bg-amber-500", isHoliday: true }, // (Johor/Kedah/Melaka)
-  "09-17": { title: "Nuzul Quran", color: "bg-teal-500", isHoliday: true }, // (Certain states)
-  "10-01": { title: "Hari Raya Aidilfitri", color: "bg-emerald-500", isHoliday: true },
-  "10-02": { title: "Hari Raya Aidilfitri", color: "bg-emerald-400", isHoliday: true },
-  "12-09": { title: "Hari Arafah (Sunat Puasa)", color: "bg-orange-500", isHoliday: false },
-  "12-10": { title: "Hari Raya Aidiladha", color: "bg-rose-500", isHoliday: true },
-  "12-11": { title: "Hari Raya Aidiladha (Hari Kedua)", color: "bg-rose-400", isHoliday: true }, // Certain states
-  "01-09": { title: "Hari Tasu'a (Sunat Puasa)", color: "bg-cyan-500", isHoliday: false },
-  "01-10": { title: "Hari Asyura (Sunat Puasa)", color: "bg-indigo-600", isHoliday: false },
+  "01-01": { title: "Awal Muharram", color: "bg-[var(--md-sys-color-primary)]", isHoliday: true },
+  "03-12": { title: "Maulidur Rasul", color: "bg-[var(--md-sys-color-tertiary)]", isHoliday: true },
+  "07-27": { title: "Israk & Mikraj", color: "bg-[var(--md-sys-color-secondary)]", isHoliday: false },
+  "08-15": { title: "Nisfu Syaaban", color: "bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]", isHoliday: false },
+  "09-01": { title: "Awal Ramadan", color: "bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]", isHoliday: true }, // (Johor/Kedah/Melaka)
+  "09-17": { title: "Nuzul Quran", color: "bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]", isHoliday: true }, // (Certain states)
+  "10-01": { title: "Hari Raya Aidilfitri", color: "bg-[var(--md-sys-color-tertiary)]", isHoliday: true },
+  "10-02": { title: "Hari Raya Aidilfitri", color: "bg-[var(--md-sys-color-tertiary)]", isHoliday: true },
+  "12-09": { title: "Hari Arafah (Sunat Puasa)", color: "bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]", isHoliday: false },
+  "12-10": { title: "Hari Raya Aidiladha", color: "bg-[var(--md-sys-color-primary)]", isHoliday: true },
+  "12-11": { title: "Hari Raya Aidiladha (Hari Kedua)", color: "bg-[var(--md-sys-color-primary)]", isHoliday: true }, // Certain states
+  "01-09": { title: "Hari Tasu'a (Sunat Puasa)", color: "bg-[var(--md-sys-color-secondary)]", isHoliday: false },
+  "01-10": { title: "Hari Asyura (Sunat Puasa)", color: "bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]", isHoliday: false },
 };
 
 export function getFixedPublicHoliday(date: Date) {
@@ -42,7 +42,7 @@ export function getIslamicEvent(hijriDate: string) {
     // Ayyamul Bidh (White Days) - 13, 14, 15 of every month
     // Except 13th of Zulhijjah (Tashreeq day - forbidden to fast)
     if ((day === "13" || day === "14" || day === "15") && !(month === "12" && day === "13")) {
-      return ISLAMIC_EVENTS[md] || { title: "Puasa Sunat Ayyamul Bidh", color: "bg-sky-400", isHoliday: false };
+      return ISLAMIC_EVENTS[md] || { title: "Puasa Sunat Ayyamul Bidh", color: "bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]", isHoliday: false };
     }
     
     return ISLAMIC_EVENTS[md] || null;
@@ -52,7 +52,7 @@ export function getIslamicEvent(hijriDate: string) {
       const md = hijriDate;
       const [month, day] = md.split("-");
       if ((day === "13" || day === "14" || day === "15") && !(month === "12" && day === "13")) {
-        return ISLAMIC_EVENTS[md] || { title: "Puasa Sunat Ayyamul Bidh", color: "bg-sky-400", isHoliday: false };
+        return ISLAMIC_EVENTS[md] || { title: "Puasa Sunat Ayyamul Bidh", color: "bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]", isHoliday: false };
       }
       return ISLAMIC_EVENTS[md] || null;
   }

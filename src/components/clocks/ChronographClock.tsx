@@ -185,8 +185,8 @@ export function ChronographClock({
             "absolute top-[8%] left-1/2 w-[2px] h-[55%] rounded-full -ml-[1px] origin-[50%_76.3%] z-20 shadow-sm",
             "bg-[var(--md-sys-color-error)]",
             visualStyle === 'retro' && "bg-[var(--md-sys-color-error)] w-[2.5px] rounded-none shadow-none",
-            visualStyle === 'glass' && "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]",
-            visualStyle === 'soft' && "bg-rose-500"
+            visualStyle === 'glass' && "bg-[var(--md-sys-color-error)] shadow-[0_0_8px_rgba(244,63,94,0.6)]",
+            visualStyle === 'soft' && "bg-[var(--md-sys-color-error)]"
           )}
           style={{ transform: `rotate(${seconds * 6}deg)` }}
         ></div>

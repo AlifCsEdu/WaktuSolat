@@ -725,11 +725,13 @@ export function SharePanel({ isOpen, onClose, currentZone, currentZoneData }: Sh
                                     setCopied(false);
                                   }}
                                   className={cn(
-                                    "w-full text-left px-4 py-2.5 text-[11px] flex items-center gap-3 transition-colors hover:bg-[var(--md-sys-color-primary)]/8 cursor-pointer",
+                                    "relative overflow-hidden w-full text-left px-4 py-2.5 text-[11px] flex items-center gap-3 transition-colors hover:bg-[var(--md-sys-color-primary)]/8 cursor-pointer",
                                     z.v === shareZone &&
                                       "bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] font-bold"
                                   )}
                                 >
+                                  {/* @ts-ignore */}
+                                  <md-ripple></md-ripple>
                                   <span className="font-black text-[11px] text-[var(--md-sys-color-primary)] w-12 shrink-0">
                                     {z.v}
                                   </span>

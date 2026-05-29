@@ -402,10 +402,12 @@ export function OnboardingFlow({ onComplete, language }: OnboardingFlowProps) {
                               setGpsSuccess(false);
                             }}
                             className={cn(
-                              "w-full text-left px-3 py-2.5 text-xs flex items-center justify-between transition-colors hover:bg-[var(--md-sys-color-primary)]/8 cursor-pointer rounded-lg mt-0.5",
+                              "relative overflow-hidden w-full text-left px-3 py-2.5 text-xs flex items-center justify-between transition-colors hover:bg-[var(--md-sys-color-primary)]/8 cursor-pointer rounded-lg mt-0.5",
                               z.v === selectedZone && "bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] font-bold"
                             )}
                           >
+                            {/* @ts-ignore */}
+                            <md-ripple></md-ripple>
                             <span className="truncate text-[var(--md-sys-color-on-surface)]">{z.l}</span>
                             <span className="font-mono text-[9px] text-[var(--md-sys-color-on-surface-variant)]/60">{z.v}</span>
                           </button>
@@ -500,21 +502,19 @@ export function OnboardingFlow({ onComplete, language }: OnboardingFlowProps) {
                         <span className="text-[10px] text-[var(--md-sys-color-on-surface-variant)]/60 truncate mt-0.5 leading-none">{snd.desc}</span>
                       </div>
                       
-                      <button
-                        onClick={(e) => {
+                      {/* @ts-ignore */}
+                      <md-icon-button
+                        onClick={(e: any) => {
                           e.stopPropagation();
                           playPreviewSound(snd.id);
                         }}
-                        className={cn(
-                          "w-8 h-8 rounded-full flex items-center justify-center shrink-0 border transition-all hover:scale-105 active:scale-95 cursor-pointer",
-                          isPlayingSound === snd.id 
-                            ? "bg-[var(--md-sys-color-tertiary-container)] border-[var(--md-sys-color-tertiary)] text-[var(--md-sys-color-on-tertiary-container)]" 
-                            : "bg-[var(--md-sys-color-surface-container-high)] border-[var(--md-sys-color-outline-variant)] text-[var(--md-sys-color-on-surface-variant)]"
-                        )}
+                        style={isPlayingSound === snd.id 
+                          ? { '--md-icon-button-state-layer-color': 'var(--md-sys-color-on-tertiary-container)', '--md-icon-button-icon-color': 'var(--md-sys-color-on-tertiary-container)' } as any
+                          : { '--md-icon-button-state-layer-color': 'var(--md-sys-color-on-surface-variant)', '--md-icon-button-icon-color': 'var(--md-sys-color-on-surface-variant)' } as any}
                         aria-label="Preview Sound Option"
                       >
-                        {isPlayingSound === snd.id ? <Pause size={12} fill="currentColor" /> : <Play size={12} fill="currentColor" className="ml-0.5" />}
-                      </button>
+                        {isPlayingSound === snd.id ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
+                      </md-icon-button>
                     </div>
                   ))}
                 </div>

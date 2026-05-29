@@ -44,8 +44,8 @@ export function OrbitClock({ movement }: { movement: 'tick' | 'sweep' }) {
             "w-4.5 h-4.5 sm:w-5.5 sm:h-5.5 rounded-full absolute -top-2.25 sm:-top-2.75 left-1/2 -translate-x-1/2 transition-all shadow-[0_0_12px_var(--md-sys-color-error)]",
             "bg-[var(--md-sys-color-error)]",
             visualStyle === 'retro' && "bg-[var(--md-sys-color-error)] border border-[var(--md-sys-color-on-surface)] shadow-none rounded-none w-5 h-5 -top-2.5",
-            visualStyle === 'glass' && "bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.8)]",
-            visualStyle === 'soft' && "bg-rose-500 shadow-sm"
+            visualStyle === 'glass' && "bg-[var(--md-sys-color-error)] shadow-[0_0_10px_rgba(244,63,94,0.8)]",
+            visualStyle === 'soft' && "bg-[var(--md-sys-color-error)] shadow-sm"
           )}></div>
         </div>
       </div>

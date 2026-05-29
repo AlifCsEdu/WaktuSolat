@@ -685,27 +685,29 @@ export function ClockPanel({
               {/* Tactile Administrative Overlays revealed on hover/touch */}
               {onIqamahTogglePause && onIqamahAddMinute && iqamahRemainingSeconds > 5 && (
                 <div className="absolute inset-0 bg-black/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-3 z-20">
-                  <button
-                    onClick={(e) => {
+                  {/* @ts-ignore */}
+                  <md-icon-button
+                    onClick={(e: any) => {
                       e.stopPropagation();
                       onIqamahTogglePause();
                     }}
-                    className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/40 text-white flex items-center justify-center backdrop-blur transition-all active:scale-90"
+                    style={{ '--md-icon-button-state-layer-color': 'white', '--md-icon-button-icon-color': 'white' } as any}
                     title={iqamahPaused ? "Mula" : "Jeda"}
                   >
-                    {iqamahPaused ? <Play className="w-5 h-5 fill-white stroke-[2.5]" /> : <Pause className="w-5 h-5 fill-white stroke-[2.5]" />}
-                  </button>
-                  <button
-                    onClick={(e) => {
+                    {iqamahPaused ? <Play className="fill-white stroke-[2.5]" /> : <Pause className="fill-white stroke-[2.5]" />}
+                  </md-icon-button>
+                  {/* @ts-ignore */}
+                  <md-filled-tonal-button
+                    onClick={(e: any) => {
                       e.stopPropagation();
                       onIqamahAddMinute();
                     }}
-                    className="px-3 py-1.5 rounded-full bg-white/20 hover:bg-white/40 text-white flex items-center gap-1 font-bold text-xs backdrop-blur transition-all active:scale-90"
                     title="Tambah 1 minit"
+                    style={{ '--md-sys-color-secondary-container': 'rgba(255,255,255,0.2)', '--md-sys-color-on-secondary-container': 'white' } as any}
                   >
-                    <Plus className="w-4 h-4 stroke-[3]" />
-                    <span>+1m</span>
-                  </button>
+                    <Plus slot="icon" />
+                    +1m
+                  </md-filled-tonal-button>
                 </div>
               )}
             </motion.div>

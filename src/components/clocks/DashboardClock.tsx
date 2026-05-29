@@ -122,8 +122,8 @@ export function DashboardClock({ movement }: { movement: 'tick' | 'sweep' }) {
             "absolute top-[8%] left-1/2 w-[2px] h-[55%] rounded-full -ml-[1px] origin-[50%_76.3%] z-20 shadow-[0_0_8px_var(--md-sys-color-error)] transition-all",
             "bg-[var(--md-sys-color-error)]",
             visualStyle === 'retro' && "bg-[var(--md-sys-color-error)] w-[2.5px] rounded-none shadow-none",
-            visualStyle === 'glass' && "bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.7)]",
-            visualStyle === 'soft' && "bg-rose-500 shadow-none"
+            visualStyle === 'glass' && "bg-[var(--md-sys-color-error)] shadow-[0_0_10px_rgba(244,63,94,0.7)]",
+            visualStyle === 'soft' && "bg-[var(--md-sys-color-error)] shadow-none"
           )}
           style={{ transform: `rotate(${seconds * 6}deg)` }}
         ></div>

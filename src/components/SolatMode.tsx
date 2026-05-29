@@ -88,10 +88,10 @@ export function SolatMode({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       onClick={handleContainerClick}
-      className="fixed inset-0 z-[500] bg-zinc-950 text-neutral-100 flex flex-col items-center justify-between p-8 sm:p-12 cursor-pointer select-none overflow-hidden"
+      className="fixed inset-0 z-[500] bg-[var(--md-sys-color-surface)] text-[var(--md-sys-color-on-surface)] flex flex-col items-center justify-between p-8 sm:p-12 cursor-pointer select-none overflow-hidden"
     >
       {/* Calm ambient breathing backdrop */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(24,24,27,0.85)_0%,rgba(9,9,11,1)_100%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-black/40 dark:bg-black/60 pointer-events-none" />
       
       {/* Subtle pulsing color blob in center */}
       <motion.div
@@ -109,14 +109,14 @@ export function SolatMode({
 
       {/* Top Header: Solat Mode Indicator & Clock */}
       <div className="w-full flex items-center justify-between z-10">
-        <div className="flex items-center gap-2 text-zinc-500 font-extrabold tracking-widest text-xs uppercase bg-zinc-900/60 border border-zinc-800 px-4 py-2 rounded-full">
+        <div className="flex items-center gap-2 text-[var(--md-sys-color-on-surface-variant)] font-extrabold tracking-widest text-xs uppercase bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline-variant)] px-4 py-2 rounded-full">
           <span className={`w-2 h-2 rounded-full bg-[var(--md-sys-color-primary)] ${isDuaStage ? 'opacity-80' : 'animate-pulse'}`}></span>
           {isDuaStage ? "Dua & Remembrance" : "Solat Sedang Berlangsung"}
         </div>
         
         {showClock && (
-          <div className="flex items-center gap-2 text-zinc-300 font-black tracking-tight text-xl bg-zinc-900/40 border border-zinc-800/50 px-4 py-2 rounded-2xl">
-            <Clock size={18} className="text-zinc-500 shrink-0" />
+          <div className="flex items-center gap-2 text-[var(--md-sys-color-on-surface)] font-black tracking-tight text-xl bg-[var(--md-sys-color-surface-container)] border border-[var(--md-sys-color-outline-variant)]/50 px-4 py-2 rounded-2xl">
+            <Clock size={18} className="text-[var(--md-sys-color-on-surface-variant)] shrink-0" />
             <span className="font-mono">{formattedClock}</span>
           </div>
         )}
@@ -140,12 +140,12 @@ export function SolatMode({
             <motion.h1
               animate={{ opacity: [0.8, 1, 0.8] }}
               transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-              className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight text-zinc-100"
+              className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight text-[var(--md-sys-color-on-surface)]"
             >
               {prayerName}
             </motion.h1>
 
-            <p className="text-zinc-500 text-sm sm:text-base font-medium max-w-sm tracking-wide mt-2">
+            <p className="text-[var(--md-sys-color-on-surface-variant)] text-sm sm:text-base font-medium max-w-sm tracking-wide mt-2">
               {t("solatModeInstruction")}
             </p>
 
@@ -181,7 +181,7 @@ export function SolatMode({
               </AnimatePresence>
             </div>
 
-            <p className="text-zinc-400 text-xs sm:text-sm max-w-md font-semibold tracking-wide leading-relaxed animate-pulse">
+            <p className="text-[var(--md-sys-color-on-surface-variant)]/80 text-xs sm:text-sm max-w-md font-semibold tracking-wide leading-relaxed animate-pulse">
               {t("solatModeDuaInstruction")}
             </p>
 
@@ -194,13 +194,13 @@ export function SolatMode({
       {/* Bottom: Qibla & Exit Panel */}
       <div className="w-full flex flex-col items-center gap-6 z-10">
         {showQibla && (
-          <div className="flex items-center gap-2.5 text-zinc-400 font-semibold tracking-wider text-sm bg-zinc-900/30 border border-zinc-800/40 px-5 py-3 rounded-full">
+          <div className="flex items-center gap-2.5 text-[var(--md-sys-color-on-surface-variant)] font-semibold tracking-wider text-sm bg-[var(--md-sys-color-surface-container-low)] border border-[var(--md-sys-color-outline-variant)]/40 px-5 py-3 rounded-full">
             <Compass size={16} className="text-[var(--md-sys-color-primary)]/80 shrink-0 animate-spin-slow" />
             <span>Kiblat: 292.41° (Barat Laut)</span>
           </div>
         )}
 
-        <div className="text-zinc-600 text-xs font-medium h-4">
+        <div className="text-[var(--md-sys-color-on-surface-variant)]/60 text-xs font-medium h-4">
           Automatik tamat dalam {Math.floor(remainingSeconds / 60)}m {remainingSeconds % 60}s
         </div>
       </div>

@@ -105,8 +105,8 @@ export function SwissStationClock({ movement }: { movement: 'tick' | 'sweep' }) 
             "absolute top-[10%] left-1/2 w-[2px] h-[55%] -ml-[1px] origin-[50%_72.7%] z-20 transition-colors shadow-[0_4px_12px_rgba(255,0,0,0.2)]",
             "bg-[var(--md-sys-color-error)]",
             visualStyle === 'retro' && "bg-[var(--md-sys-color-error)] w-[2.5px] rounded-none",
-            visualStyle === 'glass' && "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]",
-            visualStyle === 'soft' && "bg-rose-500"
+            visualStyle === 'glass' && "bg-[var(--md-sys-color-error)] shadow-[0_0_8px_rgba(244,63,94,0.6)]",
+            visualStyle === 'soft' && "bg-[var(--md-sys-color-error)]"
           )}
           style={{ transform: `rotate(${seconds * 6}deg)` }}
         >
@@ -115,8 +115,8 @@ export function SwissStationClock({ movement }: { movement: 'tick' | 'sweep' }) 
              "absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 sm:w-5 sm:h-5 rounded-full shadow-sm",
              "bg-[var(--md-sys-color-error)]",
              visualStyle === 'retro' && "bg-[var(--md-sys-color-error)] border border-white rounded-none w-4 h-4",
-             visualStyle === 'glass' && "bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.6)]",
-             visualStyle === 'soft' && "bg-rose-500"
+             visualStyle === 'glass' && "bg-[var(--md-sys-color-error)] shadow-[0_0_6px_rgba(244,63,94,0.6)]",
+             visualStyle === 'soft' && "bg-[var(--md-sys-color-error)]"
            )}></div>
         </div>
       </div>

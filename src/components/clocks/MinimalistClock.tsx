@@ -85,8 +85,8 @@ export function MinimalistClock({ movement }: { movement: 'tick' | 'sweep' }) {
             "absolute top-[6%] left-1/2 w-[2px] sm:w-[2.5px] h-[48%] -ml-[1px] sm:-ml-[1.25px] origin-[50%_91.6%] z-20 shadow-[0_4px_12px_rgba(var(--md-sys-color-primary-rgb,0,0,0),0.3)] transition-all",
             "bg-[var(--md-sys-color-primary)]",
             visualStyle === 'retro' && "bg-[var(--md-sys-color-error)] w-[2.5px] rounded-none shadow-none",
-            visualStyle === 'glass' && "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]",
-            visualStyle === 'soft' && "bg-rose-500"
+            visualStyle === 'glass' && "bg-[var(--md-sys-color-error)] shadow-[0_0_8px_rgba(244,63,94,0.6)]",
+            visualStyle === 'soft' && "bg-[var(--md-sys-color-error)]"
           )}
           style={{ transform: `rotate(${seconds * 6}deg)` }}
         ></div>
