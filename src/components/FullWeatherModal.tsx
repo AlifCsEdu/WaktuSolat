@@ -27,7 +27,7 @@ const WeatherParticles = ({ weatherCode, isDay }: { weatherCode: number, isDay: 
         {[...Array(20)].map((_, i) => (
           <motion.div
             key={`rain-${i}`}
-            className="absolute w-[2px] h-[20px] bg-blue-300 rounded-full"
+            className="absolute w-[2px] h-[20px] bg-[var(--md-sys-color-tertiary)] rounded-full"
             style={{ left: `${Math.random() * 100}%`, top: `-20px` }}
             animate={{ top: ['0%', '100%'], opacity: [0, 1, 0] }}
             transition={{ duration: 0.8 + Math.random() * 0.5, repeat: Infinity, delay: Math.random(), ease: "linear" }}
@@ -41,7 +41,7 @@ const WeatherParticles = ({ weatherCode, isDay }: { weatherCode: number, isDay: 
     return (
       <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20 flex items-center justify-center">
         <motion.div 
-          className="w-[400px] h-[400px] sm:w-[600px] sm:h-[600px] rounded-full border-[40px] border-amber-200 border-dashed"
+          className="w-[400px] h-[400px] sm:w-[600px] sm:h-[600px] rounded-full border-[40px] border-[var(--md-sys-color-primary-container)] border-dashed"
           animate={{ rotate: 360 }}
           transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
         />
@@ -203,7 +203,7 @@ export function FullWeatherModal({ isOpen, onClose, weather, locationName, onRef
                         <HourIcon size={28} className="mb-3 text-[var(--md-sys-color-primary)]" />
                         <span className="text-xl font-black">{hour.temp}°</span>
                         {hour.precip > 20 && (
-                          <span className="text-xs font-bold text-blue-500 mt-2 flex items-center gap-1">
+                          <span className="text-xs font-bold text-[var(--md-sys-color-tertiary)] mt-2 flex items-center gap-1">
                             <Umbrella size={10} /> {hour.precip}%
                           </span>
                         )}
@@ -294,14 +294,14 @@ export function FullWeatherModal({ isOpen, onClose, weather, locationName, onRef
                         <div className="flex items-center justify-center gap-2 sm:gap-4 flex-1">
                           <DayIcon className="w-5 h-5 sm:w-6 sm:h-6 text-[var(--md-sys-color-primary)] shrink-0" />
                           {day.precip > 20 && (
-                            <span className="text-[10px] sm:text-xs font-bold text-blue-500 w-8 sm:w-10 text-center">{day.precip}%</span>
+                            <span className="text-[10px] sm:text-xs font-bold text-[var(--md-sys-color-tertiary)] w-8 sm:w-10 text-center">{day.precip}%</span>
                           )}
                         </div>
                         <div className="w-[120px] sm:w-48 flex items-center justify-end gap-2 sm:gap-3 font-black text-[13px] sm:text-base shrink-0">
                           <span className="opacity-60 text-right w-6 sm:w-8">{day.minTemp}°</span>
                           <div className="relative flex-1 max-w-[60px] sm:max-w-[100px] h-1.5 sm:h-2 bg-[var(--md-sys-color-surface-container-highest)] rounded-full overflow-hidden shrink-0">
                              <div 
-                               className="absolute h-full bg-gradient-to-r from-blue-400 to-[var(--md-sys-color-error)] opacity-90 rounded-full" 
+                               className="absolute h-full bg-gradient-to-r from-[var(--md-sys-color-primary)] to-[var(--md-sys-color-error)] opacity-90 rounded-full" 
                                style={{ left: `${leftPercent}%`, width: `${widthPercent}%` }}
                              />
                           </div>
@@ -325,12 +325,14 @@ export function FullWeatherModal({ isOpen, onClose, weather, locationName, onRef
                         key={p.id}
                         onClick={() => updateSettings({ weatherProvider: p.id as any })}
                         className={cn(
-                          "flex flex-col items-start p-3 sm:p-4 rounded-2xl transition-all border-2 text-left",
+                          "relative overflow-hidden flex flex-col items-start p-3 sm:p-4 rounded-2xl transition-all border-2 text-left",
                           (settings.weatherProvider || 'best_match') === p.id
                             ? "border-[var(--md-sys-color-primary)] bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]"
                             : "border-transparent bg-[var(--md-sys-color-surface)] hover:border-[var(--md-sys-color-outline-variant)]"
                         )}
                       >
+                        {/* @ts-ignore */}
+                        <md-ripple></md-ripple>
                         <span className="font-black text-sm sm:text-base mb-0.5 sm:mb-1">{t(p.name as any)}</span>
                         <span className="text-[10px] sm:text-xs font-medium opacity-80">{t(p.desc as any)}</span>
                       </button>

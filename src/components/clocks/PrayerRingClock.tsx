@@ -183,8 +183,8 @@ export function PrayerRingClock({
             "absolute top-[5%] left-1/2 w-[2px] sm:w-[2.5px] h-[55%] rounded-full -ml-[1px] sm:-ml-[1.25px] origin-[50%_81.8%] shadow-lg",
             "bg-[var(--md-sys-color-error)]",
             visualStyle === 'retro' && "bg-[var(--md-sys-color-error)] w-[2.5px] rounded-none shadow-none",
-            visualStyle === 'glass' && "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]",
-            visualStyle === 'soft' && "bg-rose-500"
+            visualStyle === 'glass' && "bg-[var(--md-sys-color-error)] shadow-[0_0_8px_rgba(244,63,94,0.6)]",
+            visualStyle === 'soft' && "bg-[var(--md-sys-color-error)]"
           )}
           style={{ transform: `rotate(${seconds * 6}deg)` }}
         >
@@ -192,8 +192,8 @@ export function PrayerRingClock({
             "w-3.5 h-3.5 rounded-full absolute bottom-[18.2%] -left-1.5",
             "bg-[var(--md-sys-color-error)]",
             visualStyle === 'retro' && "bg-[var(--md-sys-color-error)] border border-white shadow-none rounded-none w-3.5 h-3.5 -left-1.5",
-            visualStyle === 'glass' && "bg-rose-500",
-            visualStyle === 'soft' && "bg-rose-500"
+            visualStyle === 'glass' && "bg-[var(--md-sys-color-error)]",
+            visualStyle === 'soft' && "bg-[var(--md-sys-color-error)]"
           )}></div>
         </div>
       </div>
@@ -204,7 +204,7 @@ export function PrayerRingClock({
         "bg-[var(--md-sys-color-surface)] border-2 border-[var(--md-sys-color-error)]",
         visualStyle === 'retro' && "bg-white border-2 border-[var(--md-sys-color-on-surface)]",
         visualStyle === 'glass' && "bg-white border-[var(--md-sys-color-on-surface)]",
-        visualStyle === 'soft' && "bg-white border-rose-500"
+        visualStyle === 'soft' && "bg-white border-[var(--md-sys-color-error)]"
       )}></div>
     </div>
   );

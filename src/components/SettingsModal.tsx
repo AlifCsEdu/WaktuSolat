@@ -522,8 +522,10 @@ export function SettingsModal({
                     <button
                       onClick={() => setShowAdvancedGeneral(!showAdvancedGeneral)}
                       type="button"
-                      className="w-full flex items-center justify-between font-bold text-left cursor-pointer focus:outline-none"
+                      className="relative w-full flex items-center justify-between font-bold text-left cursor-pointer focus:outline-none overflow-hidden"
                     >
+                      {/* @ts-ignore */}
+                      <md-ripple></md-ripple>
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-2xl bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center">
                           <Sliders size={20} className="stroke-[2.5]" />
@@ -1244,8 +1246,10 @@ export function SettingsModal({
                     <button
                       onClick={() => setShowAdvancedCalculations(!showAdvancedCalculations)}
                       type="button"
-                      className="w-full flex items-center justify-between font-bold text-left cursor-pointer focus:outline-none"
+                      className="relative w-full flex items-center justify-between font-bold text-left cursor-pointer focus:outline-none overflow-hidden"
                     >
+                      {/* @ts-ignore */}
+                      <md-ripple></md-ripple>
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-2xl bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center">
                           <Sliders size={20} className="stroke-[2.5]" />
@@ -1367,8 +1371,10 @@ export function SettingsModal({
                     <button
                       onClick={() => setShowHijriEngine(!showHijriEngine)}
                       type="button"
-                      className="w-full flex items-center justify-between font-bold text-left cursor-pointer focus:outline-none"
+                      className="relative w-full flex items-center justify-between font-bold text-left cursor-pointer focus:outline-none overflow-hidden"
                     >
+                      {/* @ts-ignore */}
+                      <md-ripple></md-ripple>
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-2xl bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center">
                           <Sliders size={20} className="stroke-[2.5]" />
@@ -1410,15 +1416,20 @@ export function SettingsModal({
                               {/* @ts-ignore */}
                               <md-outlined-select
                                 value={settings.hijriMethod || "jakim"}
+                                onChange={(e: any) => updateSettings({ hijriMethod: e.target.value })}
                                 onInput={(e: any) => updateSettings({ hijriMethod: e.target.value })}
                                 style={{ width: "100%" }}
                               >
-                                {(["jakim", "umalqura", "tbla", "civil", "islamic"] as const).map((method) => (
+                                {((["jakim", "umalqura", "tbla", "civil", "islamic"] as const).map((method) => (
                                   /* @ts-ignore */
-                                  <md-select-option key={`hijri-${method}`} value={method}>
+                                  <md-select-option 
+                                    key={`hijri-${method}`} 
+                                    value={method}
+                                    onClick={() => updateSettings({ hijriMethod: method })}
+                                  >
                                     <div slot="headline">{t(`method${method.charAt(0).toUpperCase() + method.slice(1)}` as any)}</div>
                                   </md-select-option>
-                                ))}
+                                )))}
                               </md-outlined-select>
                             </div>
                           </div>

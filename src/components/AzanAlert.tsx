@@ -243,15 +243,11 @@ export function AzanAlert({
           </div>
 
           <div className="flex items-center gap-3 relative z-10 shrink-0">
-            <button
-              onClick={handleDismiss}
-              className="px-7 py-4 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] font-black text-sm shadow-md hover:shadow-lg transition-all hover:scale-105 active:scale-95 flex items-center gap-2 relative overflow-hidden cursor-pointer"
-            >
-              <X size={16} className="stroke-[2.5]" />
-              <span>
-                {dismissTapCount > 0 ? t("doubleTapExit") : t("dismissAlert")}
-              </span>
-            </button>
+            {/* @ts-ignore */}
+            <md-filled-button onClick={handleDismiss}>
+              <X size={16} slot="icon" className="stroke-[2.5]" />
+              {dismissTapCount > 0 ? t("doubleTapExit") : t("dismissAlert")}
+            </md-filled-button>
           </div>
 
           {/* Dynamic sliding indicator at bottom of banner */}
@@ -379,15 +375,11 @@ export function AzanAlert({
 
       {/* Bottom: Close Button with Accidental Dismiss Protection */}
       <div className="z-10 w-full max-w-xs relative flex flex-col items-center gap-3">
-        <button
-          onClick={handleDismiss}
-          className="w-full py-4.5 rounded-2xl bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] font-black text-sm sm:text-base shadow-lg hover:shadow-xl transition-all hover:scale-103 active:scale-97 flex items-center justify-center gap-2 relative overflow-hidden cursor-pointer border border-white/10"
-        >
-          <X size={20} className="stroke-[2.5]" />
-          <span>
-            {dismissTapCount > 0 ? t("doubleTapExit") : t("dismissAlert")}
-          </span>
-        </button>
+        {/* @ts-ignore */}
+        <md-filled-button onClick={handleDismiss} className="w-full" style={{ '--md-filled-button-container-shape': '16px' } as any}>
+          <X size={20} slot="icon" className="stroke-[2.5]" />
+          {dismissTapCount > 0 ? t("doubleTapExit") : t("dismissAlert")}
+        </md-filled-button>
         {dismissTapCount > 0 && (
           <motion.span 
             initial={{ opacity: 0, y: 5 }}

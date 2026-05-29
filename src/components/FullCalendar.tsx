@@ -276,12 +276,14 @@ export function FullCalendar({
                           key={v}
                           onClick={() => setView(v)}
                           className={cn(
-                            "px-4 py-1.5 rounded-lg font-black text-xs transition-all duration-200 whitespace-nowrap cursor-pointer",
+                            "relative overflow-hidden px-4 py-1.5 rounded-lg font-black text-xs transition-all duration-200 whitespace-nowrap cursor-pointer",
                             view === v 
                               ? "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-sm" 
                               : "text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-highest)]"
                           )}
                         >
+                          {/* @ts-ignore */}
+                          <md-ripple></md-ripple>
                           {t(v as any)}
                         </button>
                       ))}
@@ -295,30 +297,28 @@ export function FullCalendar({
                     activeTab === "grid" ? "justify-center w-auto" : "w-full sm:w-auto justify-between sm:justify-end"
                   )}>
                     {activeTab === 'list' && (
-                      <motion.button
-                        whileHover={{ scale: 1.03, y: -0.5 }}
-                        whileTap={{ scale: 0.97 }}
-                        onClick={handleCopy}
-                        disabled={uniqueDisplayData.length === 0}
-                        className="mr-auto sm:mr-1 flex items-center gap-2 px-4 py-2 bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary)] hover:text-white rounded-xl transition-all font-black text-xs disabled:opacity-50 shadow-xs cursor-pointer"
-                        title={t("copySchedule")}
-                      >
-                        {isCopied ? <Check size={14} className="stroke-[3]" /> : <Copy size={14} strokeWidth={iconStroke} />}
-                        <span>{isCopied ? t("copied") : t("copy")}</span>
-                      </motion.button>
+                      <div className="mr-auto sm:mr-1">
+                        {/* @ts-ignore */}
+                        <md-filled-tonal-button
+                          onClick={handleCopy}
+                          disabled={uniqueDisplayData.length === 0}
+                          title={t("copySchedule")}
+                        >
+                          {isCopied ? <Check size={14} slot="icon" /> : <Copy size={14} slot="icon" />}
+                          {isCopied ? t("copied") : t("copy")}
+                        </md-filled-tonal-button>
+                      </div>
                     )}
                     
                     {/* Centered navigation pill */}
                     <div className="flex items-center gap-2.5 bg-[var(--md-sys-color-surface-container-high)] p-1 rounded-full border border-[var(--md-sys-color-outline)]/8 shadow-inner shrink-0">
-                      <motion.button 
-                        whileHover={{ scale: 1.08 }}
-                        whileTap={{ scale: 0.92 }}
+                      {/* @ts-ignore */}
+                      <md-icon-button 
                         onClick={handlePrev}
-                        className="p-2 bg-[var(--md-sys-color-surface)] text-[var(--md-sys-color-on-surface)] rounded-full hover:text-[var(--md-sys-color-primary)] transition-all shadow-xs cursor-pointer"
                         disabled={isLoading}
                       >
                         <ChevronLeft size={16} strokeWidth={iconStroke} />
-                      </motion.button>
+                      </md-icon-button>
                       
                       <h3 className="text-xs font-black min-w-[130px] text-center uppercase tracking-widest text-[var(--md-sys-color-primary)] px-1 flex items-center justify-center gap-1.5 select-none">
                         <Clock size={12} className="text-[var(--md-sys-color-primary)]" />
@@ -329,15 +329,13 @@ export function FullCalendar({
                             : format(currentDate, "MMMM yyyy", { locale: settings.language === 'ms' ? ms : enUS })}
                       </h3>
                       
-                      <motion.button 
-                        whileHover={{ scale: 1.08 }}
-                        whileTap={{ scale: 0.92 }}
+                      {/* @ts-ignore */}
+                      <md-icon-button 
                         onClick={handleNext}
-                        className="p-2 bg-[var(--md-sys-color-surface)] text-[var(--md-sys-color-on-surface)] rounded-full hover:text-[var(--md-sys-color-primary)] transition-all shadow-xs cursor-pointer"
                         disabled={isLoading}
                       >
                         <ChevronRight size={16} strokeWidth={iconStroke} />
-                      </motion.button>
+                      </md-icon-button>
                     </div>
 
                     {showLoadingState && <Loader2 size={18} className="animate-spin text-[var(--md-sys-color-primary)] shrink-0 ml-1" strokeWidth={3} />}
