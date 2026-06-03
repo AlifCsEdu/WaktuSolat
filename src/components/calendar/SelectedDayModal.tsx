@@ -1,5 +1,6 @@
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, CalendarDays, Info, Calendar } from "lucide-react";
+import { X, CalendarDays, Info, Calendar, Share2, Check, Clock } from "lucide-react";
 import { PrayerData } from "../../types";
 import { PRAYER_NAMES, PRAYER_ICONS } from "../PrayerSchedule";
 import { getAllEventsForDay, getHijriFormatted } from "../../lib/holidays";
@@ -21,12 +22,91 @@ export function SelectedDayModal({ day, onClose, onPrayerSelect }: SelectedDayMo
   const visualStyle = useVisualStyle();
   const iconStroke = useIconStroke();
   
-  if (!day) return null;
-  
-  const dateObj = parse(day.date, "dd-MMM-yyyy", new Date());
-  const isToday = day.date === format(new Date(), "dd-MMM-yyyy");
+  const [shareSuccess, setShareSuccess] = useState(false);
+  const [nextPrayerInfo, setNextPrayerInfo] = useState<{
+    name: string;
+    timeLeftStr: string;
+  } | null>(null);
+
+  const dateObj = day ? parse(day.date, "dd-MMM-yyyy", new Date()) : null;
+  const isToday = day ? day.date === format(new Date(), "dd-MMM-yyyy") : false;
+
+  useEffect(() => {
+    if (!day || !isToday) {
+      setNextPrayerInfo(null);
+      return;
+    }
+
+    const parsePrayerTime = (timeStr: string, date: Date) => {
+      if (!timeStr) return null;
+      const [h, m, s] = timeStr.split(":").map(Number);
+      const d = new Date(date);
+      d.setHours(h, m, s || 0, 0);
+      return d;
+    };
+
+    const updateTimer = () => {
+      const now = new Date();
+      const prayers = ["imsak", "fajr", "syuruk", "dhuhr", "asr", "maghrib", "isha"] as const;
+      
+      let nextKey: string | null = null;
+      let nextTime: Date | null = null;
+      
+      for (const k of prayers) {
+        const timeStr = day[k];
+        if (timeStr) {
+          const pTime = parsePrayerTime(timeStr, now);
+          if (pTime && pTime > now) {
+            nextKey = k;
+            nextTime = pTime;
+            break;
+          }
+        }
+      }
+      
+      if (!nextKey) {
+        setNextPrayerInfo({
+          name: "isha",
+          timeLeftStr: isMalay ? "Selesai" : "Completed"
+        });
+        return;
+      }
+      
+      const diffMs = nextTime!.getTime() - now.getTime();
+      const totalSeconds = Math.max(0, Math.floor(diffMs / 1000));
+      
+      const hours = Math.floor(totalSeconds / 3600);
+      const mins = Math.floor((totalSeconds % 3600) / 60);
+      const secs = totalSeconds % 60;
+      
+      const pad = (n: number) => String(n).padStart(2, '0');
+      
+      setNextPrayerInfo({
+        name: nextKey,
+        timeLeftStr: `${pad(hours)}h ${pad(mins)}m ${pad(secs)}s`
+      });
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [day, isToday, isMalay]);
+
+  if (!day || !dateObj) return null;
+
   const events = getAllEventsForDay(dateObj, day.hijri);
   const timesToDisplay = ["imsak", "fajr", "syuruk", "dhuhr", "asr", "maghrib", "isha"] as const;
+
+  const handleShareDaySchedule = () => {
+    let text = `${day.date.replace(/-/g, " ")} (${getHijriFormatted(day.date, settings.hijriMethod, settings.hijriAdjustment, "text", settings.language, day.hijri)} - ${day.day})\n`;
+    timesToDisplay.forEach(k => {
+      text += `${t(k)}: ${day[k] ? day[k].substring(0, 5) : "--:--"}\n`;
+    });
+    navigator.clipboard.writeText(text).then(() => {
+      setShareSuccess(true);
+      setTimeout(() => setShareSuccess(false), 2000);
+    });
+  };
 
   return (
     <AnimatePresence>
@@ -51,7 +131,11 @@ export function SelectedDayModal({ day, onClose, onPrayerSelect }: SelectedDayMo
           onClick={e => e.stopPropagation()}
         >
           {/* Header Ticket (Editorial) */}
-          <div className="bg-[var(--md-sys-color-surface-container-low)] p-6 sm:p-10 relative border-b border-[var(--md-sys-color-outline)]/8 select-none">
+          <div className="bg-[var(--md-sys-color-surface-container-low)] p-6 sm:p-10 relative border-b-2 border-dashed border-[var(--md-sys-color-outline-variant)] select-none">
+            {/* Ticket Punch Holes */}
+            <div className="absolute -left-4 bottom-[-16px] w-8 h-8 rounded-full bg-neutral-950/90 z-20" />
+            <div className="absolute -right-4 bottom-[-16px] w-8 h-8 rounded-full bg-neutral-950/90 z-20" />
+
             <motion.button 
               whileHover={{ scale: 1.1, rotate: 90 }}
               whileTap={{ scale: 0.9 }}
@@ -68,16 +152,29 @@ export function SelectedDayModal({ day, onClose, onPrayerSelect }: SelectedDayMo
                  </span>
                )}
                
-               <h2 className="md3-display-medium sm:md3-display-large font-black tracking-tighter text-[var(--md-sys-color-on-surface)] flex flex-col gap-1 leading-none">
-                 <span className="text-[var(--md-sys-color-primary)]">
-                    {format(dateObj, "dd", { locale: settings.language === 'ms' ? ms : enUS })}
-                 </span>
-                 <span>
-                    {format(dateObj, "MMMM yyyy", { locale: settings.language === 'ms' ? ms : enUS })}
-                 </span>
-               </h2>
+               <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                 <h2 className="md3-display-medium sm:md3-display-large font-black tracking-tighter text-[var(--md-sys-color-on-surface)] flex flex-col gap-1 leading-none">
+                   <span className="text-[var(--md-sys-color-primary)]">
+                      {format(dateObj, "dd", { locale: settings.language === 'ms' ? ms : enUS })}
+                   </span>
+                   <span>
+                      {format(dateObj, "MMMM yyyy", { locale: settings.language === 'ms' ? ms : enUS })}
+                   </span>
+                 </h2>
+
+                 {/* Countdown Widget */}
+                 {nextPrayerInfo && (
+                   <div className="flex items-center gap-3 p-3 px-4 rounded-2xl bg-[var(--md-sys-color-surface)] border border-[var(--md-sys-color-outline)]/5 shadow-inner sm:max-w-xs self-start sm:self-auto font-mono">
+                     <Clock size={16} className="text-[var(--md-sys-color-primary)] animate-pulse" />
+                     <div className="flex flex-col leading-none">
+                       <span className="text-[8px] font-black uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)]">{t(nextPrayerInfo.name as any)} {isMalay ? "Seterusnya" : "Next"}</span>
+                       <span className="text-sm font-black text-[var(--md-sys-color-primary)] mt-1">{nextPrayerInfo.timeLeftStr}</span>
+                     </div>
+                   </div>
+                 )}
+               </div>
                
-               <p className="font-semibold text-[var(--md-sys-color-on-surface-variant)] mt-1.5 text-xs sm:text-sm flex items-center gap-2 flex-wrap">
+               <p className="font-semibold text-[var(--md-sys-color-on-surface-variant)] mt-3.5 text-xs sm:text-sm flex items-center gap-2 flex-wrap">
                  {(!settings.hijriFormat || settings.hijriFormat === 'both' || settings.hijriFormat === 'text') && (
                    <span className="font-black">{getHijriFormatted(day.date, settings.hijriMethod, settings.hijriAdjustment, "text", settings.language, day.hijri).split(" (")[0]}</span>
                  )}
@@ -93,16 +190,29 @@ export function SelectedDayModal({ day, onClose, onPrayerSelect }: SelectedDayMo
                  <span className="opacity-80 font-black uppercase tracking-wider">{format(dateObj, "EEEE", { locale: settings.language === 'ms' ? ms : enUS })}</span>
                </p>
                
-               {/* Event tags styled as outline pills */}
-               {events.length > 0 && (
-                 <div className="flex flex-wrap gap-1.5 mt-3.5">
-                   {events.map((evt, i) => (
-                     <div key={i} className={cn("px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider text-white shadow-xs border border-white/5", evt.type === 'public' ? 'bg-[var(--md-sys-color-error)]' : (evt.color || 'bg-[var(--md-sys-color-primary)]'))}>
-                       {evt.title}
-                     </div>
-                   ))}
-                 </div>
-               )}
+               <div className="flex flex-wrap items-center gap-2 mt-4">
+                 <motion.button
+                   whileHover={{ scale: 1.03 }}
+                   whileTap={{ scale: 0.97 }}
+                   onClick={handleShareDaySchedule}
+                   className={cn(
+                     "px-4 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all duration-250 flex items-center gap-2 shadow-xs cursor-pointer border border-[var(--md-sys-color-outline)]/5",
+                     shareSuccess
+                       ? "bg-[#25D366] text-white border-transparent"
+                       : "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)]"
+                   )}
+                 >
+                   {shareSuccess ? <Check size={14} strokeWidth={3} /> : <Share2 size={14} />}
+                   {shareSuccess ? t("copied") : (isMalay ? "Kongsi Jadual" : "Share Schedule")}
+                 </motion.button>
+
+                 {/* Event tags styled as outline pills */}
+                 {events.length > 0 && events.map((evt, i) => (
+                   <div key={i} className={cn("px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider text-white shadow-xs border border-white/5", evt.type === 'public' ? 'bg-[var(--md-sys-color-error)]' : (evt.color || 'bg-[var(--md-sys-color-primary)]'))}>
+                     {evt.title}
+                   </div>
+                 ))}
+               </div>
             </div>
           </div>
           

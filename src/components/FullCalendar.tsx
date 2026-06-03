@@ -208,6 +208,12 @@ export function FullCalendar({
              visualStyle === 'soft' && "shadow-[var(--soft-shadow-heavy)] bg-[var(--md-sys-color-background)]",
              visualStyle === 'retro' && "border-[4px] border-[var(--md-sys-color-on-surface)] rounded-none"
            )}
+           style={{
+             backgroundImage: !isWallpaperActive && visualStyle !== 'glass'
+               ? "radial-gradient(var(--md-sys-color-outline-variant) 1px, transparent 1px)"
+               : undefined,
+             backgroundSize: "24px 24px"
+           }}
         >
           {/* STICKY HEADER ZONE */}
           <div className={cn(
@@ -230,6 +236,15 @@ export function FullCalendar({
                       {t("extensiveCalendarDesc")}
                     </p>
                   </div>
+                </div>
+
+                <div className="hidden lg:flex flex-col items-end border-l border-[var(--md-sys-color-outline)]/12 pl-6 ml-auto mr-4 select-none font-mono">
+                  <span className="text-3xl font-black text-[var(--md-sys-color-primary)] leading-none tracking-tighter">
+                    {format(currentDate, "yyyy")}
+                  </span>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)] mt-1">
+                    {format(currentDate, "MMMM", { locale: settings.language === 'ms' ? ms : enUS })}
+                  </span>
                 </div>
 
                 <motion.button
@@ -342,20 +357,23 @@ export function FullCalendar({
                       </motion.button>
                     )}
 
-                    {/* Centered navigation pill */}
-                    <div className="flex items-center gap-1.5 sm:gap-2.5 bg-[var(--md-sys-color-surface-container-high)] p-1.5 rounded-full border border-[var(--md-sys-color-outline)]/8 shadow-inner shrink-0">
+                    {/* Chunky Cassette Nav Block */}
+                    <div className={cn(
+                      "flex items-center gap-1.5 sm:gap-2 bg-[var(--md-sys-color-surface-container-highest)] p-1 rounded-2xl border-2 border-[var(--md-sys-color-on-surface)] shadow-[4px_4px_0px_0px_var(--md-sys-color-on-surface)] shrink-0 transition-all duration-250 hover:translate-y-[-1px] hover:shadow-[5px_5px_0px_0px_var(--md-sys-color-on-surface)]",
+                      visualStyle === "retro" && "rounded-none",
+                      visualStyle === "soft" && "shadow-[var(--soft-shadow-light)] border-[var(--md-sys-color-outline)]/10"
+                    )}>
                       <motion.button 
-                        whileHover={{ scale: 1.1, backgroundColor: "var(--md-sys-color-surface-container-highest)" }}
-                        whileTap={{ scale: 0.9 }}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={handlePrev}
                         disabled={isLoading}
-                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-[var(--md-sys-color-on-surface)] transition-colors cursor-pointer disabled:opacity-50"
+                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[var(--md-sys-color-surface-container)] hover:bg-[var(--md-sys-color-primary)] hover:text-[var(--md-sys-color-on-primary)] flex items-center justify-center text-[var(--md-sys-color-on-surface)] transition-colors cursor-pointer disabled:opacity-50 border border-[var(--md-sys-color-outline)]/5"
                       >
                         <ChevronLeft size={20} strokeWidth={iconStroke} />
                       </motion.button>
                       
-                      <h3 className="text-xs sm:text-sm font-black min-w-[120px] sm:min-w-[140px] text-center uppercase tracking-widest text-[var(--md-sys-color-primary)] px-2 flex items-center justify-center gap-2 select-none">
-                        <Clock size={14} className="text-[var(--md-sys-color-primary)] hidden sm:block" />
+                      <h3 className="text-xs sm:text-sm font-black min-w-[125px] sm:min-w-[145px] text-center uppercase tracking-widest text-[var(--md-sys-color-on-surface)] px-2 flex items-center justify-center gap-2 select-none font-mono">
                         {activeTab === "list" && view === "daily" 
                           ? format(currentDate, "dd MMM yyyy", { locale: settings.language === 'ms' ? ms : enUS })
                           : activeTab === "list" && view === "weekly"
@@ -364,11 +382,11 @@ export function FullCalendar({
                       </h3>
                       
                       <motion.button 
-                        whileHover={{ scale: 1.1, backgroundColor: "var(--md-sys-color-surface-container-highest)" }}
-                        whileTap={{ scale: 0.9 }}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={handleNext}
                         disabled={isLoading}
-                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-[var(--md-sys-color-on-surface)] transition-colors cursor-pointer disabled:opacity-50"
+                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[var(--md-sys-color-surface-container)] hover:bg-[var(--md-sys-color-primary)] hover:text-[var(--md-sys-color-on-primary)] flex items-center justify-center text-[var(--md-sys-color-on-surface)] transition-colors cursor-pointer disabled:opacity-50 border border-[var(--md-sys-color-outline)]/5"
                       >
                         <ChevronRight size={20} strokeWidth={iconStroke} />
                       </motion.button>

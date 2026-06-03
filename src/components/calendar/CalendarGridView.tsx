@@ -112,6 +112,8 @@ export function CalendarGridView({ currentDate, monthData, onSelectDay, isLoadin
             }
             
             const hasPublicHoliday = events.some(e => e.type === 'public');
+            const dayOfWeek = d.getDay();
+            const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
             return (
               <motion.div
@@ -125,30 +127,40 @@ export function CalendarGridView({ currentDate, monthData, onSelectDay, isLoadin
                     transition: { type: "spring", stiffness: 400, damping: 25 }
                   }
                 }}
-                whileHover={{ scale: 0.96 }}
-                whileTap={{ scale: 0.9 }}
+                whileHover={{ y: -2, scale: 1.02 }}
+                whileTap={{ y: 1, scale: 0.98 }}
                 onClick={() => {
                   if (pData) onSelectDay(pData);
                 }}
                 className={cn(
-                  "relative flex flex-col items-center sm:items-stretch transition-colors border border-[var(--md-sys-color-outline)]/5 select-none group cursor-pointer overflow-hidden",
+                  "relative flex flex-col items-center sm:items-stretch transition-all duration-250 border select-none group cursor-pointer overflow-hidden",
                   // Sizing: Very squircular/pill shaped
                   "w-full aspect-square max-w-[44px] sm:max-w-none sm:aspect-auto sm:h-full justify-center sm:justify-between p-1.5 sm:p-2.5",
-                  "rounded-full sm:rounded-[24px] lg:rounded-[32px]",
+                  "rounded-full sm:rounded-[24px] lg:rounded-[28px]",
                   // Colors
                   isCurrentMonth 
                     ? "text-[var(--md-sys-color-on-surface)]" 
                     : "opacity-35 text-[var(--md-sys-color-on-surface-variant)]/20",
                   isCurrentDay 
-                    ? "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-md shadow-[var(--md-sys-color-primary)]/20 font-bold z-[2]"
+                    ? "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] border-transparent shadow-md shadow-[var(--md-sys-color-primary)]/20 font-bold z-[2]"
                     : isCurrentMonth
-                      ? "bg-[var(--md-sys-color-surface-container)] hover:bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-surface)] hover:text-[var(--md-sys-color-on-primary-container)]"
-                      : "bg-transparent",
+                      ? "bg-[var(--md-sys-color-surface-container-low)] hover:bg-[var(--md-sys-color-surface-container-highest)] hover:border-[var(--md-sys-color-primary)]/30 border-[var(--md-sys-color-outline)]/5 text-[var(--md-sys-color-on-surface)]"
+                      : "bg-transparent border-transparent",
+                  // Tactile shadow
+                  isCurrentMonth && !isCurrentDay && "shadow-[2px_2px_0px_0px_var(--md-sys-color-outline-variant)] hover:shadow-[4px_4px_0px_0px_var(--md-sys-color-primary)]/25",
                   // Visual Styles adaptation
                   visualStyle === "retro" && "border-2 border-[var(--md-sys-color-on-surface)] rounded-none shadow-[2px_2px_0px_0px_var(--md-sys-color-on-surface)] sm:hover:translate-y-[-2px] sm:hover:shadow-[4px_4px_0px_0px_var(--md-sys-color-on-surface)]",
-                  visualStyle === "glass" && "border-none",
+                  visualStyle === "glass" && "border-none shadow-none",
                   visualStyle === "soft" && !isCurrentDay && "shadow-[var(--soft-shadow-light)]"
                 )}
+                style={{
+                  backgroundImage: !isCurrentMonth
+                    ? "radial-gradient(var(--md-sys-color-outline-variant) 1px, transparent 1px)"
+                    : isWeekend && !isCurrentDay
+                      ? "repeating-linear-gradient(45deg, var(--md-sys-color-primary-container)/8 0, var(--md-sys-color-primary-container)/8 1.5px, transparent 1.5px, transparent 8px)"
+                      : undefined,
+                  backgroundSize: !isCurrentMonth ? "8px 8px" : undefined
+                }}
               >
                 {/* Top Row: Date labels */}
                 <div className="flex justify-center sm:justify-between items-center sm:items-start shrink-0 w-full z-10 relative">

@@ -158,11 +158,11 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: idx * 0.03, type: 'spring', stiffness: 350, damping: 24 }}
               className={cn(
-                 "bg-[var(--md-sys-color-surface-container)] rounded-[24px] p-5 lg:p-6 flex flex-col lg:flex-row gap-4 lg:items-center relative overflow-hidden border border-[var(--md-sys-color-outline)]/8 shadow-xs hover:shadow-md transition-all duration-300",
-                 isToday && "bg-[var(--md-sys-color-primary-container)]/10 ring-2 ring-[var(--md-sys-color-primary)]/35",
-                 visualStyle === "glass" && "bg-[var(--glass-bg)] backdrop-blur-md border-[var(--glass-border)]",
-                 visualStyle === "retro" && "border-2 border-[var(--md-sys-color-on-surface)] rounded-none shadow-[3px_3px_0px_0px_var(--md-sys-color-on-surface)]"
-              )}
+                "bg-[var(--md-sys-color-surface-container)] rounded-[32px] p-5 lg:p-6 flex flex-col lg:flex-row gap-4 lg:items-center relative overflow-hidden border border-[var(--md-sys-color-outline)]/5 shadow-[3px_3px_0px_0px_var(--md-sys-color-outline-variant)] hover:shadow-[5px_5px_0px_0px_var(--md-sys-color-primary)]/20 hover:-translate-y-0.5 transition-all duration-300",
+                isToday && "bg-[var(--md-sys-color-primary-container)]/10 ring-2 ring-[var(--md-sys-color-primary)]/35 shadow-[3px_3px_0px_0px_var(--md-sys-color-primary)]/20",
+                visualStyle === "glass" && "border-none shadow-none",
+                visualStyle === "retro" && "border-2 border-[var(--md-sys-color-on-surface)] rounded-none shadow-[3px_3px_0px_0px_var(--md-sys-color-on-surface)]"
+             )}
             >
               {isToday && <div className="absolute left-0 top-0 bottom-0 w-1 bg-[var(--md-sys-color-primary)]" />}
 
@@ -209,7 +209,7 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
                         hijriValue: day.hijri
                       })}
                       className={cn(
-                        "relative flex items-center gap-2 p-2.5 rounded-2xl bg-[var(--md-sys-color-surface-variant)]/35 border border-[var(--md-sys-color-outline)]/5 flex-1 min-w-[90px] justify-center lg:justify-start lg:flex-none overflow-hidden focus:outline-none focus:ring-2 focus:ring-[var(--md-sys-color-primary)] cursor-pointer",
+                        "relative flex items-center gap-2 p-2.5 rounded-xl bg-[var(--md-sys-color-surface-container-low)] hover:bg-[var(--md-sys-color-surface-container-highest)] border border-[var(--md-sys-color-outline)]/5 flex-1 min-w-[90px] justify-center lg:justify-start lg:flex-none overflow-hidden transition-colors duration-250 cursor-pointer shadow-xs",
                         isToday && "bg-[var(--md-sys-color-surface)]",
                         visualStyle === "retro" && "border-2 border-[var(--md-sys-color-on-surface)] rounded-none"
                       )}
@@ -275,7 +275,7 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
                 )}
               >
                 {/* Gregorian Date Column */}
-                <td className="py-3.5 px-4 tabular-nums relative select-none">
+                <td className="py-3.5 px-4 tabular-nums relative select-none border-r border-[var(--md-sys-color-outline)]/8">
                   {isToday && <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[var(--md-sys-color-primary)] rounded-r-full shadow-[0_0_8px_var(--md-sys-color-primary)]" />}
                   <div className={cn("font-black text-xs sm:text-sm tracking-tight", isToday && "text-[var(--md-sys-color-primary)]")}>
                     {format(dateObj, "dd MMM yyyy", { locale: settings.language === 'ms' ? ms : enUS })}
@@ -288,7 +288,7 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
                 </td>
 
                 {/* Hijri Date Column */}
-                <td className="py-3.5 px-4 select-none">
+                <td className="py-3.5 px-4 select-none border-r border-[var(--md-sys-color-outline)]/8">
                   <div className="flex flex-col gap-0.5">
                     {(!settings.hijriFormat || settings.hijriFormat === 'both' || settings.hijriFormat === 'text') && (
                       <span className="text-xs font-black whitespace-nowrap">{getHijriFormatted(day.date, settings.hijriMethod, settings.hijriAdjustment, "text", settings.language, day.hijri).split(" (")[0]}</span>
@@ -312,7 +312,7 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
                 </td>
 
                 {/* Day Name Column */}
-                <td className="py-3.5 px-4 text-xs font-black opacity-75 uppercase tracking-wider select-none">
+                <td className="py-3.5 px-4 text-xs font-black opacity-75 uppercase tracking-wider select-none border-r border-[var(--md-sys-color-outline)]/8">
                   {format(dateObj, "EEEE", { locale: settings.language === 'ms' ? ms : enUS })}
                 </td>
 
@@ -320,7 +320,7 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
                 {timesToDisplay.map((k) => {
                   const Icon = PRAYER_ICONS[k];
                   return (
-                    <td key={k} className="py-1.5 px-0.5 text-center align-middle">
+                    <td key={k} className="py-1.5 px-0.5 text-center align-middle border-r border-[var(--md-sys-color-outline)]/8">
                       <motion.button 
                         whileHover={{ scale: 1.07 }}
                         whileTap={{ scale: 0.94 }}

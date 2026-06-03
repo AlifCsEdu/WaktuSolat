@@ -66,17 +66,17 @@ export function EventsListView({ currentDate, type }: EventsListViewProps) {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: Math.min(idx * 0.03, 0.4), type: "spring", stiffness: 350, damping: 25 }}
-            whileHover={!isPast ? { scale: 0.98 } : {}}
-            whileTap={!isPast ? { scale: 0.96 } : {}}
+            whileHover={!isPast ? { y: -2 } : {}}
+            whileTap={!isPast ? { y: 1 } : {}}
             key={`${evt.date.toISOString()}-${evt.title}`}
             className={cn(
-               "flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5 p-4 sm:p-5 rounded-[28px] border transition-all duration-300 relative overflow-hidden select-none shadow-sm hover:shadow-md cursor-default",
+               "flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5 p-4 sm:p-5 rounded-[32px] border transition-all duration-300 relative overflow-hidden select-none shadow-[3px_3px_0px_0px_var(--md-sys-color-outline-variant)] hover:shadow-[5px_5px_0px_0px_var(--md-sys-color-primary)]/25 cursor-default",
                isTodayEvent 
-                 ? "bg-[var(--md-sys-color-primary-container)]/20 border-[var(--md-sys-color-primary)] ring-2 ring-[var(--md-sys-color-primary)]/20 shadow-md" 
+                 ? "bg-[var(--md-sys-color-primary-container)]/20 border-[var(--md-sys-color-primary)] ring-2 ring-[var(--md-sys-color-primary)]/20 shadow-[3px_3px_0px_0px_var(--md-sys-color-primary)]/25" 
                  : isPast 
-                   ? "bg-[var(--md-sys-color-surface-variant)]/10 border-[var(--md-sys-color-outline)]/4 opacity-45 grayscale-[25%]"
+                   ? "bg-[var(--md-sys-color-surface-variant)]/10 border-[var(--md-sys-color-outline)]/4 opacity-45 grayscale-[25%] shadow-none"
                    : "bg-[var(--md-sys-color-surface-container-low)] border-[var(--md-sys-color-outline)]/5 hover:border-[var(--md-sys-color-primary)]/25 hover:bg-[var(--md-sys-color-surface-container)]",
-               visualStyle === "glass" && "border-none",
+               visualStyle === "glass" && "border-none shadow-none",
                visualStyle === "retro" && "border-2 border-[var(--md-sys-color-on-surface)] rounded-none shadow-[2px_2px_0px_0px_var(--md-sys-color-on-surface)]"
             )}
           >
