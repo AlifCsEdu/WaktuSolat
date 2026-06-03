@@ -7,6 +7,10 @@ async function startServer() {
   const PORT = 3001;
 
   // API routes FIRST
+  // Simple in-memory geocoding cache
+  const geocodeCache = new Map<string, any>();
+  const MAX_CACHE_SIZE = 100;
+
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
   });
@@ -15,10 +19,22 @@ async function startServer() {
   app.get("/api/geocode", async (req, res) => {
     try {
       const { lat, lng } = req.query;
+      if (!lat || !lng) {
+        return res.status(400).json({ error: "Missing lat or lng" });
+      }
+
+      // Round to 2 decimal places (~1.1 km accuracy) for cache-friendliness
+      const roundedLat = parseFloat(lat as string).toFixed(2);
+      const roundedLng = parseFloat(lng as string).toFixed(2);
+      const cacheKey = `${roundedLat},${roundedLng}`;
+
+      if (geocodeCache.has(cacheKey)) {
+        return res.json(geocodeCache.get(cacheKey));
+      }
 
       // Fetch Nominatim
       const nominatimPromise = fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=jsonv2&accept-language=en`,
+        `https://nominatim.openstreetmap.org/reverse?lat=${roundedLat}&lon=${roundedLng}&format=jsonv2&accept-language=en`,
         {
           headers: {
             "User-Agent": "WaktuSolatApp/1.0 (Contact: a78477308@gmail.com)",
@@ -30,7 +46,7 @@ async function startServer() {
 
       // Fetch BigDataCloud as fallback/supplement
       const bdcPromise = fetch(
-        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`,
+        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${roundedLat}&longitude=${roundedLng}&localityLanguage=en`,
       )
         .then((r) => (r.ok ? r.json() : null))
         .catch(() => null);
@@ -44,7 +60,18 @@ async function startServer() {
         throw new Error(`Geocode APIs failed`);
       }
 
-      res.json({ osm: osmData, bdc: bdcData });
+      const result = { osm: osmData, bdc: bdcData };
+
+      // Manage cache size
+      if (geocodeCache.size >= MAX_CACHE_SIZE) {
+        const firstKey = geocodeCache.keys().next().value;
+        if (firstKey !== undefined) {
+          geocodeCache.delete(firstKey);
+        }
+      }
+      geocodeCache.set(cacheKey, result);
+
+      res.json(result);
     } catch (error) {
       console.error("Error fetching geocode:", error);
       res.status(500).json({ error: "Failed to fetch geocode" });

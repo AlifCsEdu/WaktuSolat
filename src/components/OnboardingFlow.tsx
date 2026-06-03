@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, Variants } from "motion/react";
 import { 
   Sparkles, 
   MapPin, 
@@ -28,7 +28,7 @@ interface OnboardingFlowProps {
 }
 
 // Staggered variants for expressive animation
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -43,13 +43,13 @@ const containerVariants = {
   }
 };
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 40, scale: 0.95 },
   visible: { 
     opacity: 1, 
     y: 0, 
     scale: 1,
-    transition: { type: "spring", stiffness: 350, damping: 25 }
+    transition: { type: "spring" as const, stiffness: 350, damping: 25 }
   },
   exit: { 
     opacity: 0, 

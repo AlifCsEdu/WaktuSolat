@@ -88,14 +88,17 @@ export function ZoneSelector({
     lat: number;
     lng: number;
   } | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<any>(null);
   const [activeScrollState, setActiveScrollState] = useState<string | null>(null);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Set focus on input when dropdown opens
+  // Set focus on input when dropdown opens (with slight delay for modal mount transition)
   useEffect(() => {
-    if (isOpen && inputRef.current) {
-      inputRef.current.focus();
+    if (isOpen) {
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 150);
+      return () => clearTimeout(timer);
     } else {
       setSearchQuery(""); // clear search when closed
     }
@@ -349,7 +352,7 @@ export function ZoneSelector({
 
                 <div className="mb-2 w-full bg-[var(--md-sys-color-surface-container-high)]/50 backdrop-blur-md rounded-[20px] overflow-hidden">
                   {/* @ts-ignore */}
-                  <md-tabs active-tab-index={settings.locationMode === 'auto' ? 1 : 0}>
+                  <md-tabs activeTabIndex={settings.locationMode === 'auto' ? 1 : 0}>
                     {/* @ts-ignore */}
                     <md-primary-tab onClick={() => updateSettings({ locationMode: 'manual' })}>
                       {t('modeManual' as any) || "Manual Selection"}
@@ -396,6 +399,7 @@ export function ZoneSelector({
                       <div className="relative group w-full mb-2">
                         {/* @ts-ignore */}
                         <md-outlined-text-field
+                          ref={inputRef}
                           type="text"
                           placeholder={t("searchPlaceholder")}
                           value={searchQuery}
@@ -596,10 +600,15 @@ export function ZoneSelector({
                                         onZoneSelect(zone.v);
                                         setIsOpen(false);
                                       }}
-                                      className={cn(
-                                        "rounded-2xl my-0.5 transition-colors duration-200",
-                                        isSelected ? "bg-[var(--md-sys-color-primary-container)]" : "hover:bg-[var(--md-sys-color-surface-container-high)]"
-                                      )}
+                                      className="my-0.5 block w-full outline-none"
+                                      style={{
+                                        '--md-list-item-container-shape': '16px',
+                                        '--md-list-item-container-color': isSelected ? 'var(--md-sys-color-primary-container)' : 'transparent',
+                                        '--md-list-item-label-text-color': isSelected ? 'var(--md-sys-color-on-primary-container)' : 'var(--md-sys-color-on-surface)',
+                                        '--md-list-item-supporting-text-color': isSelected ? 'var(--md-sys-color-primary)' : 'var(--md-sys-color-on-surface-variant)',
+                                        '--md-list-item-hover-state-layer-color': 'var(--md-sys-color-on-surface)',
+                                        '--md-list-item-hover-state-layer-opacity': '0.08',
+                                      } as React.CSSProperties}
                                     >
                                       {/* @ts-ignore */}
                                       <div slot="headline" className={cn(

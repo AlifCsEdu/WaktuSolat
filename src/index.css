@@ -1024,3 +1024,42 @@ html.dark[data-style="soft"] {
 .custom-m3e-tooltip::before {
     border-top-color: var(--md-sys-color-surface-container-highest) !important;
 }
+
+/* --- Material Web List & List Item Custom styling overrides --- */
+md-list-item {
+    transition: all 250ms var(--ease-m3-emphasized);
+}
+
+/* Shape styles override for MWC List Items based on visualStyle mode */
+html[data-shape="boxy"] md-list-item {
+    --md-list-item-container-shape: 0px !important;
+}
+
+html[data-shape="semi"] md-list-item {
+    --md-list-item-container-shape: 8px !important;
+}
+
+html[data-shape="rounded"] md-list-item {
+    --md-list-item-container-shape: 16px !important;
+}
+
+html[data-shape="pill"] md-list-item {
+    --md-list-item-container-shape: 28px !important;
+}
+
+/* Glassmorphism theme style adjustments for List Items */
+html[data-style="glass"] md-list-item {
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+html.dark[data-style="glass"] md-list-item {
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    background-color: rgba(0, 0, 0, 0.15);
+}
+
+/* Neobrutalist retro style override for List Items */
+html[data-style="retro"] md-list-item {
+    border: 2px solid var(--md-sys-color-on-surface) !important;
+    --md-list-item-container-shape: 0px !important;
+}

@@ -33,12 +33,13 @@ import { LocationToast } from "./components/LocationToast";
 import { AzanAlert } from "./components/AzanAlert";
 import { SolatMode } from "./components/SolatMode";
 import { SharePanel } from "./components/SharePanel";
-import { CalendarRange, Wifi, RefreshCw } from "lucide-react";
+import { CalendarRange, Wifi, RefreshCw, Tv } from "lucide-react";
 import { useAppContext } from "./AppContext";
 import { useVisualStyle } from "./hooks/useVisualStyle";
 import { cn } from "./lib/utils";
 import { StorageManager } from "./lib/StorageManager";
 import { OnboardingFlow } from "./components/OnboardingFlow";
+import { TvModeView } from "./components/TvModeView";
 
 // Feature Hooks
 import { useTime } from "./hooks/useTime";
@@ -65,6 +66,8 @@ export default function App() {
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(() => {
     return StorageManager.getHasCompletedOnboarding();
   });
+
+  const [isTvMode, setIsTvMode] = useState(false);
 
   // 1. Time Ticking State
   const currentTime = useTime();
@@ -534,6 +537,21 @@ export default function App() {
               </md-filled-tonal-icon-button>
             </motion.div>
             <div className="flex gap-2 shrink-0 ml-auto sm:ml-0 bg-[var(--md-sys-color-surface-container-highest)] p-1.5 rounded-full">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="inline-flex shrink-0 w-12 h-12 lg:w-[56px] lg:h-[56px]"
+              >
+                {/* @ts-ignore */}
+                <md-filled-tonal-icon-button
+                  onClick={() => setIsTvMode(true)}
+                  title={settings.language === "ms" ? "Mod TV Masjid" : "Mosque TV Mode"}
+                  aria-label={settings.language === "ms" ? "Mod TV Masjid" : "Mosque TV Mode"}
+                  style={{ '--md-filled-tonal-icon-button-container-shape': '24px', width: '100%', height: '100%' }}
+                >
+                  <Tv size={24} className="stroke-[2.5]" />
+                </md-filled-tonal-icon-button>
+              </motion.div>
               <ThemeControl />
               <FullScreenToggle />
             </div>
@@ -676,9 +694,28 @@ export default function App() {
         <OnboardingFlow 
           language={settings.language || "ms"} 
           onComplete={(zone) => {
+            StorageManager.saveRecentZone(zone);
             setSelectedZone(zone);
             setHasCompletedOnboarding(true);
           }}
+        />
+      )}
+      {isTvMode && (
+        <TvModeView
+          currentTime={currentTime}
+          todayData={todayData}
+          nextPrayerName={nextPrayerName}
+          nextPrayerTime={nextPrayerTime}
+          prevPrayerName={prevPrayerKey}
+          prevPrayerTime={prevPrayerTime}
+          selectedZone={selectedZone}
+          currentLocationName={currentLocationName}
+          t={t}
+          settings={settings}
+          onClose={() => setIsTvMode(false)}
+          iqamahCountdownActive={iqamahCountdownActive}
+          iqamahRemainingSeconds={iqamahRemainingSeconds}
+          iqamahTotalSeconds={iqamahTotalSeconds}
         />
       )}
     </div>

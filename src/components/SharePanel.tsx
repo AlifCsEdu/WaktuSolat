@@ -759,7 +759,7 @@ export function SharePanel({ isOpen, onClose, currentZone, currentZoneData }: Sh
               {/* Tab Selector */}
               <div className="mb-2 w-full bg-[var(--md-sys-color-surface-container)] rounded-[20px] overflow-hidden">
                 {/* @ts-ignore */}
-                <md-tabs active-tab-index={activeTab === 'link' ? 0 : activeTab === 'image' ? 1 : 2}>
+                <md-tabs activeTabIndex={activeTab === 'link' ? 0 : activeTab === 'image' ? 1 : 2}>
                   {/* @ts-ignore */}
                   <md-primary-tab onClick={() => setActiveTab('link')}>
                     {t("smartLink" as any)}
