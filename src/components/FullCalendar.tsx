@@ -257,8 +257,8 @@ export function FullCalendar({
               </div>
 
               {/* Custom Bouncy Segmented Control */}
-              <div className="w-full shrink-0 overflow-x-auto no-scrollbar pt-2 pb-1">
-                <div className="flex p-1.5 bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline)]/5 rounded-full shadow-inner w-max min-w-full sm:min-w-0">
+              <div className="w-full shrink-0 pt-2 pb-1">
+                <div className="grid grid-cols-2 gap-1.5 p-1.5 bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline)]/5 rounded-[24px] sm:flex sm:rounded-full shadow-inner w-full sm:w-max mx-auto">
                   {[
                     { id: "grid", icon: CalendarDays, label: t("calendarGrid") },
                     { id: "list", icon: ListTree, label: t("schedule") },
@@ -272,7 +272,7 @@ export function FullCalendar({
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as CalendarTab)}
                         className={cn(
-                          "relative overflow-hidden flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-black uppercase tracking-wider rounded-full transition-colors whitespace-nowrap cursor-pointer z-10",
+                          "relative overflow-hidden flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-[10.5px] sm:text-sm font-black uppercase tracking-tight sm:tracking-wider rounded-xl sm:rounded-full transition-colors whitespace-nowrap cursor-pointer z-10 w-full sm:w-auto",
                           isActive ? "text-[var(--md-sys-color-on-primary)]" : "text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-highest)]"
                         )}
                       >
@@ -281,12 +281,12 @@ export function FullCalendar({
                         {isActive && (
                           <motion.div
                             layoutId="calendarTabIndicator"
-                            className="absolute inset-0 bg-[var(--md-sys-color-primary)] rounded-full shadow-md z-[-1]"
+                            className="absolute inset-0 bg-[var(--md-sys-color-primary)] rounded-xl sm:rounded-full shadow-md z-[-1]"
                             transition={{ type: "spring", stiffness: 400, damping: 30 }}
                           />
                         )}
                         <Icon size={14} strokeWidth={iconStroke + 0.5} className="shrink-0" />
-                        {tab.label}
+                        <span className="truncate">{tab.label}</span>
                       </button>
                     );
                   })}
