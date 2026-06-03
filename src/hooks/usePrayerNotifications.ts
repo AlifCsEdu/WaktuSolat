@@ -18,7 +18,7 @@ export function usePrayerNotifications(
   currentTime: Date, 
   todayData: PrayerData | null
 ) {
-  const { t } = useAppContext();
+  const { settings, t } = useAppContext();
   const [preferences, setPreferences] = useState<Preferences>(() => {
     const savedV2 = StorageManager.getItem('prayer_notifications_v2');
     if (savedV2) {
@@ -92,11 +92,14 @@ export function usePrayerNotifications(
   }, []);
 
   const playSound = useCallback((sound: NotificationSound, message: string) => {
+    const volumeMultiplier = (settings.soundVolume ?? 80) / 100;
+    
     if (sound === 'voice') {
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(message);
         utterance.lang = t("language") === "ms" ? 'ms-MY' : 'en-US';
+        utterance.volume = volumeMultiplier;
         window.speechSynthesis.speak(utterance);
       }
       return;
@@ -115,7 +118,7 @@ export function usePrayerNotifications(
         
         // Attack, Sustain, Decay
         gain.gain.setValueAtTime(0, startTime + delay);
-        gain.gain.linearRampToValueAtTime(vol, startTime + delay + Math.min(0.05, dur * 0.1));
+        gain.gain.linearRampToValueAtTime(vol * volumeMultiplier, startTime + delay + Math.min(0.05, dur * 0.1));
         gain.gain.exponentialRampToValueAtTime(0.00001, startTime + delay + dur);
         
         osc.connect(gain);
@@ -157,7 +160,7 @@ export function usePrayerNotifications(
       } else if (sound === 'azan1' || sound === 'azan2') {
         const file = sound === 'azan1' ? '/audio/azan-makkah.mp3' : '/audio/azan-madinah.mp3';
         const audio = new Audio(file);
-        audio.volume = 0.5;
+        audio.volume = volumeMultiplier * 0.5;
         audio.play().catch(err => {
           console.warn("Real audio playback failed, falling back to synthesized tone", err);
           if (sound === 'azan1') {
@@ -178,7 +181,7 @@ export function usePrayerNotifications(
     } catch (e) {
       console.warn("AudioContext playback failed", e);
     }
-  }, [t]);
+  }, [settings.soundVolume, t]);
 
   useEffect(() => {
     if (!todayData || permission !== 'granted') return;

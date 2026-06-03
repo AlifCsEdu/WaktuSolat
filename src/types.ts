@@ -95,6 +95,7 @@ export interface GeneralSettings {
   themeFont?: string;
   themeShape?: string;
   weatherProvider?: 'best_match' | 'ecmwf_ifs04' | 'gfs_seamless' | 'jma_seamless';
+  soundVolume?: number;
 }
 
 // Default preferences
@@ -143,6 +144,7 @@ export const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
   offlineCachedRange: null,
   offlineCachedAt: null,
   autoSyncOffline: true,
+  soundVolume: 80,
   themeDark: false,
   themeColor: '#006c54',
   themeVariant: 'tonal_spot',

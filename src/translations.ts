@@ -250,6 +250,8 @@ export const translations = {
     solatScreensaverSection: "Skrin Penghadang Solat & Doa",
     testIqamahChime: "Uji Chime",
     testIqamahTick: "Uji Detik",
+    soundVolume: "Volume Bunyi",
+    volumeDesc: "Laras kekuatan bunyi pengumuman suara dan penggera dalam aplikasi.",
     adjustIqamahHint: "Ketik kad iqamah untuk Pause / +1 Minit",
     darkThemeModeLabel: "Mod Tema Gelap",
     darkThemeModeManual: "Manual",
@@ -398,6 +400,10 @@ export const translations = {
     locationPromptDesc: "Anda berada di {locationName} ({zoneName}). Tukar zon?",
     ignore: "Abaikan",
     changeZone: "Tukar Zon",
+    enableAllSunnah: "Aktifkan Semua Sunat",
+    muteAllSunnah: "Senyapkan Semua Sunat",
+    quickActionSunnah: "Tindakan Pantas Sunat",
+    quickActionSunnahDesc: "Aktifkan atau senyapkan semua penggera amalan sunat sekaligus.",
   },
   en: {
     appTitle: "Waktu Solat",
@@ -653,6 +659,8 @@ export const translations = {
     solatScreensaverSection: "Solat & Dua Screensaver",
     testIqamahChime: "Test Chime",
     testIqamahTick: "Test Tick",
+    soundVolume: "Sound Volume",
+    volumeDesc: "Adjust volume level for in-app voice announcements and alarms.",
     adjustIqamahHint: "Tap iqamah card to Pause / +1 Minute",
     darkThemeModeLabel: "Dark Theme Mode",
     darkThemeModeManual: "Manual",
@@ -818,6 +826,10 @@ export const translations = {
     locationPromptDesc: "You are currently in {locationName} ({zoneName}). Change zone?",
     ignore: "Ignore",
     changeZone: "Change Zone",
+    enableAllSunnah: "Enable All Sunnah",
+    muteAllSunnah: "Mute All Sunnah",
+    quickActionSunnah: "Quick Sunnah Actions",
+    quickActionSunnahDesc: "Enable or mute all optional sunnah alerts at once.",
   }
 };
 
