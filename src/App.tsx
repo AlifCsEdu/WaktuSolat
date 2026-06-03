@@ -67,7 +67,10 @@ export default function App() {
     return StorageManager.getHasCompletedOnboarding();
   });
 
-  const [isTvMode, setIsTvMode] = useState(false);
+  const isTvMode = !!settings.tvModeEnabled;
+  const setIsTvMode = useCallback((val: boolean) => {
+    updateSettings({ tvModeEnabled: val });
+  }, [updateSettings]);
 
   // 1. Time Ticking State
   const currentTime = useTime();

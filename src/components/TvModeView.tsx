@@ -54,18 +54,29 @@ export function TvModeView({
   iqamahTotalSeconds,
 }: TvModeViewProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isWakeLockSupported, setIsWakeLockSupported] = useState(false);
+  const [isWakeLockActive, setIsWakeLockActive] = useState(false);
   const isMalay = settings.language === "ms";
 
   // Screen Wake Lock API Integration
   useEffect(() => {
     let wakeLock: any = null;
     const requestWakeLock = async () => {
+      if (!("wakeLock" in navigator)) {
+        setIsWakeLockSupported(false);
+        setIsWakeLockActive(false);
+        return;
+      }
+      setIsWakeLockSupported(true);
       try {
-        if ("wakeLock" in navigator) {
-          wakeLock = await (navigator as any).wakeLock.request("screen");
-        }
+        wakeLock = await (navigator as any).wakeLock.request("screen");
+        setIsWakeLockActive(true);
+        wakeLock.addEventListener("release", () => {
+          setIsWakeLockActive(false);
+        });
       } catch (err) {
         console.warn("Wake Lock request failed:", err);
+        setIsWakeLockActive(false);
       }
     };
 
@@ -83,6 +94,7 @@ export function TvModeView({
       if (wakeLock) {
         wakeLock.release().then(() => {
           wakeLock = null;
+          setIsWakeLockActive(false);
         });
       }
     };
@@ -98,6 +110,17 @@ export function TvModeView({
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
     };
   }, []);
+
+  // Escape key event listener to close TV Mode
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -139,8 +162,16 @@ export function TvModeView({
     return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   }, [nextPrayerTime, currentTime]);
 
-  // Rotational hadith reminders (changing every 15s)
+  // Rotational hadith or custom reminders
   const announcements = useMemo(() => {
+    if (settings.tvModeCustomReminders && settings.tvModeCustomReminders.trim()) {
+      const custom = settings.tvModeCustomReminders
+        .split("\n")
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+      if (custom.length > 0) return custom;
+    }
+
     return isMalay 
       ? [
           "Sila luruskan saff dan rapatkan barisan sebelum memulakan solat berjemaah.",
@@ -156,16 +187,24 @@ export function TvModeView({
           "The best of rows for men are the front rows.",
           "Charity in the morning brings blessings and increases provision.",
         ];
-  }, [isMalay]);
+  }, [isMalay, settings.tvModeCustomReminders]);
 
   const [currentAnnouncementIdx, setCurrentAnnouncementIdx] = useState(0);
 
+  // Clamp current index if announcements list changes length
   useEffect(() => {
+    if (currentAnnouncementIdx >= announcements.length) {
+      setCurrentAnnouncementIdx(0);
+    }
+  }, [announcements, currentAnnouncementIdx]);
+
+  useEffect(() => {
+    const intervalSec = settings.tvModeReminderInterval ?? 15;
     const timer = setInterval(() => {
       setCurrentAnnouncementIdx((prev) => (prev + 1) % announcements.length);
-    }, 15000);
+    }, intervalSec * 1000);
     return () => clearInterval(timer);
-  }, [announcements]);
+  }, [announcements, settings.tvModeReminderInterval]);
 
   const activeKeys = ["imsak", "fajr", "syuruk", "dhuhr", "asr", "maghrib", "isha"];
 
@@ -215,6 +254,28 @@ export function TvModeView({
             <span className="truncate max-w-[200px]">{currentLocationName || t("selectedZone")}</span>
             <span className="font-mono text-xs opacity-60">({selectedZone})</span>
           </div>
+
+          {/* Wake Lock Active Indicator */}
+          <div className={cn(
+            "flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all duration-300",
+            isWakeLockActive 
+              ? "bg-[var(--md-sys-color-primary-container)]/30 text-[var(--md-sys-color-primary)] border-[var(--md-sys-color-primary)]/20 shadow-sm"
+              : "bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-outline)] border-[var(--md-sys-color-outline-variant)]/40"
+          )}>
+            <span className={cn(
+              "w-2 h-2 rounded-full relative flex shrink-0",
+              isWakeLockActive ? "bg-[var(--md-sys-color-primary)]" : "bg-[var(--md-sys-color-outline)]"
+            )}>
+              {isWakeLockActive && (
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--md-sys-color-primary)] opacity-75"></span>
+              )}
+            </span>
+            <span className="tracking-wide">
+              {isWakeLockActive 
+                ? (isMalay ? t("wakeLockActive" as any) : "Screen Awake") 
+                : (isMalay ? t("wakeLockInactive" as any) : "Wake Lock Off")}
+            </span>
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
@@ -248,7 +309,7 @@ export function TvModeView({
         <div className="flex-[1.2] flex flex-col justify-between items-stretch gap-6 min-w-0">
           
           {/* Main Massive Clock Panel */}
-          <div className="flex-1 flex flex-col justify-center items-center bg-[var(--md-sys-color-surface-container-low)] border border-[var(--md-sys-color-outline-variant)]/30 rounded-[48px] p-10 shadow-lg relative overflow-hidden group">
+          <div className="flex-1 flex flex-col justify-center items-center bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/15 rounded-[48px] p-10 shadow-2xl relative overflow-hidden group transition-all duration-500 hover:border-[var(--md-sys-color-primary)]/20">
             
             {/* Top Info row (dates) */}
             <div className="flex flex-col items-center mb-6">
@@ -280,7 +341,7 @@ export function TvModeView({
 
             {/* Next Prayer Countdown Sub-panel */}
             {nextPrayerName && (
-              <div className="mt-8 flex flex-col items-center bg-[var(--md-sys-color-surface-container-high)]/50 border border-[var(--md-sys-color-outline-variant)]/20 px-8 py-3 rounded-3xl w-full max-w-md shadow-sm">
+              <div className="mt-8 flex flex-col items-center bg-[var(--md-sys-color-surface-container-high)]/60 backdrop-blur-md border border-[var(--md-sys-color-outline-variant)]/20 px-8 py-3 rounded-3xl w-full max-w-md shadow-sm">
                 <span className="text-xs uppercase tracking-[0.25em] font-black text-[var(--md-sys-color-on-surface-variant)]">
                   {isMalay ? "HITUNG MUNDUR" : "COUNTDOWN"} — {nextPrayerName}
                 </span>
@@ -314,13 +375,13 @@ export function TvModeView({
           </AnimatePresence>
 
           {/* Running announcement banner */}
-          <div className="h-28 bg-[var(--md-sys-color-surface-container-low)] border border-[var(--md-sys-color-outline-variant)]/30 rounded-[32px] p-6 shadow-sm overflow-hidden flex items-center relative">
-            <div className="absolute left-6 text-[var(--md-sys-color-primary)] shrink-0 bg-[var(--md-sys-color-surface-container-low)] pr-4 z-10 flex items-center gap-2">
-              <BookOpen size={24} className="stroke-[2.5]" />
-              <span className="text-sm font-black uppercase tracking-widest">{isMalay ? "PERINGATAN" : "REMINDER"}:</span>
+          <div className="h-28 bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/10 rounded-[32px] p-6 shadow-md overflow-hidden flex items-center relative transition-all duration-500 hover:border-[var(--md-sys-color-primary)]/15">
+            <div className="absolute left-6 text-[var(--md-sys-color-primary)] shrink-0 bg-[var(--md-sys-color-surface-container-high)]/90 backdrop-blur-xl px-4 py-2 rounded-2xl border border-[var(--md-sys-color-outline-variant)]/20 shadow-sm z-10 flex items-center gap-2">
+              <BookOpen size={20} className="stroke-[2.5]" />
+              <span className="text-xs font-black uppercase tracking-widest">{isMalay ? "PERINGATAN" : "REMINDER"}:</span>
             </div>
             
-            <div className="flex-1 pl-36 overflow-hidden relative">
+            <div className="flex-1 pl-44 overflow-hidden relative">
               <AnimatePresence mode="wait">
                 <motion.p
                   key={currentAnnouncementIdx}
@@ -338,7 +399,7 @@ export function TvModeView({
         </div>
 
         {/* Right Container: Massive Prayer Schedule list */}
-        <div className="flex-[0.9] flex flex-col justify-between items-stretch bg-[var(--md-sys-color-surface-container-low)] border border-[var(--md-sys-color-outline-variant)]/30 rounded-[48px] p-8 shadow-lg min-w-0">
+        <div className="flex-[0.9] flex flex-col justify-between items-stretch bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/15 rounded-[48px] p-8 shadow-2xl min-w-0 transition-all duration-500 hover:border-[var(--md-sys-color-primary)]/20">
           <div className="flex flex-col h-full justify-between gap-2.5">
             {activeKeys.map((key) => {
               const rawTime = todayData ? todayData[key as keyof PrayerData] : "--:--";
@@ -350,12 +411,12 @@ export function TvModeView({
                 <div
                   key={key}
                   className={cn(
-                    "flex items-center justify-between px-6 py-4 rounded-[24px] border transition-all relative overflow-hidden flex-1",
+                    "flex items-center justify-between px-6 py-4 rounded-[24px] border transition-all duration-300 relative overflow-hidden flex-1",
                     isCurrent
                       ? "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] border-[var(--md-sys-color-primary)]/10 shadow-lg scale-[1.02] z-10"
                       : isNext
                       ? "bg-[var(--md-sys-color-primary-container)]/30 text-[var(--md-sys-color-on-primary-container)] border-[var(--md-sys-color-primary)]/20"
-                      : "bg-[var(--md-sys-color-surface)]/50 border-transparent hover:bg-[var(--md-sys-color-surface-container-high)]"
+                      : "bg-[var(--md-sys-color-surface)]/40 border-transparent hover:bg-[var(--md-sys-color-surface-container-high)]/60 hover:border-[var(--md-sys-color-outline-variant)]/30"
                   )}
                 >
                   {/* Backdrop highlight flash */}

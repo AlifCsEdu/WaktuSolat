@@ -32,7 +32,8 @@ import {
   Trash2,
   Sliders,
   MoonStar,
-  Search
+  Search,
+  Tv
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { modalVariants } from "../lib/motion";
@@ -1758,6 +1759,109 @@ export function SettingsModal({
               <span>{t("resetSuccess" as any)}</span>
             </motion.div>
           )}
+        </div>
+      )
+    },
+    {
+      id: "mosque_tv_mode",
+      tab: "mosque",
+      categoryLabel: settings.language === "ms" ? "MASJID > MOD TV" : "MOSQUE > TV MODE",
+      title: settings.language === "ms" ? "Mod TV Masjid" : "Mosque TV Mode",
+      keywords: "mosque tv mode enabled custom reminders interval hadith display",
+      render: () => (
+        <div className={cn("relative p-6 sm:p-8 rounded-[var(--md-sys-shape-corner-extra-large)] space-y-6 overflow-hidden", getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface-container-high)] ring-1 ring-[var(--md-sys-color-outline)]/10 shadow-sm"))}>
+          <md-elevation></md-elevation>
+          <div className="flex items-center gap-3 relative z-10">
+            <div className="w-10 h-10 rounded-2xl bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center">
+              <Tv size={20} className="stroke-[2.5]" />
+            </div>
+            <div>
+              <h3 className="text-lg font-black text-[var(--md-sys-color-on-surface)]">
+                {settings.language === "ms" ? "Mod TV Masjid" : "Mosque TV Mode"}
+              </h3>
+              <p className="text-xs text-[var(--md-sys-color-on-surface-variant)]">
+                {t("tvModeEnabledDesc" as any)}
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-4 pt-2 border-t border-[var(--md-sys-color-outline)]/10 relative z-10">
+            <div className="flex items-center justify-between p-1">
+              <div>
+                <h4 className="text-sm font-bold text-[var(--md-sys-color-on-surface)]">
+                  {t("tvModeEnabled" as any)}
+                </h4>
+                <p className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] leading-relaxed mt-0.5 max-w-[200px] sm:max-w-xs">
+                  {settings.language === "ms" 
+                    ? "Aktifkan paparan TV masjid skrin penuh landskap secara berterusan." 
+                    : "Activate persistent full-screen landscape TV presentation layout."}
+                </p>
+              </div>
+              {/* @ts-ignore */}
+              <md-switch
+                selected={!!settings.tvModeEnabled}
+                onChange={(e: any) =>
+                  updateSettings({ tvModeEnabled: e.target.selected })
+                }
+                icons
+              ></md-switch>
+            </div>
+
+            {settings.tvModeEnabled && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="space-y-6 pt-4 border-t border-[var(--md-sys-color-outline)]/5 mt-4"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-[var(--md-sys-color-surface)] rounded-[2rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5 gap-3">
+                  <div>
+                    <span className="font-bold text-[var(--md-sys-color-on-surface)] text-sm block">
+                      {t("tvModeReminderInterval" as any)}
+                    </span>
+                    <span className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] block mt-0.5">
+                      {settings.language === "ms" ? "Tempoh putaran peringatan/hadith." : "Rotation delay for scrolling reminders."}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 flex-1 max-w-[250px] w-full self-end sm:self-auto justify-end">
+                    {/* @ts-ignore */}
+                    <md-slider
+                      min="5"
+                      max="120"
+                      step="5"
+                      value={settings.tvModeReminderInterval ?? 15}
+                      labeled
+                      ticks
+                      onChange={(e: any) => updateSettings({ tvModeReminderInterval: e.target.value })}
+                      className="flex-1"
+                    ></md-slider>
+                    <span className="w-12 text-right font-mono font-bold text-[var(--md-sys-color-primary)] tabular-nums text-sm">
+                      {settings.tvModeReminderInterval ?? 15}s
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col p-4 bg-[var(--md-sys-color-surface)] rounded-[2rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5">
+                  <span className="font-bold text-[var(--md-sys-color-on-surface)] text-sm block">
+                    {t("tvModeCustomReminders" as any)}
+                  </span>
+                  <span className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] block mt-0.5 leading-relaxed">
+                    {t("tvModeCustomRemindersDesc" as any)}
+                  </span>
+                  
+                  <textarea
+                    rows={4}
+                    value={settings.tvModeCustomReminders ?? ""}
+                    onChange={(e) => updateSettings({ tvModeCustomReminders: e.target.value })}
+                    placeholder={settings.language === "ms" 
+                      ? "Contoh:\nSila luruskan saff dan rapatkan barisan sebelum memulakan solat berjemaah.\nMatikan atau senyapkan telefon bimbit anda untuk menjaga kekhusyukan masjid."
+                      : "Example:\nPlease straighten the rows and close the gaps before beginning prayer.\nKindly silence or turn off your mobile devices to maintain tranquility."}
+                    className="w-full mt-3 p-4 text-sm rounded-2xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 focus:border-[var(--md-sys-color-primary)] focus:ring-1 focus:ring-[var(--md-sys-color-primary)] outline-none transition-all placeholder-[var(--md-sys-color-on-surface-variant)]/30 resize-y font-sans font-medium"
+                  />
+                </div>
+              </motion.div>
+            )}
+          </div>
         </div>
       )
     },

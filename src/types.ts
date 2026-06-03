@@ -96,6 +96,10 @@ export interface GeneralSettings {
   themeShape?: string;
   weatherProvider?: 'best_match' | 'ecmwf_ifs04' | 'gfs_seamless' | 'jma_seamless';
   soundVolume?: number;
+  // Mosque TV Mode settings
+  tvModeEnabled?: boolean;
+  tvModeReminderInterval?: number;
+  tvModeCustomReminders?: string;
 }
 
 // Default preferences
@@ -151,5 +155,8 @@ export const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
   themeContrast: 0,
   themeFont: 'Google Sans',
   themeShape: 'rounded',
-  weatherProvider: 'best_match'
+  weatherProvider: 'best_match',
+  tvModeEnabled: false,
+  tvModeReminderInterval: 15,
+  tvModeCustomReminders: ""
 };
