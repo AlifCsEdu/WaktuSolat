@@ -87,6 +87,10 @@ export function usePrayerNotifications(
     }));
   };
 
+  const resetPreferences = useCallback(() => {
+    setPreferences(DEFAULT_PREFS);
+  }, []);
+
   const playSound = useCallback((sound: NotificationSound, message: string) => {
     if (sound === 'voice') {
       if ('speechSynthesis' in window) {
@@ -252,5 +256,5 @@ export function usePrayerNotifications(
     });
   }, [currentTime, todayData, preferences, permission, playSound, t]);
 
-  return { preferences, togglePreference, updatePreference, permission, requestPermission, playSound };
+  return { preferences, togglePreference, updatePreference, resetPreferences, permission, requestPermission, playSound };
 }

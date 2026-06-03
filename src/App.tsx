@@ -156,6 +156,7 @@ export default function App() {
     preferences,
     togglePreference: rawTogglePreference,
     updatePreference,
+    resetPreferences,
     permission,
     requestPermission: rawRequestPermission,
     playSound,
@@ -454,6 +455,7 @@ export default function App() {
           onClose={() => setShowNotificationSettings(false)}
           preferences={preferences}
           onUpdatePreference={updatePreference}
+          onResetPreferences={resetPreferences}
           permission={permission}
           onRequestPermission={requestPermission}
           onTestSound={playSound}
