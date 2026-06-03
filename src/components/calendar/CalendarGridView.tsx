@@ -162,6 +162,8 @@ export function CalendarGridView({ currentDate, monthData, onSelectDay, isLoadin
                   backgroundSize: !isCurrentMonth ? "8px 8px" : undefined
                 }}
               >
+                {/* @ts-ignore */}
+                <md-ripple></md-ripple>
                 {/* Top Row: Date labels */}
                 <div className="flex justify-center sm:justify-between items-center sm:items-start shrink-0 w-full z-10 relative">
                   <span className={cn(

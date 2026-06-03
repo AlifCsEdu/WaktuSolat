@@ -247,14 +247,13 @@ export function FullCalendar({
                   </span>
                 </div>
 
-                <motion.button
-                  whileHover={{ scale: 1.1, rotate: 90 }}
-                  whileTap={{ scale: 0.9 }}
+                {/* @ts-ignore */}
+                <md-filled-tonal-icon-button
                   onClick={onClose}
-                  className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-full text-[var(--md-sys-color-on-surface)] bg-[var(--md-sys-color-surface-container-highest)] hover:bg-[var(--md-sys-color-error-container)] hover:text-[var(--md-sys-color-on-error-container)] shrink-0 shadow-sm transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-sys-color-error)] cursor-pointer"
+                  className="cursor-pointer"
                 >
                   <X size={18} strokeWidth={iconStroke} />
-                </motion.button>
+                </md-filled-tonal-icon-button>
               </div>
 
               {/* Custom Bouncy Segmented Control */}
@@ -266,17 +265,19 @@ export function FullCalendar({
                     { id: "public_holidays", icon: PartyPopper, label: t("publicHolidays") },
                     { id: "islamic_events", icon: Moon, label: t("islamicEvents") },
                   ].map((tab) => {
-                    const isActive = activeTab === tab.id;
+                    const isActive = tab.id === activeTab;
                     const Icon = tab.icon;
                     return (
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as CalendarTab)}
                         className={cn(
-                          "relative flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-black uppercase tracking-wider rounded-full transition-colors whitespace-nowrap cursor-pointer z-10",
+                          "relative overflow-hidden flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-black uppercase tracking-wider rounded-full transition-colors whitespace-nowrap cursor-pointer z-10",
                           isActive ? "text-[var(--md-sys-color-on-primary)]" : "text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-highest)]"
                         )}
                       >
+                        {/* @ts-ignore */}
+                        <md-ripple></md-ripple>
                         {isActive && (
                           <motion.div
                             layoutId="calendarTabIndicator"
@@ -343,18 +344,20 @@ export function FullCalendar({
                     
                     {/* Jump to Today Button */}
                     {!(currentDate.getMonth() === new Date().getMonth() && currentDate.getFullYear() === new Date().getFullYear() && view === "monthly") && (
-                      <motion.button
+                      <motion.div
                         initial={{ opacity: 0, scale: 0.8, x: -10 }}
                         animate={{ opacity: 1, scale: 1, x: 0 }}
                         exit={{ opacity: 0, scale: 0.8, x: -10 }}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => setCurrentDate(new Date())}
-                        className="px-4 py-2.5 rounded-full bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)] font-black text-xs uppercase tracking-widest shadow-sm flex items-center gap-2 cursor-pointer border border-[var(--md-sys-color-outline)]/10"
                       >
-                        <Calendar size={14} strokeWidth={iconStroke + 0.5} />
-                        <span className="hidden sm:inline">{t("today") || "Today"}</span>
-                      </motion.button>
+                        {/* @ts-ignore */}
+                        <md-filled-tonal-button
+                          onClick={() => setCurrentDate(new Date())}
+                          className="cursor-pointer"
+                        >
+                          <Calendar size={14} slot="icon" strokeWidth={iconStroke + 0.5} />
+                          {t("today") || "Today"}
+                        </md-filled-tonal-button>
+                      </motion.div>
                     )}
 
                     {/* Chunky Cassette Nav Block */}
@@ -363,15 +366,14 @@ export function FullCalendar({
                       visualStyle === "retro" && "rounded-none",
                       visualStyle === "soft" && "shadow-[var(--soft-shadow-light)] border-[var(--md-sys-color-outline)]/10"
                     )}>
-                      <motion.button 
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                      {/* @ts-ignore */}
+                      <md-filled-icon-button 
                         onClick={handlePrev}
                         disabled={isLoading}
-                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[var(--md-sys-color-surface-container)] hover:bg-[var(--md-sys-color-primary)] hover:text-[var(--md-sys-color-on-primary)] flex items-center justify-center text-[var(--md-sys-color-on-surface)] transition-colors cursor-pointer disabled:opacity-50 border border-[var(--md-sys-color-outline)]/5"
+                        className="cursor-pointer"
                       >
                         <ChevronLeft size={20} strokeWidth={iconStroke} />
-                      </motion.button>
+                      </md-filled-icon-button>
                       
                       <h3 className="text-xs sm:text-sm font-black min-w-[125px] sm:min-w-[145px] text-center uppercase tracking-widest text-[var(--md-sys-color-on-surface)] px-2 flex items-center justify-center gap-2 select-none font-mono">
                         {activeTab === "list" && view === "daily" 
@@ -381,15 +383,14 @@ export function FullCalendar({
                             : format(currentDate, "MMMM yyyy", { locale: settings.language === 'ms' ? ms : enUS })}
                       </h3>
                       
-                      <motion.button 
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                      {/* @ts-ignore */}
+                      <md-filled-icon-button 
                         onClick={handleNext}
                         disabled={isLoading}
-                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[var(--md-sys-color-surface-container)] hover:bg-[var(--md-sys-color-primary)] hover:text-[var(--md-sys-color-on-primary)] flex items-center justify-center text-[var(--md-sys-color-on-surface)] transition-colors cursor-pointer disabled:opacity-50 border border-[var(--md-sys-color-outline)]/5"
+                        className="cursor-pointer"
                       >
                         <ChevronRight size={20} strokeWidth={iconStroke} />
-                      </motion.button>
+                      </md-filled-icon-button>
                     </div>
 
                     {showLoadingState && <Loader2 size={20} className="animate-spin text-[var(--md-sys-color-primary)] shrink-0 ml-1" strokeWidth={3} />}

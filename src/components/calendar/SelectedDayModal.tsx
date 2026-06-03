@@ -136,14 +136,13 @@ export function SelectedDayModal({ day, onClose, onPrayerSelect }: SelectedDayMo
             <div className="absolute -left-4 bottom-[-16px] w-8 h-8 rounded-full bg-neutral-950/90 z-20" />
             <div className="absolute -right-4 bottom-[-16px] w-8 h-8 rounded-full bg-neutral-950/90 z-20" />
 
-            <motion.button 
-              whileHover={{ scale: 1.1, rotate: 90 }}
-              whileTap={{ scale: 0.9 }}
+            {/* @ts-ignore */}
+            <md-filled-tonal-icon-button
               onClick={onClose}
-              className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 bg-[var(--md-sys-color-surface)] text-[var(--md-sys-color-on-surface-variant)] hover:text-[var(--md-sys-color-on-surface)] hover:bg-[var(--md-sys-color-surface-container-highest)] rounded-full transition-colors z-10 shadow-sm cursor-pointer border border-[var(--md-sys-color-outline)]/5"
+              className="absolute top-4 right-4 sm:top-6 sm:right-6 z-10 cursor-pointer"
             >
               <X size={20} strokeWidth={iconStroke} />
-            </motion.button>
+            </md-filled-tonal-icon-button>
             
             <div className="flex flex-col relative z-0">
                {isToday && (
@@ -191,20 +190,18 @@ export function SelectedDayModal({ day, onClose, onPrayerSelect }: SelectedDayMo
                </p>
                
                <div className="flex flex-wrap items-center gap-2 mt-4">
-                 <motion.button
-                   whileHover={{ scale: 1.03 }}
-                   whileTap={{ scale: 0.97 }}
+                 {/* @ts-ignore */}
+                 <md-filled-button
                    onClick={handleShareDaySchedule}
-                   className={cn(
-                     "px-4 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all duration-250 flex items-center gap-2 shadow-xs cursor-pointer border border-[var(--md-sys-color-outline)]/5",
-                     shareSuccess
-                       ? "bg-[#25D366] text-white border-transparent"
-                       : "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)]"
-                   )}
+                   className="cursor-pointer"
+                   style={{
+                     "--md-filled-button-container-color": shareSuccess ? "#25D366" : undefined,
+                     "--md-filled-button-label-text-color": shareSuccess ? "#ffffff" : undefined
+                   }}
                  >
-                   {shareSuccess ? <Check size={14} strokeWidth={3} /> : <Share2 size={14} />}
+                   {shareSuccess ? <Check size={14} slot="icon" strokeWidth={3} /> : <Share2 size={14} slot="icon" />}
                    {shareSuccess ? t("copied") : (isMalay ? "Kongsi Jadual" : "Share Schedule")}
-                 </motion.button>
+                 </md-filled-button>
 
                  {/* Event tags styled as outline pills */}
                  {events.length > 0 && events.map((evt, i) => (
@@ -258,6 +255,8 @@ export function SelectedDayModal({ day, onClose, onPrayerSelect }: SelectedDayMo
                       visualStyle === "retro" && "border-[3px] border-[var(--md-sys-color-on-surface)] rounded-none shadow-[4px_4px_0px_0px_var(--md-sys-color-on-surface)]"
                     )}
                   >
+                    {/* @ts-ignore */}
+                    <md-ripple></md-ripple>
                     <Icon size={24} strokeWidth={iconStroke} className="text-[var(--md-sys-color-primary)] opacity-70 group-hover:opacity-100 mb-2 sm:mb-3 shrink-0 transition-opacity" />
                     <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-[var(--md-sys-color-on-surface-variant)]">{t(k)}</span>
                     <span className="text-2xl sm:text-3xl font-black font-mono text-[var(--md-sys-color-on-surface)] mt-1 tracking-tighter">{day[k] ? day[k].substring(0, 5) : "--:--"}</span>
