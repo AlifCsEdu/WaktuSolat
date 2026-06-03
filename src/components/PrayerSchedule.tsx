@@ -403,7 +403,7 @@ export function PrayerSchedule({
                           ? "md3-headline-medium lg:md3-headline-large drop-shadow-sm"
                           : isCurrent
                             ? "md3-headline-small lg:md3-headline-medium"
-                            : "md3-title-medium sm:md3-title-large",
+                            : "md3-title-large sm:md3-headline-small lg:md3-headline-small",
                         isCurrent &&
                           "text-[var(--md-sys-color-on-tertiary-container)]",
                       )}
@@ -439,7 +439,7 @@ export function PrayerSchedule({
                         ? "md3-headline-medium lg:md3-headline-large text-[var(--md-sys-color-primary)]"
                         : isCurrent
                           ? "md3-headline-small lg:md3-headline-medium"
-                          : "md3-title-medium sm:md3-title-large",
+                          : "md3-title-large sm:md3-headline-small lg:md3-headline-small",
                       isCurrent &&
                         "text-[var(--md-sys-color-on-tertiary-container)]",
                     )}

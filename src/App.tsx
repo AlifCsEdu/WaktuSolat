@@ -539,7 +539,7 @@ export default function App() {
             </div>
           </header>
 
-          <div className="flex-1 flex flex-col justify-center lg:justify-start xl:justify-center min-h-0 lg:overflow-y-auto no-scrollbar pt-1">
+          <div className="flex-1 flex flex-col justify-center lg:justify-start xl:justify-center min-h-0 lg:overflow-y-visible no-scrollbar pt-1">
             <ClockPanel
               currentTime={currentTime}
               nextPrayerName={nextPrayerName}
