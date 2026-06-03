@@ -157,41 +157,45 @@ html.dark[data-style="soft"] {
 
         /* Display */
         --md-sys-typescale-display-large-font: var(--font-sans);
-        --md-sys-typescale-display-large-size: 57px;
-        --md-sys-typescale-display-large-line-height: 64px;
+        --md-sys-typescale-display-large-size: clamp(3.5rem, 8vw, 6rem);
+        --md-sys-typescale-display-large-line-height: clamp(4rem, 9vw, 6.5rem);
         --md-sys-typescale-display-large-weight: 400;
         --md-sys-typescale-display-large-tracking: -0.25px;
 
         --md-sys-typescale-display-medium-font: var(--font-sans);
-        --md-sys-typescale-display-medium-size: 45px;
-        --md-sys-typescale-display-medium-line-height: 52px;
+        --md-sys-typescale-display-medium-size: clamp(2.75rem, 6vw, 4rem);
+        --md-sys-typescale-display-medium-line-height: clamp(3.25rem, 7vw, 4.5rem);
         --md-sys-typescale-display-medium-weight: 400;
         --md-sys-typescale-display-medium-tracking: 0;
 
         --md-sys-typescale-display-small-font: var(--font-sans);
-        --md-sys-typescale-display-small-size: 36px;
-        --md-sys-typescale-display-small-line-height: 44px;
+        --md-sys-typescale-display-small-size: clamp(2.25rem, 5vw, 3rem);
+        --md-sys-typescale-display-small-line-height: clamp(2.75rem, 6vw, 3.5rem);
         --md-sys-typescale-display-small-weight: 400;
         --md-sys-typescale-display-small-tracking: 0;
 
         /* Headline */
         --md-sys-typescale-headline-large-font: var(--font-sans);
-        --md-sys-typescale-headline-large-size: 32px;
-        --md-sys-typescale-headline-large-line-height: 40px;
+        --md-sys-typescale-headline-large-size: clamp(2rem, 4vw, 2.5rem);
+        --md-sys-typescale-headline-large-line-height: clamp(2.5rem, 5vw, 3rem);
         --md-sys-typescale-headline-large-weight: 700;
         --md-sys-typescale-headline-large-tracking: 0;
 
         --md-sys-typescale-headline-medium-font: var(--font-sans);
-        --md-sys-typescale-headline-medium-size: 28px;
-        --md-sys-typescale-headline-medium-line-height: 36px;
+        --md-sys-typescale-headline-medium-size: clamp(1.75rem, 3.5vw, 2.25rem);
+        --md-sys-typescale-headline-medium-line-height: clamp(2.25rem, 4.5vw, 2.75rem);
         --md-sys-typescale-headline-medium-weight: 700;
         --md-sys-typescale-headline-medium-tracking: 0;
 
         --md-sys-typescale-headline-small-font: var(--font-sans);
-        --md-sys-typescale-headline-small-size: 24px;
-        --md-sys-typescale-headline-small-line-height: 32px;
+        --md-sys-typescale-headline-small-size: clamp(1.5rem, 3vw, 1.75rem);
+        --md-sys-typescale-headline-small-line-height: clamp(2rem, 4vw, 2.25rem);
         --md-sys-typescale-headline-small-weight: 700;
         --md-sys-typescale-headline-small-tracking: 0;
+
+        /* M3 Expressive Spatial Layout Tokens */
+        --sys-spacing-edge: clamp(1rem, 3vw, 2.5rem);
+        --sys-spacing-section: clamp(2rem, 5vw, 4rem);
 
         /* Title */
         --md-sys-typescale-title-large-font: var(--font-sans);

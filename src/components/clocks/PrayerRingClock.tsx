@@ -138,7 +138,7 @@ export function PrayerRingClock({
         visualStyle === 'soft' && "bg-[var(--md-sys-color-surface-container-low)] shadow-[var(--soft-shadow-dark)]"
       )}>
          <span className={cn(
-           "text-xl sm:text-2xl md:text-3xl font-sans font-black tracking-tight text-[var(--md-sys-color-on-surface)] tabular-nums select-none",
+           "md3-headline-medium font-sans font-black tracking-tight text-[var(--md-sys-color-on-surface)] tabular-nums select-none",
            visualStyle === 'retro' && "text-[var(--md-sys-color-on-surface)]",
            visualStyle === 'soft' && "text-[var(--md-sys-color-primary)]"
          )}>

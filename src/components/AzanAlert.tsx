@@ -55,7 +55,7 @@ export function AzanAlert({
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
         className="fixed bottom-6 right-6 z-[300] w-[90%] max-w-sm"
       >
-        <div className="bg-[var(--md-sys-color-surface-container-highest)]/85 dark:bg-[#121214]/85 backdrop-blur-2xl border border-[var(--md-sys-color-primary)]/20 dark:border-white/12 shadow-[0_20px_50px_rgba(0,0,0,0.35)] rounded-[28px] p-5 flex items-center justify-between gap-4 relative overflow-hidden ring-1 ring-black/5">
+        <div className="bg-[var(--md-sys-color-surface-container-highest)]/85 backdrop-blur-2xl border border-[var(--md-sys-color-primary)]/20 shadow-[0_20px_50px_rgba(0,0,0,0.35)] rounded-[28px] p-5 flex items-center justify-between gap-4 relative overflow-hidden ring-1 ring-black/5">
           <div className="flex items-center gap-4 relative z-10">
             {/* Pulsing visualizer bell icon */}
             <div className="relative shrink-0 flex items-center justify-center">
@@ -75,10 +75,10 @@ export function AzanAlert({
               </div>
             </div>
             <div>
-              <h4 className="font-black text-[var(--md-sys-color-on-surface)] dark:text-zinc-100 text-sm tracking-tight leading-tight">
+              <h4 className="font-black text-[var(--md-sys-color-on-surface)] text-sm tracking-tight leading-tight">
                 {t("azanAlertTitle", { prayer: prayerName })}
               </h4>
-              <p className="text-[var(--md-sys-color-on-surface-variant)]/90 dark:text-zinc-400/90 text-[11px] font-bold mt-1">
+              <p className="text-[var(--md-sys-color-on-surface-variant)]/90 text-[11px] font-bold mt-1">
                 {formattedTime} • {t("closeInSeconds" as any, { seconds: remainingSeconds })}
               </p>
             </div>
@@ -113,7 +113,7 @@ export function AzanAlert({
         transition={{ type: "spring", stiffness: 350, damping: 28 }}
         className="fixed top-6 left-1/2 -translate-x-1/2 z-[300] w-[92%] max-w-md"
       >
-        <div className="bg-[#0b0b0d]/90 dark:bg-black/90 backdrop-blur-3xl border border-[var(--md-sys-color-primary)]/30 dark:border-white/12 shadow-[0_24px_50px_rgba(0,0,0,0.45)] rounded-[30px] p-4 pl-5 flex items-center justify-between gap-4 ring-1 ring-black/5 relative overflow-hidden">
+        <div className="bg-[var(--md-sys-color-surface-container-highest)]/90 backdrop-blur-3xl border border-[var(--md-sys-color-primary)]/30 shadow-[0_24px_50px_rgba(0,0,0,0.45)] rounded-[30px] p-4 pl-5 flex items-center justify-between gap-4 ring-1 ring-black/5 relative overflow-hidden">
           {/* Subtle slow pulsing glow inside background */}
           <div className="absolute inset-0 bg-gradient-to-r from-[var(--md-sys-color-primary)]/5 via-transparent to-[var(--md-sys-color-primary)]/5 animate-pulse" />
           
@@ -145,8 +145,8 @@ export function AzanAlert({
               <span className="text-[9px] font-black uppercase tracking-widest text-[var(--md-sys-color-primary)] opacity-95 block mb-0.5">
                 {t("enteringPrayerTime" as any)}
               </span>
-              <h4 className="font-black text-white text-base tracking-tight leading-none truncate">
-                {prayerName} • <span className="text-zinc-400 font-bold font-mono text-sm">{formattedTime}</span>
+              <h4 className="font-black text-[var(--md-sys-color-on-surface)] text-base tracking-tight leading-none truncate">
+                {prayerName} • <span className="text-[var(--md-sys-color-on-surface-variant)] font-bold font-mono text-sm">{formattedTime}</span>
               </h4>
               
               {/* Dynamic visual remaining timeline */}
@@ -185,7 +185,7 @@ export function AzanAlert({
         transition={{ type: "spring", stiffness: 400, damping: 30 }}
         className="fixed top-6 right-6 z-[300]"
       >
-        <div className="bg-zinc-900/90 dark:bg-black/95 text-white backdrop-blur-xl border border-zinc-800/80 dark:border-white/15 shadow-2xl rounded-full px-5 py-2.5 flex items-center gap-3.5 select-none ring-1 ring-black/10">
+        <div className="bg-[var(--md-sys-color-inverse-surface)] text-[var(--md-sys-color-inverse-on-surface)] backdrop-blur-xl border border-[var(--md-sys-color-outline)]/20 shadow-2xl rounded-full px-5 py-2.5 flex items-center gap-3.5 select-none ring-1 ring-black/10">
           {/* Active pulsing emerald/primary ring */}
           <span className="relative flex h-2.5 w-2.5 shrink-0">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--md-sys-color-primary)] opacity-75"></span>
@@ -193,9 +193,9 @@ export function AzanAlert({
           </span>
           
           <span className="text-[11px] font-black tracking-tight flex items-center gap-2 whitespace-nowrap">
-            <span className="text-zinc-100">{prayerName}</span> 
+            <span className="text-[var(--md-sys-color-inverse-on-surface)]">{prayerName}</span> 
             <span className="opacity-60 font-bold font-mono">{formattedTime}</span>
-            <span className="px-2 py-0.5 rounded-full bg-white/10 text-[9px] font-black font-mono text-[var(--md-sys-color-primary)]/90 tabular-nums">
+            <span className="px-2 py-0.5 rounded-full bg-[var(--md-sys-color-inverse-primary)]/10 text-[9px] font-black font-mono text-[var(--md-sys-color-inverse-primary)]/90 tabular-nums">
               {remainingSeconds}s
             </span>
           </span>
@@ -219,7 +219,7 @@ export function AzanAlert({
         transition={{ type: "spring", stiffness: 220, damping: 24 }}
         className="fixed top-0 inset-x-0 z-[300] w-full p-4 sm:p-6"
       >
-        <div className="max-w-4xl mx-auto bg-gradient-to-r from-[var(--md-sys-color-surface-container-highest)]/90 via-[var(--md-sys-color-surface-container-highest)]/95 to-[var(--md-sys-color-surface-container-high)]/90 dark:from-[#0d0d0f]/90 dark:via-[#121214]/95 dark:to-[#0d0d0f]/90 border border-[var(--md-sys-color-primary)]/20 dark:border-white/12 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.55)] rounded-[32px] p-6 sm:p-7 relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-6 backdrop-blur-3xl ring-1 ring-black/5">
+        <div className="max-w-4xl mx-auto bg-gradient-to-r from-[var(--md-sys-color-surface-container-highest)]/90 via-[var(--md-sys-color-surface-container-highest)]/95 to-[var(--md-sys-color-surface-container-high)]/90 border border-[var(--md-sys-color-primary)]/20 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.55)] rounded-[32px] p-6 sm:p-7 relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-6 backdrop-blur-3xl ring-1 ring-black/5">
           {/* Animated decorative concentric ring halos */}
           <div className="absolute -left-10 -bottom-10 w-40 h-40 rounded-full border-[6px] border-[var(--md-sys-color-primary)]/8 animate-ping pointer-events-none" />
           <div className="absolute right-10 -top-10 w-32 h-32 rounded-full border-2 border-[var(--md-sys-color-primary)]/8 animate-pulse pointer-events-none" />
@@ -233,10 +233,10 @@ export function AzanAlert({
               <span className="text-[10px] font-black uppercase tracking-widest text-[var(--md-sys-color-primary)] bg-[var(--md-sys-color-primary)]/10 px-3.5 py-1 rounded-full border border-[var(--md-sys-color-primary)]/15">
                 {t("enteringPrayerTime" as any)}
               </span>
-              <h2 className="text-2xl sm:text-3xl font-black text-[var(--md-sys-color-on-surface)] dark:text-white tracking-tight mt-3 leading-none">
+              <h2 className="text-2xl sm:text-3xl font-black text-[var(--md-sys-color-on-surface)] tracking-tight mt-3 leading-none">
                 {t("prepareForAzan" as any, { prayer: prayerName })}
               </h2>
-              <p className="text-[var(--md-sys-color-on-surface-variant)]/90 dark:text-zinc-400 text-sm mt-2.5 font-bold">
+              <p className="text-[var(--md-sys-color-on-surface-variant)]/90 text-sm mt-2.5 font-bold">
                 {t("azanTimePrefix" as any)}: {formattedTime} • {t("closeInSeconds" as any, { seconds: remainingSeconds })}
               </p>
             </div>
@@ -363,7 +363,7 @@ export function AzanAlert({
           <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight text-[var(--md-sys-color-on-background)] drop-shadow-[0_4px_16px_rgba(0,0,0,0.15)] leading-tight">
             {prayerName}
           </h1>
-          <p className="text-xl sm:text-2xl text-[var(--md-sys-color-on-surface-variant)] dark:text-zinc-200 font-black tracking-wide mt-1.5 bg-black/10 px-6 py-2 rounded-2xl border border-white/5 inline-block mx-auto">
+          <p className="text-xl sm:text-2xl text-[var(--md-sys-color-on-surface-variant)] font-black tracking-wide mt-1.5 bg-[var(--md-sys-color-surface-container-highest)]/50 px-6 py-2 rounded-2xl border border-[var(--md-sys-color-outline)]/20 inline-block mx-auto">
             {t("azanTimePrefix" as any)}: {formattedTime}
           </p>
         </div>

@@ -14,7 +14,7 @@ export function TypographicClock() {
 
   return (
     <div className={cn(
-      "relative w-full overflow-hidden p-4 sm:p-5 lg:p-6 min-h-[120px] sm:min-h-[145px] lg:min-h-[165px] xl:min-h-[180px] max-h-[26vh] flex flex-col justify-between transition-all duration-300",
+      "relative w-full overflow-hidden p-[var(--sys-spacing-edge)] mb-[var(--sys-spacing-section)] min-h-[120px] sm:min-h-[145px] lg:min-h-[165px] xl:min-h-[180px] max-h-[26vh] flex flex-col justify-between transition-all duration-300",
       "bg-[var(--md-sys-color-primary)] rounded-[var(--md-sys-shape-corner-extra-large)] shadow-md",
       visualStyle === 'retro' && "border-2 border-[var(--md-sys-color-on-surface)] shadow-[6px_6px_0px_0px_var(--md-sys-color-on-surface)] rounded-none md3-shape-extra-large bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface)]",
       visualStyle === 'glass' && "bg-[var(--glass-bg)]/35 backdrop-blur-[var(--glass-blur)] border border-[var(--glass-border)] text-[var(--md-sys-color-on-surface)] rounded-[var(--md-sys-shape-corner-extra-large)]",
@@ -33,7 +33,7 @@ export function TypographicClock() {
       {/* Wide stacked digits layout */}
       <div className="flex items-baseline gap-3 sm:gap-4 lg:gap-6 relative z-10 w-full">
         <span className={cn(
-          "text-7xl sm:text-8xl md:text-9xl lg:text-[10rem] font-black leading-[0.85] tracking-tighter drop-shadow-md select-none font-sans tabular-nums",
+          "md3-display-large font-black drop-shadow-md select-none font-sans tabular-nums leading-[0.85]",
           "text-[var(--md-sys-color-on-primary)]",
           visualStyle === 'retro' && "text-[var(--md-sys-color-on-surface)] drop-shadow-none",
           visualStyle === 'glass' && "text-[var(--md-sys-color-on-surface)] drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]",
@@ -42,7 +42,7 @@ export function TypographicClock() {
           {format(time, settings.timeFormat === "12h" ? "hh" : "HH")}
         </span>
         <span className={cn(
-          "text-7xl sm:text-8xl md:text-9xl lg:text-[10rem] font-black leading-[0.85] tracking-tighter opacity-40 drop-shadow-sm select-none font-sans tabular-nums",
+          "md3-display-large font-black opacity-40 drop-shadow-sm select-none font-sans tabular-nums leading-[0.85]",
           "text-[var(--md-sys-color-on-primary)]",
           visualStyle === 'retro' && "text-[var(--md-sys-color-on-surface)]/70 drop-shadow-none",
           visualStyle === 'glass' && "text-[var(--md-sys-color-on-surface)]/50",

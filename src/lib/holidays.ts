@@ -138,11 +138,11 @@ export function getAllEventsForDay(gregorianDate: Date, hijriDateStr: string | n
         // Tag as Islamic event if it's one of the known titles
         const isIslamic = ["Awal Ramadan", "Hari Raya Aidilfitri", "Hari Raya Aidilfitri (Hari Kedua)", "Hari Raya Aidiladha", "Awal Muharram", "Maulidur Rasul"].includes(variable);
         let color = "bg-[var(--md-sys-color-primary)]";
-        if (variable.includes("Aidilfitri")) color = "bg-emerald-500";
-        if (variable.includes("Aidiladha")) color = "bg-rose-500";
-        if (variable.includes("Ramadan")) color = "bg-amber-500";
-        if (variable.includes("Muharram")) color = "bg-blue-500";
-        if (variable.includes("Maulidur")) color = "bg-green-500";
+        if (variable.includes("Aidilfitri")) color = "bg-[var(--md-sys-color-tertiary)] text-[var(--md-sys-color-on-tertiary)]";
+        if (variable.includes("Aidiladha")) color = "bg-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)]";
+        if (variable.includes("Ramadan")) color = "bg-[var(--md-sys-color-secondary)] text-[var(--md-sys-color-on-secondary)]";
+        if (variable.includes("Muharram")) color = "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)]";
+        if (variable.includes("Maulidur")) color = "bg-[var(--md-sys-color-tertiary)] text-[var(--md-sys-color-on-tertiary)]";
         
         events.push({ title: variable, type: isIslamic ? 'islamic' : 'public', color: isIslamic ? color : undefined });
     }

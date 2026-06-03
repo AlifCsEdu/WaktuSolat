@@ -87,7 +87,7 @@ export function EventsListView({ currentDate, type }: EventsListViewProps) {
                  evt.type === 'public' 
                    ? "bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] border border-[var(--md-sys-color-error)]/10" 
                    : "bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] border border-[var(--md-sys-color-primary)]/10",
-                 isPast && "bg-gray-100 text-gray-500 border-gray-200"
+                 isPast && "bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-on-surface-variant)] border-[var(--md-sys-color-outline)]/20"
                )}>
                  <span className="text-[8px] font-black uppercase tracking-wider">{format(evt.date, "MMM", { locale: settings.language === 'ms' ? ms : enUS })}</span>
                  <span className="text-xl font-black leading-none mt-0.5">{format(evt.date, "dd")}</span>
@@ -114,8 +114,8 @@ export function EventsListView({ currentDate, type }: EventsListViewProps) {
                  <span className={cn(
                    "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border",
                    evt.type === 'public' 
-                     ? isPast ? "bg-red-50/20 text-red-500/70 border-red-200/30" : "bg-[var(--md-sys-color-error-container)]/20 text-[var(--md-sys-color-error)] border-[var(--md-sys-color-error)]/10" 
-                     : isPast ? "bg-emerald-50/20 text-emerald-500/70 border-emerald-200/30" : "bg-[var(--md-sys-color-primary-container)]/20 text-[var(--md-sys-color-primary)] border-[var(--md-sys-color-primary)]/10"
+                     ? isPast ? "bg-[var(--md-sys-color-error-container)]/40 text-[var(--md-sys-color-error)]/70 border-[var(--md-sys-color-error)]/30" : "bg-[var(--md-sys-color-error-container)]/20 text-[var(--md-sys-color-error)] border-[var(--md-sys-color-error)]/10" 
+                     : isPast ? "bg-[var(--md-sys-color-tertiary-container)]/40 text-[var(--md-sys-color-tertiary)]/70 border-[var(--md-sys-color-tertiary)]/30" : "bg-[var(--md-sys-color-primary-container)]/20 text-[var(--md-sys-color-primary)] border-[var(--md-sys-color-primary)]/10"
                  )}>
                    {evt.type === 'public' ? t("publicHolidays") : t("islamicEvents")}
                  </span>
@@ -125,11 +125,11 @@ export function EventsListView({ currentDate, type }: EventsListViewProps) {
                      <CalendarDays size={10} /> {t("today")}
                    </span>
                  ) : isPast ? (
-                   <span className="px-2 py-0.5 rounded bg-gray-100 text-gray-500 border border-gray-200 text-[8px] font-black uppercase tracking-wider flex items-center gap-1">
+                   <span className="px-2 py-0.5 rounded bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-on-surface-variant)] border border-[var(--md-sys-color-outline)]/20 text-[8px] font-black uppercase tracking-wider flex items-center gap-1">
                      <CheckCircle2 size={10} /> {t("passed")}
                    </span>
                  ) : (
-                   <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-200 text-[8px] font-black uppercase tracking-wider flex items-center gap-1">
+                   <span className="px-2 py-0.5 rounded bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] border border-[var(--md-sys-color-secondary)]/20 text-[8px] font-black uppercase tracking-wider flex items-center gap-1">
                      <Clock size={10} strokeWidth={iconStroke} /> {t("upcoming")}
                    </span>
                  )}

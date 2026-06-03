@@ -77,7 +77,7 @@ export function BauhausClock({ movement }: { movement: 'tick' | 'sweep' }) {
             "absolute top-[10%] left-1/2 w-[5px] sm:w-[6px] h-[41%] -ml-[2.5px] sm:-ml-[3px] origin-bottom z-10 transition-colors shadow-[0_4px_12px_rgba(0,0,0,0.15)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.5)]",
             "bg-[var(--md-sys-color-primary)]",
             visualStyle === 'retro' && "bg-[var(--md-sys-color-secondary)] border border-[var(--md-sys-color-on-surface)] rounded-none w-1.5 sm:w-2",
-            visualStyle === 'glass' && "bg-sky-500",
+            visualStyle === 'glass' && "bg-[var(--md-sys-color-primary)]",
             visualStyle === 'soft' && "bg-[var(--md-sys-color-secondary)]"
           )}
           style={{ transform: `rotate(${minutes * 6}deg)` }}

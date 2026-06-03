@@ -44,8 +44,8 @@ export function LocationToast({
             <div className="flex items-start gap-4">
               <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${
                 autoUpdatedZone 
-                  ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400" 
-                  : "bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]"
+                  ? "bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]" 
+                  : "bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)]"
               }`}>
                 {autoUpdatedZone ? <Check size={24} className="stroke-[2.5]" /> : <MapPin size={24} className="stroke-[2.5]" />}
               </div>

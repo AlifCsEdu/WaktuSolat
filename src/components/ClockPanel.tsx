@@ -621,9 +621,9 @@ export function ClockPanel({
               className={cn(
                 "p-2 sm:p-2.5 rounded-[var(--md-sys-shape-corner-extra-large)] flex-1 relative overflow-hidden min-h-[56px] sm:min-h-[64px] lg:min-h-[68px] flex flex-col justify-between select-none transition-all duration-300 group cursor-default",
                 iqamahRemainingSeconds <= 10 
-                  ? "bg-red-600 text-white border-2 border-red-700 shadow-[0_0_20px_rgba(220,38,38,0.7)] animate-pulse" 
+                  ? "bg-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)] border-2 border-[var(--md-sys-color-error)] shadow-md animate-pulse" 
                   : iqamahRemainingSeconds <= 30
-                    ? "bg-amber-500 text-white border-2 border-amber-600 shadow-[0_0_15px_rgba(245,158,11,0.5)]"
+                    ? "bg-[var(--md-sys-color-tertiary)] text-[var(--md-sys-color-on-tertiary)] border-2 border-[var(--md-sys-color-tertiary)] shadow-sm"
                     : "bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] border border-[var(--md-sys-color-error)]/30",
                 visualStyle === 'retro' && "border-2 border-[var(--md-sys-color-on-surface)] shadow-[4px_4px_0px_0px_var(--md-sys-color-on-surface)] rounded-none",
                 visualStyle === 'glass' && "bg-[var(--glass-bg)] backdrop-blur-[var(--glass-blur)] border border-[var(--glass-border)] text-[var(--md-sys-color-on-surface)]",
@@ -642,7 +642,7 @@ export function ClockPanel({
               <div className="relative z-10 flex flex-col h-full justify-between gap-1 w-full text-center">
                 {iqamahRemainingSeconds <= 5 ? (
                   <div className="flex flex-col items-center justify-center h-full w-full py-1">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-red-100 dark:text-red-200 animate-bounce leading-none mb-1">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-[var(--md-sys-color-on-error)] animate-bounce leading-none mb-1">
                       {currentPrayerNameForIqamah || "IQAMAH"}
                     </span>
                     <motion.span 
@@ -659,7 +659,7 @@ export function ClockPanel({
                   <>
                     <h3 className={cn(
                       "md3-label-small font-black uppercase tracking-widest text-center",
-                      iqamahRemainingSeconds <= 10 ? "text-red-100 dark:text-red-200" : iqamahRemainingSeconds <= 30 ? "text-amber-100" : "text-[var(--md-sys-color-on-error-container)]/80"
+                      iqamahRemainingSeconds <= 10 ? "text-[var(--md-sys-color-on-error)]" : iqamahRemainingSeconds <= 30 ? "text-[var(--md-sys-color-on-tertiary)]" : "text-[var(--md-sys-color-on-error-container)]/80"
                     )}>
                       IQAMAH {currentPrayerNameForIqamah ? `• ${currentPrayerNameForIqamah}` : ''} {iqamahPaused ? " (PAUSED)" : ""}
                     </h3>
@@ -673,7 +673,7 @@ export function ClockPanel({
                       </p>
                       <p className={cn(
                         "text-[9px] sm:text-[10px] font-bold mt-1 tracking-wide text-center",
-                        iqamahRemainingSeconds <= 10 ? "text-red-100" : iqamahRemainingSeconds <= 30 ? "text-amber-100" : "opacity-80"
+                        iqamahRemainingSeconds <= 10 ? "text-[var(--md-sys-color-on-error)]" : iqamahRemainingSeconds <= 30 ? "text-[var(--md-sys-color-on-tertiary)]" : "opacity-80"
                       )}>
                         {iqamahRemainingSeconds <= 10 ? "SEDIA BERSOLAT" : iqamahRemainingSeconds <= 30 ? "SAK SAF RAPAT & LURUS" : "Sila bersedia untuk solat berjemaah"}
                       </p>

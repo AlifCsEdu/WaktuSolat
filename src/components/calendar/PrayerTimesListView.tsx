@@ -78,7 +78,7 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
              <span className="text-[10px] sm:text-xs font-black text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-widest opacity-85">
                {format(parse(day.date, "dd-MMM-yyyy", new Date()), "EEEE", { locale: settings.language === 'ms' ? ms : enUS })}
              </span>
-             <h3 className="text-2xl sm:text-4xl font-black text-[var(--md-sys-color-on-surface)] tracking-tighter mt-1">
+             <h3 className="md3-display-small font-black text-[var(--md-sys-color-on-surface)] tracking-tighter mt-1">
                {format(parse(day.date, "dd-MMM-yyyy", new Date()), "dd MMMM yyyy", { locale: settings.language === 'ms' ? ms : enUS })}
              </h3>
           </div>
@@ -133,7 +133,7 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
                 </div>
                 <div className="flex flex-col items-center z-10 select-none">
                   <span className="text-[10px] font-black opacity-80 uppercase tracking-widest text-[var(--md-sys-color-on-surface-variant)]">{t(k)}</span>
-                  <span className="text-xl sm:text-2xl font-black font-mono tracking-tighter mt-1 text-[var(--md-sys-color-on-surface)]">{timeStr.substring(0, 5)}</span>
+                  <span className="md3-headline-small font-black font-mono tracking-tighter mt-1 text-[var(--md-sys-color-on-surface)]">{timeStr.substring(0, 5)}</span>
                 </div>
               </motion.button>
             );
@@ -167,7 +167,7 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
               {isToday && <div className="absolute left-0 top-0 bottom-0 w-1 bg-[var(--md-sys-color-primary)]" />}
 
               <div className="flex flex-col min-w-[190px] shrink-0 gap-0.5 select-none">
-                <span className={cn("font-black text-lg sm:text-xl tracking-tight flex items-center gap-1.5", isToday ? "text-[var(--md-sys-color-primary)]" : "text-[var(--md-sys-color-on-surface)]")}>
+                <span className={cn("font-black md3-title-large tracking-tight flex items-center gap-1.5", isToday ? "text-[var(--md-sys-color-primary)]" : "text-[var(--md-sys-color-on-surface)]")}>
                   {format(parse(day.date, "dd-MMM-yyyy", new Date()), "dd MMMM", { locale: settings.language === 'ms' ? ms : enUS })}
                   {isToday && (
                     <span className="px-2 py-0.5 bg-[var(--md-sys-color-primary)] text-white text-[8px] font-black uppercase rounded-md tracking-wider flex items-center gap-1 shadow-sm">

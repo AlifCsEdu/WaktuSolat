@@ -352,12 +352,12 @@ export function PrayerSchedule({
                 "group relative overflow-hidden flex items-center justify-between min-h-0",
                 shapeClasses,
                 isNext
-                  ? "bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] shadow-md px-4 py-3 sm:p-5 lg:py-4 lg:px-5 z-20 flex-[1.05] min-h-[64px] lg:min-h-[76px] shrink-0"
+                  ? "bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] shadow-md px-[var(--sys-spacing-edge)] py-3 sm:py-4 z-20 flex-[1.05] min-h-[64px] lg:min-h-[76px] shrink-0"
                   : isCurrent
-                    ? "bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)] shadow-sm px-4 py-3 sm:p-4 lg:py-3 lg:px-5 z-10 flex-[1.02] min-h-[60px] lg:min-h-[70px] shrink-0"
+                    ? "bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)] shadow-sm px-[var(--sys-spacing-edge)] py-3 sm:py-3.5 z-10 flex-[1.02] min-h-[60px] lg:min-h-[70px] shrink-0"
                     : isFardhu
-                      ? "bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] py-2.5 px-4 sm:p-4 lg:py-3 lg:px-4 shadow-sm flex-1 min-h-[56px] lg:min-h-[64px] shrink-0"
-                      : "bg-[var(--md-sys-color-surface-container-low)] text-[var(--md-sys-color-on-surface-variant)] py-2.5 px-4 sm:p-4 lg:py-2.5 lg:px-4 flex-1 min-h-[56px] lg:min-h-[64px] shrink-0",
+                      ? "bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] px-[var(--sys-spacing-edge)] py-2.5 sm:py-3 shadow-sm flex-1 min-h-[56px] lg:min-h-[64px] shrink-0"
+                      : "bg-[var(--md-sys-color-surface-container-low)] text-[var(--md-sys-color-on-surface-variant)] px-[var(--sys-spacing-edge)] py-2.5 sm:py-3 flex-1 min-h-[56px] lg:min-h-[64px] shrink-0",
                 visualStyle === 'retro' && "border-2 border-[var(--md-sys-color-on-surface)] shadow-[3px_3px_0px_0px_var(--md-sys-color-on-surface)]",
                 visualStyle === 'glass' && "backdrop-blur-[8px] border border-[var(--glass-border)]",
                 visualStyle === 'soft' && "shadow-[var(--soft-shadow-light)] border-0"
@@ -400,10 +400,10 @@ export function PrayerSchedule({
                       className={cn(
                         "font-black tracking-tight",
                         isNext
-                          ? "text-lg sm:text-xl lg:text-2xl drop-shadow-sm"
+                          ? "md3-headline-medium lg:md3-headline-large drop-shadow-sm"
                           : isCurrent
-                            ? "text-base sm:text-lg lg:text-xl"
-                            : "text-sm sm:text-base lg:text-lg",
+                            ? "md3-headline-small lg:md3-headline-medium"
+                            : "md3-title-medium sm:md3-title-large",
                         isCurrent &&
                           "text-[var(--md-sys-color-on-tertiary-container)]",
                       )}
@@ -436,10 +436,10 @@ export function PrayerSchedule({
                     className={cn(
                       "font-black tracking-[-0.04em] tabular-nums whitespace-nowrap",
                       isNext
-                        ? "text-xl sm:text-2xl lg:text-3xl text-[var(--md-sys-color-primary)]"
+                        ? "md3-headline-medium lg:md3-headline-large text-[var(--md-sys-color-primary)]"
                         : isCurrent
-                          ? "text-lg sm:text-xl lg:text-2xl"
-                          : "text-base sm:text-lg lg:text-xl",
+                          ? "md3-headline-small lg:md3-headline-medium"
+                          : "md3-title-medium sm:md3-title-large",
                       isCurrent &&
                         "text-[var(--md-sys-color-on-tertiary-container)]",
                     )}
