@@ -960,27 +960,47 @@ html.dark[data-style="soft"] {
     }
 
     .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
+        width: 8px;
+        height: 8px;
     }
     .custom-scrollbar::-webkit-scrollbar-track {
         background: transparent;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb {
-        background-color: var(--md-sys-color-primary);
-        border-radius: 20px;
+        background-color: var(--md-sys-color-outline-variant);
+        border-radius: 9999px;
         border: 2px solid transparent;
-        background-clip: content-box;
-        opacity: 0.5;
+        background-clip: padding-box;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
         background-color: var(--md-sys-color-primary);
-        opacity: 1;
     }
     .custom-scrollbar {
         scrollbar-width: thin;
-        scrollbar-color: var(--md-sys-color-primary) transparent;
+        scrollbar-color: var(--md-sys-color-outline-variant) transparent;
     }
+}
+
+/* Global scrollbar styling for cohesive design across all scrollable layouts */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background-color: var(--md-sys-color-outline-variant);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+    background-color: var(--md-sys-color-primary);
+}
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--md-sys-color-outline-variant) transparent;
 }
 
 /* Custom Leaflet overrides */

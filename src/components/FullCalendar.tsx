@@ -325,18 +325,25 @@ export function FullCalendar({
                   )}
                   
                   <div className={cn(
-                    "flex items-center gap-3 shrink-0",
-                    activeTab === "grid" ? "justify-center w-full sm:w-auto" : "w-full sm:w-auto justify-between sm:justify-end"
+                    "flex flex-wrap items-center gap-2.5 shrink-0",
+                    activeTab === "grid" ? "justify-center w-full sm:w-auto" : "w-full sm:w-auto justify-center sm:justify-end"
                   )}>
                     {activeTab === 'list' && (
-                      <div className="mr-auto sm:mr-1">
+                      <div className="shrink-0 sm:mr-1">
                         {/* @ts-ignore */}
                         <md-filled-tonal-button
                           onClick={handleCopy}
                           disabled={uniqueDisplayData.length === 0}
                           title={t("copySchedule")}
+                          className="shrink-0 cursor-pointer"
+                          style={{
+                            '--md-filled-tonal-button-container-height': '40px',
+                            '--md-filled-tonal-button-container-shape': '20px',
+                            '--md-filled-tonal-button-label-text-size': '13px',
+                            '--md-filled-tonal-button-horizontal-padding': '16px',
+                          } as any}
                         >
-                          {isCopied ? <Check size={14} slot="icon" /> : <Copy size={14} slot="icon" />}
+                          {isCopied ? <Check size={16} slot="icon" /> : <Copy size={16} slot="icon" />}
                           {isCopied ? t("copied") : t("copy")}
                         </md-filled-tonal-button>
                       </div>
@@ -348,13 +355,20 @@ export function FullCalendar({
                         initial={{ opacity: 0, scale: 0.8, x: -10 }}
                         animate={{ opacity: 1, scale: 1, x: 0 }}
                         exit={{ opacity: 0, scale: 0.8, x: -10 }}
+                        className="shrink-0"
                       >
                         {/* @ts-ignore */}
                         <md-filled-tonal-button
                           onClick={() => setCurrentDate(new Date())}
-                          className="cursor-pointer"
+                          className="shrink-0 cursor-pointer"
+                          style={{
+                            '--md-filled-tonal-button-container-height': '40px',
+                            '--md-filled-tonal-button-container-shape': '20px',
+                            '--md-filled-tonal-button-label-text-size': '13px',
+                            '--md-filled-tonal-button-horizontal-padding': '16px',
+                          } as any}
                         >
-                          <Calendar size={14} slot="icon" strokeWidth={iconStroke + 0.5} />
+                          <Calendar size={16} slot="icon" strokeWidth={iconStroke + 0.5} />
                           {t("today") || "Today"}
                         </md-filled-tonal-button>
                       </motion.div>

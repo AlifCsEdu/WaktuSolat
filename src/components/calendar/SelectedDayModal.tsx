@@ -123,35 +123,36 @@ export function SelectedDayModal({ day, onClose, onPrayerSelect }: SelectedDayMo
           exit={{ y: "100%", opacity: 0, scale: 0.9 }}
           transition={{ type: "spring", stiffness: 350, damping: 30 }}
           className={cn(
-            "bg-[var(--md-sys-color-surface)] w-full max-h-[92dvh] overflow-y-auto max-w-lg rounded-t-[40px] sm:rounded-[40px] shadow-2xl flex flex-col transition-all duration-300",
+            "bg-[var(--md-sys-color-surface)] w-full max-h-[92dvh] md:max-h-[80dvh] overflow-y-auto md:overflow-hidden custom-scrollbar max-w-lg md:max-w-3xl rounded-t-[40px] sm:rounded-[40px] md:rounded-[40px] shadow-2xl flex flex-col md:flex-row transition-all duration-300 relative",
             visualStyle === "retro" && "border-[4px] border-[var(--md-sys-color-on-surface)] rounded-none shadow-[12px_12px_0px_0px_var(--md-sys-color-on-surface)]",
             visualStyle === "glass" && "border-none",
             visualStyle === "soft" && "shadow-[var(--soft-shadow-heavy)] rounded-t-[48px] sm:rounded-[48px] border border-[var(--md-sys-color-outline)]/5"
           )}
           onClick={e => e.stopPropagation()}
         >
-          {/* Header Ticket (Editorial) */}
-          <div className="bg-[var(--md-sys-color-surface-container-low)] p-6 sm:p-10 relative border-b-2 border-dashed border-[var(--md-sys-color-outline-variant)] select-none">
-            {/* Ticket Punch Holes */}
-            <div className="absolute -left-4 bottom-[-16px] w-8 h-8 rounded-full bg-neutral-950/90 z-20" />
-            <div className="absolute -right-4 bottom-[-16px] w-8 h-8 rounded-full bg-neutral-950/90 z-20" />
+          {/* @ts-ignore */}
+          <md-filled-tonal-icon-button
+            onClick={onClose}
+            className="absolute top-4 right-4 sm:top-6 sm:right-6 z-50 cursor-pointer"
+          >
+            <X size={20} strokeWidth={iconStroke} />
+          </md-filled-tonal-icon-button>
 
-            {/* @ts-ignore */}
-            <md-filled-tonal-icon-button
-              onClick={onClose}
-              className="absolute top-4 right-4 sm:top-6 sm:right-6 z-10 cursor-pointer"
-            >
-              <X size={20} strokeWidth={iconStroke} />
-            </md-filled-tonal-icon-button>
-            
-            <div className="flex flex-col relative z-0">
-               {isToday && (
-                 <span className="mb-4 self-start px-3 py-1 bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] rounded-lg text-[10px] sm:text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shadow-md shadow-[var(--md-sys-color-primary)]/20">
-                   <CalendarDays size={14} /> {t("today")}
-                 </span>
-               )}
-               
-               <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          {/* Header Ticket (Editorial) */}
+          <div className="bg-[var(--md-sys-color-surface-container-low)] p-6 sm:p-10 md:p-8 lg:p-10 relative border-b-2 md:border-b-0 md:border-r-2 border-dashed border-[var(--md-sys-color-outline-variant)] select-none md:w-[310px] md:shrink-0 md:flex md:flex-col md:justify-between md:h-full">
+            {/* Ticket Punch Holes */}
+            <div className="absolute w-8 h-8 rounded-full bg-neutral-950/90 z-20 -left-4 md:left-auto md:-right-4 bottom-[-16px] md:top-[-16px]" />
+            <div className="absolute w-8 h-8 rounded-full bg-neutral-950/90 z-20 -right-4 bottom-[-16px] md:bottom-[-16px]" />
+
+            <div className="flex flex-col md:justify-between justify-start h-full gap-6 md:gap-0 relative z-0">
+               {/* Top Section */}
+               <div className="flex flex-col">
+                 {isToday && (
+                   <span className="mb-4 self-start px-3 py-1 bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] rounded-lg text-[10px] sm:text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shadow-md shadow-[var(--md-sys-color-primary)]/20">
+                     <CalendarDays size={14} /> {t("today")}
+                   </span>
+                 )}
+                 
                  <h2 className="md3-display-medium sm:md3-display-large font-black tracking-tighter text-[var(--md-sys-color-on-surface)] flex flex-col gap-1 leading-none">
                    <span className="text-[var(--md-sys-color-primary)]">
                       {format(dateObj, "dd", { locale: settings.language === 'ms' ? ms : enUS })}
@@ -161,9 +162,25 @@ export function SelectedDayModal({ day, onClose, onPrayerSelect }: SelectedDayMo
                    </span>
                  </h2>
 
+                 <p className="font-semibold text-[var(--md-sys-color-on-surface-variant)] mt-3.5 text-xs sm:text-sm flex items-center gap-2 flex-wrap">
+                   {(!settings.hijriFormat || settings.hijriFormat === 'both' || settings.hijriFormat === 'text') && (
+                     <span className="font-black">{getHijriFormatted(day.date, settings.hijriMethod, settings.hijriAdjustment, "text", settings.language, day.hijri).split(" (")[0]}</span>
+                   )}
+                   {(!settings.hijriFormat || settings.hijriFormat === 'both') && (
+                     <span className="opacity-40">•</span>
+                   )}
+                   {(!settings.hijriFormat || settings.hijriFormat === 'both' || settings.hijriFormat === 'number') && (
+                     <span className="font-mono opacity-70 font-black">
+                       {getHijriFormatted(day.date, settings.hijriMethod, settings.hijriAdjustment, "number", settings.language, day.hijri)}
+                     </span>
+                   )}
+                   <span className="opacity-40">•</span>
+                   <span className="opacity-80 font-black uppercase tracking-wider">{format(dateObj, "EEEE", { locale: settings.language === 'ms' ? ms : enUS })}</span>
+                 </p>
+
                  {/* Countdown Widget */}
                  {nextPrayerInfo && (
-                   <div className="flex items-center gap-3 p-3 px-4 rounded-2xl bg-[var(--md-sys-color-surface)] border border-[var(--md-sys-color-outline)]/5 shadow-inner sm:max-w-xs self-start sm:self-auto font-mono">
+                   <div className="flex items-center gap-3 p-3 px-4 rounded-2xl bg-[var(--md-sys-color-surface)] border border-[var(--md-sys-color-outline)]/5 shadow-inner sm:max-w-xs md:w-full mt-5 font-mono">
                      <Clock size={16} className="text-[var(--md-sys-color-primary)] animate-pulse" />
                      <div className="flex flex-col leading-none">
                        <span className="text-[8px] font-black uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)]">{t(nextPrayerInfo.name as any)} {isMalay ? "Seterusnya" : "Next"}</span>
@@ -173,23 +190,8 @@ export function SelectedDayModal({ day, onClose, onPrayerSelect }: SelectedDayMo
                  )}
                </div>
                
-               <p className="font-semibold text-[var(--md-sys-color-on-surface-variant)] mt-3.5 text-xs sm:text-sm flex items-center gap-2 flex-wrap">
-                 {(!settings.hijriFormat || settings.hijriFormat === 'both' || settings.hijriFormat === 'text') && (
-                   <span className="font-black">{getHijriFormatted(day.date, settings.hijriMethod, settings.hijriAdjustment, "text", settings.language, day.hijri).split(" (")[0]}</span>
-                 )}
-                 {(!settings.hijriFormat || settings.hijriFormat === 'both') && (
-                   <span className="opacity-40">•</span>
-                 )}
-                 {(!settings.hijriFormat || settings.hijriFormat === 'both' || settings.hijriFormat === 'number') && (
-                   <span className="font-mono opacity-70 font-black">
-                     {getHijriFormatted(day.date, settings.hijriMethod, settings.hijriAdjustment, "number", settings.language, day.hijri)}
-                   </span>
-                 )}
-                 <span className="opacity-40">•</span>
-                 <span className="opacity-80 font-black uppercase tracking-wider">{format(dateObj, "EEEE", { locale: settings.language === 'ms' ? ms : enUS })}</span>
-               </p>
-               
-               <div className="flex flex-wrap items-center gap-2 mt-4">
+               {/* Bottom Section */}
+               <div className="flex flex-wrap items-center gap-2 mt-4 md:mt-auto">
                  {/* @ts-ignore */}
                  <md-filled-button
                    onClick={handleShareDaySchedule}
@@ -214,8 +216,8 @@ export function SelectedDayModal({ day, onClose, onPrayerSelect }: SelectedDayMo
           </div>
           
           {/* Editorial Grid Prayer Times Content */}
-          <div className="p-6 sm:p-10 bg-[var(--md-sys-color-surface)]">
-            <h3 className="text-xs font-black uppercase tracking-widest text-[var(--md-sys-color-primary)] mb-6 flex items-center gap-2">
+          <div className="p-6 sm:p-10 md:p-8 lg:p-10 bg-[var(--md-sys-color-surface)] md:flex-1 md:h-full md:overflow-y-auto custom-scrollbar flex flex-col min-h-0">
+            <h3 className="text-xs font-black uppercase tracking-widest text-[var(--md-sys-color-primary)] mb-6 flex items-center gap-2 shrink-0">
               {isMalay ? "Waktu Solat" : "Prayer Times"}
               <div className="flex-1 h-px bg-[var(--md-sys-color-outline)]/10" />
             </h3>
@@ -230,7 +232,7 @@ export function SelectedDayModal({ day, onClose, onPrayerSelect }: SelectedDayMo
                   transition: { staggerChildren: 0.05 }
                 }
               }}
-              className="grid grid-cols-2 gap-3 sm:gap-4"
+              className="grid grid-cols-2 gap-3 sm:gap-4 pb-2"
             >
               {timesToDisplay.map((k) => {
                 const Icon = PRAYER_ICONS[k] as React.ComponentType<any>;
