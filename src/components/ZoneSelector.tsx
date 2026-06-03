@@ -21,6 +21,7 @@ import { fetchReverseGeocode, matchZoneFromGeocode, ALIASES } from "../lib/geoco
 import { analytics } from "../lib/analytics";
 import { StorageManager } from "../lib/StorageManager";
 import { sanitizeInput } from "../lib/security";
+import { useAppContext } from "../AppContext";
 
 const STATE_FLAGS: Record<string, string> = {
   Johor:

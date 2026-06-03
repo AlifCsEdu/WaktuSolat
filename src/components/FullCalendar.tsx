@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, Variants } from "motion/react";
 import "@material/web/tabs/tabs.js";
 import "@material/web/tabs/primary-tab.js";
 import "@material/web/tabs/secondary-tab.js";
@@ -22,7 +22,7 @@ import { useVisualStyle, useIconStroke } from "../hooks/useVisualStyle";
 export type CalendarTab = "grid" | "list" | "public_holidays" | "islamic_events";
 export type ListViewFilter = "daily" | "weekly" | "monthly";
 
-const calendarVariants = {
+const calendarVariants: Variants = {
   hidden: { opacity: 0, scale: 0.96, y: 20 },
   visible: { 
     opacity: 1, 
