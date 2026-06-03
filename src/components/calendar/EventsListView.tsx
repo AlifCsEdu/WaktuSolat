@@ -66,9 +66,11 @@ export function EventsListView({ currentDate, type }: EventsListViewProps) {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: Math.min(idx * 0.03, 0.4), type: "spring", stiffness: 350, damping: 25 }}
+            whileHover={!isPast ? { scale: 0.98 } : {}}
+            whileTap={!isPast ? { scale: 0.96 } : {}}
             key={`${evt.date.toISOString()}-${evt.title}`}
             className={cn(
-               "flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5 p-4 sm:p-5 rounded-[22px] border transition-all duration-300 relative overflow-hidden select-none shadow-xs hover:shadow-md",
+               "flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5 p-4 sm:p-5 rounded-[22px] border transition-all duration-300 relative overflow-hidden select-none shadow-xs hover:shadow-md cursor-default",
                isTodayEvent 
                  ? "bg-[var(--md-sys-color-primary-container)]/15 border-[var(--md-sys-color-primary)] ring-2 ring-[var(--md-sys-color-primary)]/20 shadow-md" 
                  : isPast 

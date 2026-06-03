@@ -116,8 +116,8 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
                 initial={{ opacity: 0, scale: 0.94, y: 10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 transition={{ delay: idx * 0.04, type: "spring", stiffness: 350, damping: 24 }}
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.97 }}
+                whileHover={{ scale: 0.98 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => onPrayerSelect({ key: k as PrayerKey, time: timeStr.substring(0, 5), dateValue: day.date, hijriValue: day.hijri })}
                 className={cn(
                   "relative bg-[var(--md-sys-color-surface-container)] rounded-[24px] border border-[var(--md-sys-color-outline)]/8 p-5 flex flex-col items-center gap-3.5 overflow-hidden shadow-xs hover:shadow-md cursor-pointer transition-all duration-350 focus:outline-none focus:ring-2 focus:ring-[var(--md-sys-color-primary)]",
@@ -199,8 +199,8 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
                   return (
                     <motion.button
                       key={k}
-                      whileHover={{ scale: 1.05, y: -2 }}
-                      whileTap={{ scale: 0.96 }}
+                      whileHover={{ scale: 0.98 }}
+                      whileTap={{ scale: 0.95 }}
                       transition={{ type: "spring", stiffness: 500, damping: 24 }}
                       onClick={() => onPrayerSelect({
                         key: k,

@@ -345,8 +345,8 @@ export function PrayerSchedule({
                 stiffness: 400,
                 damping: 25,
               }}
-              whileHover={isNext ? { scale: 1.02, y: -2 } : { scale: 1.01, x: 3 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: 0.98 }}
+              whileTap={{ scale: 0.96 }}
               key={key}
               className={cn(
                 "group relative overflow-hidden flex items-center justify-between min-h-0",

@@ -5,13 +5,11 @@ import {
   MapPin, 
   Bell, 
   Volume2, 
-  ArrowRight, 
-  ArrowLeft, 
-  Check, 
   Compass, 
   Play, 
   Pause,
-  X
+  ArrowRight,
+  Check
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { StorageManager } from "../lib/StorageManager";
@@ -21,14 +19,45 @@ import "@material/web/button/filled-button.js";
 import "@material/web/button/outlined-button.js";
 import "@material/web/button/filled-tonal-button.js";
 import "@material/web/icon/icon.js";
-import "@material/web/switch/switch.js";
 import "@material/web/textfield/filled-text-field.js";
-import "@material/web/elevation/elevation.js";
+import "@material/web/ripple/ripple.js";
 
 interface OnboardingFlowProps {
   onComplete: (zone: string) => void;
   language: "ms" | "en";
 }
+
+// Staggered variants for expressive animation
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.1,
+    }
+  },
+  exit: {
+    opacity: 0,
+    transition: { staggerChildren: 0.05, staggerDirection: -1 }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 40, scale: 0.95 },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    scale: 1,
+    transition: { type: "spring", stiffness: 350, damping: 25 }
+  },
+  exit: { 
+    opacity: 0, 
+    y: -20, 
+    scale: 0.95,
+    transition: { duration: 0.2 }
+  }
+};
 
 export function OnboardingFlow({ onComplete, language }: OnboardingFlowProps) {
   const [currentStep, setCurrentStep] = useState(0);
@@ -41,44 +70,41 @@ export function OnboardingFlow({ onComplete, language }: OnboardingFlowProps) {
     typeof Notification !== "undefined" ? Notification.permission : "default"
   );
   
-  // Audio state
   const [selectedSound, setSelectedSound] = useState<string>("chime");
   const [isPlayingSound, setIsPlayingSound] = useState<string | null>(null);
   const [audioCtx, setAudioCtx] = useState<AudioContext | null>(null);
 
   const isMalay = language === "ms";
 
-  // Translate helpers
   const tOnboarding = {
-    welcomeTitle: isMalay ? "Selamat Pulang ke AlurWaktu" : "Welcome Home to AlurWaktu",
+    welcomeTitle: isMalay ? "Selamat Pulang" : "Welcome Home",
     welcomeDesc: isMalay 
-      ? "AlurWaktu ialah aplikasi waktu solat premium dengan reka bentuk Material 3 Expressive, visual fizik dinamik, dan sokongan luar talian sepenuhnya." 
-      : "AlurWaktu is a premium prayer times utility featuring Material 3 Expressive, physical animations, and full offline caching support.",
-    startBtn: isMalay ? "Mula Konfigurasi" : "Start Setup",
+      ? "AlurWaktu direka khas untuk menjadi pengalaman waktu solat paling elegan dan premium yang pernah anda rasa." 
+      : "AlurWaktu is crafted to be the most elegant and premium prayer times experience you've ever felt.",
+    startBtn: isMalay ? "Terokai Sekarang" : "Begin Experience",
     
-    locTitle: isMalay ? "Pilih Zon Waktu Solat" : "Select Prayer Times Zone",
+    locTitle: isMalay ? "Di manakah Anda?" : "Where Are You?",
     locDesc: isMalay 
-      ? "Sila pilih zon anda secara manual atau benarkan pengesanan kedudukan GPS automatik." 
-      : "Please select your zone manually or allow automatic GPS location tracking.",
-    gpsBtn: isMalay ? "Kesan Lokasi GPS" : "Detect GPS Location",
-    gpsLoading: isMalay ? "Mengesan kedudukan..." : "Detecting location...",
-    gpsSuccessText: isMalay ? "Kawasan berjaya dikesan!" : "Location successfully matched!",
-    searchPlace: isMalay ? "Cari daerah / kawasan..." : "Search district or zone...",
-    manualLabel: isMalay ? "Pilihan Zon Manual" : "Manual Zone Selection",
+      ? "Pilih kawasan anda untuk sinkronisasi waktu solat luar talian yang sangat pantas." 
+      : "Select your zone for ultra-fast, offline-capable prayer time syncing.",
+    gpsBtn: isMalay ? "Kesan Automatik" : "Auto-detect",
+    gpsLoading: isMalay ? "Mencari..." : "Detecting...",
+    gpsSuccessText: isMalay ? "Selesai Dikesan!" : "Matched!",
+    searchPlace: isMalay ? "Cari zon / negeri..." : "Search zone or state...",
 
-    notifTitle: isMalay ? "Sentiasa Tepat Waktu" : "Stay On Schedule",
+    notifTitle: isMalay ? "Makluman Agung" : "Elegant Alerts",
     notifDesc: isMalay 
-      ? "Dapatkan pemberitahuan visual serta audio makluman Azan sejurus masuk waktu solat. Anda boleh menetapkan peringatan awal untuk setiap waktu." 
-      : "Receive elegant notifications and beautiful audio Azan reminders as soon as prayer times enter. Customize pre-alerts per prayer.",
-    notifBtn: isMalay ? "Benarkan Notifikasi" : "Enable Notifications",
-    notifGranted: isMalay ? "Notifikasi Dibenarkan ✓" : "Notifications Granted ✓",
-    notifSkip: isMalay ? "Langkau buat masa sekarang" : "Skip for now",
+      ? "Berikan kami keizinan untuk mengingatkan anda melalui notifikasi indah dan visual menawan apabila tiba waktu." 
+      : "Grant us permission to gently remind you through beautiful notifications and visual cues when it's time.",
+    notifBtn: isMalay ? "Beri Keizinan" : "Grant Access",
+    notifGranted: isMalay ? "Keizinan Diberi" : "Access Granted",
+    notifSkip: isMalay ? "Mungkin Nanti" : "Maybe Later",
 
-    soundTitle: isMalay ? "Tema Bunyi Alunan" : "Acoustic Audio Theme",
+    soundTitle: isMalay ? "Tandatangan Audio" : "Audio Signature",
     soundDesc: isMalay 
-      ? "Pilih makluman kegemaran anda untuk alunan azan atau peringatan awal." 
-      : "Choose your favorite acoustic tone for adhan entry or pre-alerts.",
-    finishBtn: isMalay ? "Selesai & Masuk Aplikasi" : "Finish & Enter App",
+      ? "Sentuhan terakhir. Pilih bunyi akustik kegemaran anda untuk peringatan azan." 
+      : "The final touch. Pick your favorite acoustic chime for adhan reminders.",
+    finishBtn: isMalay ? "Lengkap & Mula" : "Finish & Start",
     backBtn: isMalay ? "Kembali" : "Back",
     nextBtn: isMalay ? "Seterusnya" : "Next"
   };
@@ -89,10 +115,7 @@ export function OnboardingFlow({ onComplete, language }: OnboardingFlowProps) {
     if (currentStep < stepsCount - 1) {
       setCurrentStep(prev => prev + 1);
     } else {
-      // Save settings to StorageManager and complete onboarding
       StorageManager.setHasCompletedOnboarding(true);
-      
-      // Update global context settings in main app via onComplete callback
       onComplete(selectedZone);
     }
   };
@@ -103,7 +126,6 @@ export function OnboardingFlow({ onComplete, language }: OnboardingFlowProps) {
     }
   };
 
-  // Play simulated sound tones to show premium quality
   const playPreviewSound = (soundType: string) => {
     try {
       if (isPlayingSound) {
@@ -148,12 +170,9 @@ export function OnboardingFlow({ onComplete, language }: OnboardingFlowProps) {
         playTone(220.00, 'sine', 0.05, 2.0, 0.12);
       }
 
-      setTimeout(() => {
-        setIsPlayingSound(null);
-      }, 2500);
-
+      setTimeout(() => setIsPlayingSound(null), 2500);
     } catch (e) {
-      console.warn("Audio Context playback not allowed in browser until interaction:", e);
+      console.warn("Audio Context playback failed:", e);
       setIsPlayingSound(null);
     }
   };
@@ -163,12 +182,11 @@ export function OnboardingFlow({ onComplete, language }: OnboardingFlowProps) {
       const permission = await Notification.requestPermission();
       setNotificationPermission(permission);
       
-      // Update local storage preference as well
       const savedPrefs = StorageManager.getItem('prayer_notifications_v2');
       let parsed = savedPrefs ? JSON.parse(savedPrefs) : {};
       
-      const defaultNotificationKeys = ["fajr", "dhuhr", "asr", "maghrib", "isha"];
-      defaultNotificationKeys.forEach(k => {
+      const defaultKeys = ["fajr", "dhuhr", "asr", "maghrib", "isha"];
+      defaultKeys.forEach(k => {
         if (!parsed[k]) {
           parsed[k] = { enabled: true, sound: selectedSound, preAlert: 0, offset: 0, iqamahOffset: 10 };
         } else {
@@ -198,169 +216,130 @@ export function OnboardingFlow({ onComplete, language }: OnboardingFlowProps) {
               throw new Error("Kawasan tidak disokong");
             }
           } catch (err: any) {
-            setGpsError(isMalay ? "Gagal memadankan koordinat ke zon Malaysia." : "Failed to map coordinates to Malaysia zone.");
+            setGpsError(isMalay ? "Gagal memadankan koordinat." : "Failed to map coordinates.");
           } finally {
             setGpsLoading(false);
           }
         },
-        (err) => {
+        () => {
           setGpsLoading(false);
-          setGpsError(isMalay ? "Akses GPS tidak dibenarkan atau gagal." : "GPS access denied or failed.");
+          setGpsError(isMalay ? "Akses GPS tidak dibenarkan." : "GPS access denied.");
         },
         { timeout: 8000 }
       );
     } else {
-      setGpsError(isMalay ? "Pelayar anda tidak menyokong GPS." : "Browser does not support GPS.");
+      setGpsError(isMalay ? "Pelayar tidak menyokong GPS." : "No GPS support.");
     }
   };
 
-  // Filter list of zones for manual setup
   const filteredZonesList = JAKIM_ZONES.map((state) => {
     const query = searchQuery.toLowerCase().trim();
     if (!query) return state;
-    const matched = state.zones.filter(z => 
-      z.l.toLowerCase().includes(query) || z.v.toLowerCase().includes(query)
-    );
+    const matched = state.zones.filter(z => z.l.toLowerCase().includes(query) || z.v.toLowerCase().includes(query));
     return { ...state, zones: matched };
   }).filter(state => state.zones.length > 0);
 
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-4 sm:p-6 bg-[var(--md-sys-color-background)] font-sans text-[var(--md-sys-color-on-surface)] selection:bg-[var(--md-sys-color-primary-container)]/30 overflow-hidden">
-      {/* Decorative premium floating shapes for wow impact - using M3 primary/secondary theme colors */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none select-none">
-        <motion.div 
-          animate={{ rotate: 360 }}
-          transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
-          className="absolute -top-[10%] -left-[10%] w-[350px] sm:w-[500px] h-[350px] sm:h-[500px] rounded-full bg-[var(--md-sys-color-primary-container)]/20 blur-[100px]" 
-        />
-        <motion.div 
-          animate={{ rotate: -360 }}
-          transition={{ duration: 80, repeat: Infinity, ease: "linear" }}
-          className="absolute -bottom-[10%] -right-[10%] w-[400px] sm:w-[550px] h-[400px] sm:h-[550px] rounded-full bg-[var(--md-sys-color-secondary-container)]/15 blur-[120px]" 
-        />
-      </div>
-
-      {/* Main Premium Card Wrapper - 100% Native Material 3 Surface */}
-      <div className="relative z-10 w-full max-w-xl min-h-[500px] sm:min-h-[550px] p-6 sm:p-8 rounded-[28px] sm:rounded-[36px] bg-[var(--md-sys-color-surface-container)] border border-[var(--md-sys-color-outline-variant)]/60 flex flex-col justify-between overflow-hidden">
-        {/* @ts-ignore */}
-        <md-elevation level="3"></md-elevation>
-        
-        {/* Step dots header */}
-        <div className="flex items-center justify-between mb-6 shrink-0 z-10">
-          <div className="flex items-center gap-1.5">
-            <Sparkles className="w-5 h-5 text-[var(--md-sys-color-primary)] stroke-[2] animate-pulse" />
-            <span className="text-[10px] font-black tracking-widest uppercase text-[var(--md-sys-color-on-surface-variant)]/80">
-              {isMalay ? "PENGATURAN AWAL" : "WELCOME SETUP"}
-            </span>
-          </div>
-          <div className="flex gap-1.5">
-            {[...Array(stepsCount)].map((_, idx) => (
-              <div 
-                key={idx} 
-                className={cn(
-                  "h-1.5 rounded-full transition-all duration-300",
-                  idx === currentStep ? "w-6 bg-[var(--md-sys-color-primary)]" : "w-1.5 bg-[var(--md-sys-color-outline-variant)]"
-                )}
-              />
-            ))}
-          </div>
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-[var(--sys-spacing-edge)] bg-[var(--md-sys-color-surface-container-lowest)] font-sans text-[var(--md-sys-color-on-surface)] overflow-hidden">
+      
+      {/* Heavy contrast solid shapes - Pure M3 Expressive Editorial */}
+      <motion.div 
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 200, damping: 30 }}
+        className="absolute -top-[20%] -left-[10%] w-[60vh] h-[60vh] rounded-full bg-[var(--md-sys-color-primary-container)] select-none pointer-events-none" 
+      />
+      
+      {/* Main Massive Pill-Shaped Form Factor */}
+      <motion.div 
+        initial={{ y: 100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 250, damping: 25 }}
+        className="relative z-10 w-full max-w-lg min-h-[600px] h-full max-h-[85vh] p-8 sm:p-12 rounded-[48px] sm:rounded-[64px] bg-[var(--md-sys-color-surface-container-highest)] shadow-2xl flex flex-col justify-between overflow-hidden ring-1 ring-[var(--md-sys-color-outline-variant)]/40"
+      >
+        {/* Step Indicator Top Right */}
+        <div className="absolute top-8 right-10 flex gap-2">
+          {[...Array(stepsCount)].map((_, idx) => (
+            <motion.div 
+              key={idx} 
+              animate={{ 
+                width: idx === currentStep ? 32 : 8,
+                backgroundColor: idx === currentStep 
+                  ? "var(--md-sys-color-primary)" 
+                  : "var(--md-sys-color-outline-variant)"
+              }}
+              className="h-2 rounded-full"
+            />
+          ))}
         </div>
 
         {/* Carousel slide contents */}
-        <div className="flex-1 flex flex-col justify-center min-h-0 py-2 z-10">
-          <AnimatePresence mode="wait">
+        <div className="flex-1 flex flex-col justify-center h-full w-full py-8 mt-4">
+          <AnimatePresence mode="wait" custom={currentStep}>
+            {/* --- STEP 1: WELCOME --- */}
             {currentStep === 0 && (
               <motion.div
                 key="step-welcome"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="flex flex-col items-center text-center space-y-6"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="flex flex-col items-start justify-center h-full space-y-10"
               >
-                {/* Premium crescent geometry simulation spinner using M3 primary theme colors */}
-                <div className="relative w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center">
-                  <motion.div 
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-                    className="absolute inset-0 rounded-full border-t-2 border-r-2 border-[var(--md-sys-color-primary)]/40"
-                  />
-                  <motion.div 
-                    animate={{ rotate: -360 }}
-                    transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-                    className="absolute inset-2 rounded-full border-b-2 border-l-2 border-[var(--md-sys-color-secondary)]/40"
-                  />
-                  <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-[20px] bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] border border-[var(--md-sys-color-outline-variant)] flex items-center justify-center shadow-lg">
-                    <Compass className="w-8 h-8 sm:w-10 sm:h-10 animate-pulse stroke-[1.5]" />
-                  </div>
-                </div>
+                <motion.div variants={itemVariants} className="w-28 h-28 rounded-[40px] bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] flex items-center justify-center shadow-xl">
+                  <Compass className="w-14 h-14" strokeWidth={1.5} />
+                </motion.div>
 
-                <div className="space-y-3">
-                  <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-[var(--md-sys-color-on-surface)] leading-tight">
+                <motion.div variants={itemVariants} className="space-y-4 max-w-sm">
+                  <h1 className="md3-display-large font-black tracking-tight text-[var(--md-sys-color-on-surface)] leading-[1.05]">
                     {tOnboarding.welcomeTitle}
                   </h1>
-                  <p className="text-sm text-[var(--md-sys-color-on-surface-variant)] leading-relaxed max-w-sm mx-auto">
+                  <p className="md3-body-large text-[var(--md-sys-color-on-surface-variant)] font-medium leading-relaxed">
                     {tOnboarding.welcomeDesc}
                   </p>
-                </div>
-
-                {/* @ts-ignore */}
-                <md-filled-button
-                  onClick={handleNext}
-                  className="mt-4"
-                  style={{ '--md-filled-button-container-shape': '16px' } as any}
-                >
-                  {tOnboarding.startBtn}
-                  <md-icon slot="icon">arrow_forward</md-icon>
-                </md-filled-button>
+                </motion.div>
+                
+                <motion.div variants={itemVariants} className="pt-6 w-full">
+                  {/* @ts-ignore */}
+                  <md-filled-button onClick={handleNext} style={{ '--md-filled-button-container-shape': '999px', width: '100%', height: '64px' }}>
+                    <span className="text-lg font-bold">{tOnboarding.startBtn}</span>
+                    <ArrowRight className="w-6 h-6 ml-4" />
+                  </md-filled-button>
+                </motion.div>
               </motion.div>
             )}
 
+            {/* --- STEP 2: LOCATION --- */}
             {currentStep === 1 && (
               <motion.div
                 key="step-location"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="flex flex-col space-y-4 h-full max-h-[350px] sm:max-h-[390px] min-h-0"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="flex flex-col h-full space-y-6 overflow-hidden"
               >
-                <div className="text-center">
-                  <h2 className="text-2xl font-black tracking-tight text-[var(--md-sys-color-on-surface)] mb-1.5 flex items-center justify-center gap-2">
-                    <MapPin className="w-6 h-6 text-[var(--md-sys-color-primary)]" />
+                <motion.div variants={itemVariants} className="space-y-2">
+                  <h2 className="md3-display-medium font-black tracking-tight text-[var(--md-sys-color-on-surface)] leading-[1.1]">
                     {tOnboarding.locTitle}
                   </h2>
-                  <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] max-w-sm mx-auto">
+                  <p className="md3-body-medium text-[var(--md-sys-color-on-surface-variant)] font-medium">
                     {tOnboarding.locDesc}
                   </p>
-                </div>
+                </motion.div>
 
-                {/* GPS trigger */}
-                <div className="flex flex-col gap-2 shrink-0">
+                <motion.div variants={itemVariants} className="w-full">
                   {/* @ts-ignore */}
-                  <md-filled-tonal-button
-                    onClick={handleGPSDetect}
-                    disabled={gpsLoading}
-                    style={{ '--md-filled-tonal-button-container-shape': '16px' } as any}
-                  >
-                    <md-icon slot="icon">my_location</md-icon>
-                    {gpsLoading ? tOnboarding.gpsLoading : tOnboarding.gpsBtn}
+                  <md-filled-tonal-button onClick={handleGPSDetect} disabled={gpsLoading} style={{ '--md-filled-tonal-button-container-shape': '24px', width: '100%', height: '56px' }}>
+                    <MapPin className="w-5 h-5 mr-3" />
+                    <span className="font-bold">{gpsLoading ? tOnboarding.gpsLoading : tOnboarding.gpsBtn}</span>
                   </md-filled-tonal-button>
+                  {gpsSuccess && <div className="text-center text-sm mt-3 font-bold text-[var(--md-sys-color-primary)]">{tOnboarding.gpsSuccessText} <span className="underline">{selectedZone}</span></div>}
+                  {gpsError && <div className="text-center text-sm mt-3 font-bold text-[var(--md-sys-color-error)]">{gpsError}</div>}
+                </motion.div>
 
-                  {gpsSuccess && (
-                    <div className="text-center text-xs font-bold text-[var(--md-sys-color-primary)] animate-pulse">
-                      {tOnboarding.gpsSuccessText} ({selectedZone})
-                    </div>
-                  )}
-
-                  {gpsError && (
-                    <div className="text-center text-[10px] font-bold text-[var(--md-sys-color-error)]">
-                      {gpsError}
-                    </div>
-                  )}
-                </div>
-
-                {/* Search Manual list inside onboarding card scrollbox */}
-                <div className="flex-1 flex flex-col min-h-0 border border-[var(--md-sys-color-outline-variant)] rounded-2xl bg-[var(--md-sys-color-surface-container-lowest)] overflow-hidden">
-                  <div className="px-1 py-1">
+                <motion.div variants={itemVariants} className="flex-1 flex flex-col min-h-0 bg-[var(--md-sys-color-surface)] rounded-[32px] overflow-hidden shadow-sm border border-[var(--md-sys-color-outline-variant)]">
+                  <div className="p-2 pb-0">
                     {/* @ts-ignore */}
                     <md-filled-text-field
                       type="text" 
@@ -368,193 +347,180 @@ export function OnboardingFlow({ onComplete, language }: OnboardingFlowProps) {
                       value={searchQuery}
                       onInput={(e: any) => setSearchQuery(sanitizeInput(e.target.value))}
                       style={{ 
-                        width: '105%',
-                        marginLeft: '-2.5%',
-                        marginTop: '-1.5%',
-                        '--md-filled-text-field-container-shape': '0px',
+                        width: '100%',
+                        '--md-filled-text-field-container-shape': '24px',
                         '--md-filled-text-field-active-indicator-height': '0px',
                         '--md-filled-text-field-hover-active-indicator-height': '0px',
                         '--md-filled-text-field-focus-active-indicator-height': '0px',
                         '--md-sys-color-surface-variant': 'var(--md-sys-color-surface-container-low)'
-                      } as any}
-                    >
-                      <md-icon slot="leading-icon">search</md-icon>
-                      {searchQuery && (
-                        /* @ts-ignore */
-                        <md-icon-button slot="trailing-icon" onClick={() => setSearchQuery("")}>
-                          <md-icon>close</md-icon>
-                        </md-icon-button>
-                      )}
-                    </md-filled-text-field>
+                      }}
+                    />
                   </div>
-
-                  <div className="flex-1 overflow-y-auto p-1 divide-y divide-[var(--md-sys-color-outline-variant)]/40 scrollbar-thin">
+                  <div className="flex-1 overflow-y-auto p-2 scrollbar-none">
                     {filteredZonesList.map(state => (
-                      <div key={state.state} className="py-1">
-                        <div className="px-3 py-0.5 text-[8px] font-black uppercase tracking-wider text-[var(--md-sys-color-primary)] bg-[var(--md-sys-color-surface-container-low)]/50">
+                      <div key={state.state} className="mb-4">
+                        <div className="px-4 py-1.5 text-xs font-black uppercase tracking-widest text-[var(--md-sys-color-primary)] opacity-80 sticky top-0 bg-[var(--md-sys-color-surface)] z-10">
                           {state.state}
                         </div>
                         {state.zones.map(z => (
-                          <button
+                          <motion.button
+                            whileHover={{ scale: 0.98 }}
+                            whileTap={{ scale: 0.95 }}
                             key={z.v}
-                            onClick={() => {
-                              setSelectedZone(z.v);
-                              setGpsSuccess(false);
-                            }}
+                            onClick={() => { setSelectedZone(z.v); setGpsSuccess(false); }}
                             className={cn(
-                              "relative overflow-hidden w-full text-left px-3 py-2.5 text-xs flex items-center justify-between transition-colors hover:bg-[var(--md-sys-color-primary)]/8 cursor-pointer rounded-lg mt-0.5",
-                              z.v === selectedZone && "bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] font-bold"
+                              "w-full text-left px-5 py-3 mb-1 rounded-[20px] transition-all relative overflow-hidden flex justify-between items-center",
+                              z.v === selectedZone 
+                                ? "bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] font-bold shadow-sm"
+                                : "hover:bg-[var(--md-sys-color-surface-container-highest)]"
                             )}
                           >
-                            {/* @ts-ignore */}
-                            <md-ripple></md-ripple>
-                            <span className="truncate text-[var(--md-sys-color-on-surface)]">{z.l}</span>
-                            <span className="font-mono text-[9px] text-[var(--md-sys-color-on-surface-variant)]/60">{z.v}</span>
-                          </button>
+                            <span className="truncate pr-4">{z.l}</span>
+                            <span className="font-mono text-xs opacity-60">{z.v}</span>
+                          </motion.button>
                         ))}
                       </div>
                     ))}
                   </div>
-                </div>
+                </motion.div>
               </motion.div>
             )}
 
+            {/* --- STEP 3: NOTIFICATIONS --- */}
             {currentStep === 2 && (
               <motion.div
                 key="step-notifications"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="flex flex-col items-center text-center space-y-6"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="flex flex-col items-start justify-center h-full space-y-8"
               >
-                <div className="w-18 h-18 rounded-[20px] bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center border border-[var(--md-sys-color-outline-variant)] shadow-md">
-                  <Bell className="w-9 h-9 stroke-[1.5]" />
-                </div>
+                <motion.div variants={itemVariants} className="w-24 h-24 rounded-[36px] bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)] flex items-center justify-center">
+                  <Bell className="w-10 h-10" strokeWidth={1.5} />
+                </motion.div>
 
-                <div className="space-y-3">
-                  <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-[var(--md-sys-color-on-surface)]">
+                <motion.div variants={itemVariants} className="space-y-4 max-w-sm">
+                  <h2 className="md3-display-medium font-black tracking-tight text-[var(--md-sys-color-on-surface)] leading-[1.05]">
                     {tOnboarding.notifTitle}
                   </h2>
-                  <p className="text-sm text-[var(--md-sys-color-on-surface-variant)] leading-relaxed max-w-sm">
+                  <p className="md3-body-large text-[var(--md-sys-color-on-surface-variant)] font-medium leading-relaxed">
                     {tOnboarding.notifDesc}
                   </p>
-                </div>
+                </motion.div>
 
-                <div className="flex flex-col gap-3 w-full shrink-0 max-w-xs mt-2">
+                <motion.div variants={itemVariants} className="flex flex-col gap-4 w-full pt-6">
                   {/* @ts-ignore */}
                   <md-filled-button
                     onClick={handleRequestNotification}
-                    style={notificationPermission === 'granted' ? { '--md-filled-button-container-color': 'var(--md-sys-color-tertiary)', '--md-filled-button-label-text-color': 'var(--md-sys-color-on-tertiary)', '--md-filled-button-container-shape': '16px' } as any : { '--md-filled-button-container-shape': '16px' } as any}
+                    style={{ 
+                      '--md-filled-button-container-shape': '999px', 
+                      height: '64px',
+                      ...(notificationPermission === 'granted' ? { 
+                        '--md-filled-button-container-color': 'var(--md-sys-color-primary)', 
+                        '--md-filled-button-label-text-color': 'var(--md-sys-color-on-primary)' 
+                      } : {})
+                    }}
                   >
-                    <md-icon slot="icon">{notificationPermission === 'granted' ? 'check' : 'notifications'}</md-icon>
-                    {notificationPermission === 'granted' ? tOnboarding.notifGranted : tOnboarding.notifBtn}
+                    <span className="text-lg font-bold">{notificationPermission === 'granted' ? tOnboarding.notifGranted : tOnboarding.notifBtn}</span>
+                    {notificationPermission === 'granted' && <Check className="w-6 h-6 ml-3" />}
                   </md-filled-button>
-
+                  
                   {/* @ts-ignore */}
-                  <md-outlined-button
-                    onClick={handleNext}
-                    style={{ '--md-outlined-button-container-shape': '16px' } as any}
-                  >
-                    {tOnboarding.notifSkip}
+                  <md-outlined-button onClick={handleNext} style={{ '--md-outlined-button-container-shape': '999px', height: '64px' }}>
+                    <span className="text-lg font-bold">{tOnboarding.notifSkip}</span>
                   </md-outlined-button>
-                </div>
+                </motion.div>
               </motion.div>
             )}
 
+            {/* --- STEP 4: SOUNDS --- */}
             {currentStep === 3 && (
               <motion.div
                 key="step-sounds"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="flex flex-col space-y-4"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="flex flex-col h-full space-y-6"
               >
-                <div className="text-center">
-                  <h2 className="text-2xl font-black tracking-tight text-[var(--md-sys-color-on-surface)] mb-1.5 flex items-center justify-center gap-2">
-                    <Volume2 className="w-6 h-6 text-[var(--md-sys-color-primary)]" />
+                <motion.div variants={itemVariants} className="space-y-2">
+                  <h2 className="md3-display-medium font-black tracking-tight text-[var(--md-sys-color-on-surface)] leading-[1.1]">
                     {tOnboarding.soundTitle}
                   </h2>
-                  <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] max-w-sm mx-auto">
+                  <p className="md3-body-medium text-[var(--md-sys-color-on-surface-variant)] font-medium">
                     {tOnboarding.soundDesc}
                   </p>
-                </div>
+                </motion.div>
 
-                {/* Sounds list selector in strict M3 styles */}
-                <div className="grid grid-cols-1 gap-2.5 max-w-sm mx-auto w-full py-2">
+                <motion.div variants={itemVariants} className="grid grid-cols-1 gap-3 w-full py-4">
                   {[
-                    { id: 'chime', name: isMalay ? "Alunan Loceng Chime" : "Acoustic Chime", desc: isMalay ? "Melodi tonal spot premium lembut." : "Soft harmonic spot chime." },
-                    { id: 'soft-chime', name: isMalay ? "Genta Lembut (Soft)" : "Soft Bell Triangle", desc: isMalay ? "Alunan gelombang segitiga hening." : "Quiet ambient acoustic reflection." },
-                    { id: 'ambient-gong', name: isMalay ? "Gong Sufi Kuno" : "Mystical Sufi Gong", desc: isMalay ? "Resonansi gelombang dalam meditasi." : "Deep resonant contemplative gong." },
-                    { id: 'beep', name: isMalay ? "Isyarat Beep Digital" : "Standard Digital Beep", desc: isMalay ? "Makluman standard dwi-frekuensi." : "Dual-frequency retro buzzer alert." }
+                    { id: 'chime', name: isMalay ? "Alunan Loceng Chime" : "Acoustic Chime" },
+                    { id: 'soft-chime', name: isMalay ? "Genta Lembut" : "Soft Bell" },
+                    { id: 'ambient-gong', name: isMalay ? "Gong Sufi Kuno" : "Mystical Sufi Gong" },
+                    { id: 'beep', name: isMalay ? "Isyarat Digital" : "Digital Beep" }
                   ].map((snd) => (
-                    <div 
+                    <motion.div 
                       key={snd.id}
+                      whileHover={{ scale: 0.98 }}
+                      whileTap={{ scale: 0.95 }}
                       onClick={() => setSelectedSound(snd.id)}
                       className={cn(
-                        "p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group",
+                        "p-5 rounded-[28px] border-2 transition-all cursor-pointer flex items-center justify-between",
                         selectedSound === snd.id 
                           ? "bg-[var(--md-sys-color-primary-container)] border-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary-container)]" 
-                          : "bg-[var(--md-sys-color-surface-container-lowest)] border-[var(--md-sys-color-outline-variant)] hover:border-[var(--md-sys-color-outline)] text-[var(--md-sys-color-on-surface)]"
+                          : "bg-[var(--md-sys-color-surface)] border-transparent hover:border-[var(--md-sys-color-outline-variant)] text-[var(--md-sys-color-on-surface)]"
                       )}
                     >
-                      <div className="flex flex-col text-left min-w-0 pr-4">
-                        <span className="text-xs font-bold leading-tight truncate">{snd.name}</span>
-                        <span className="text-[10px] text-[var(--md-sys-color-on-surface-variant)]/60 truncate mt-0.5 leading-none">{snd.desc}</span>
-                      </div>
+                      <span className="text-lg font-bold">{snd.name}</span>
                       
                       {/* @ts-ignore */}
                       <md-icon-button
-                        onClick={(e: any) => {
-                          e.stopPropagation();
-                          playPreviewSound(snd.id);
-                        }}
+                        onClick={(e: any) => { e.stopPropagation(); playPreviewSound(snd.id); }}
                         style={isPlayingSound === snd.id 
-                          ? { '--md-icon-button-state-layer-color': 'var(--md-sys-color-on-tertiary-container)', '--md-icon-button-icon-color': 'var(--md-sys-color-on-tertiary-container)' } as any
-                          : { '--md-icon-button-state-layer-color': 'var(--md-sys-color-on-surface-variant)', '--md-icon-button-icon-color': 'var(--md-sys-color-on-surface-variant)' } as any}
-                        aria-label="Preview Sound Option"
+                          ? { '--md-icon-button-state-layer-color': 'var(--md-sys-color-on-primary-container)', '--md-icon-button-icon-color': 'var(--md-sys-color-on-primary-container)' }
+                          : { '--md-icon-button-state-layer-color': 'var(--md-sys-color-primary)', '--md-icon-button-icon-color': 'var(--md-sys-color-primary)' }}
                       >
-                        {isPlayingSound === snd.id ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
+                        {isPlayingSound === snd.id ? <Pause size={24} /> : <Play size={24} />}
                       </md-icon-button>
-                    </div>
+                    </motion.div>
                   ))}
-                </div>
+                </motion.div>
+                
+                <motion.div variants={itemVariants} className="mt-auto pt-8">
+                  {/* @ts-ignore */}
+                  <md-filled-button onClick={handleNext} style={{ '--md-filled-button-container-shape': '999px', width: '100%', height: '64px' }}>
+                    <span className="text-xl font-bold">{tOnboarding.finishBtn}</span>
+                    <Sparkles className="w-6 h-6 ml-3" />
+                  </md-filled-button>
+                </motion.div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        {/* Footer Navigation Buttons using MWC */}
-        {currentStep > 0 && (
-          <div className="flex items-center justify-between mt-6 pt-4 border-t border-[var(--md-sys-color-outline-variant)]/40 shrink-0 z-10">
-            {/* @ts-ignore */}
-            <md-outlined-button
-              onClick={handleBack}
-              style={{ '--md-outlined-button-container-shape': '12px' } as any}
+        {/* Global Footer Navigation Buttons (Only visible on Step 1, 2) */}
+        <AnimatePresence>
+          {currentStep > 0 && currentStep < stepsCount - 1 && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              className="absolute bottom-6 left-6 right-6 flex items-center justify-between"
             >
-              <md-icon slot="icon">arrow_back</md-icon>
-              {tOnboarding.backBtn}
-            </md-outlined-button>
-            
-            {/* @ts-ignore */}
-            <md-filled-button
-              onClick={handleNext}
-              style={{ '--md-filled-button-container-shape': '12px' } as any}
-            >
-              {currentStep === stepsCount - 1 ? (
-                <>
-                  {tOnboarding.finishBtn}
-                  <md-icon slot="icon">check</md-icon>
-                </>
-              ) : (
-                <>
-                  {tOnboarding.nextBtn}
-                  <md-icon slot="icon">arrow_forward</md-icon>
-                </>
-              )}
-            </md-filled-button>
-          </div>
-        )}
-      </div>
+              {/* @ts-ignore */}
+              <md-outlined-button onClick={handleBack} style={{ '--md-outlined-button-container-shape': '999px', height: '48px' }}>
+                <span className="font-bold">{tOnboarding.backBtn}</span>
+              </md-outlined-button>
+              
+              {/* @ts-ignore */}
+              <md-filled-button onClick={handleNext} style={{ '--md-filled-button-container-shape': '999px', height: '48px' }}>
+                <span className="font-bold">{tOnboarding.nextBtn}</span>
+              </md-filled-button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
     </div>
   );
 }

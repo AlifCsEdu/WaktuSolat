@@ -498,7 +498,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <main className="flex-1 w-full max-w-[2560px] mx-auto relative z-10 flex flex-col lg:flex-row px-4 sm:px-8 lg:px-12 xl:px-16 py-4 sm:py-6 lg:py-8 gap-8 lg:gap-12 xl:gap-16 lg:overflow-hidden min-h-0">
+      <main className="flex-1 w-full max-w-[2560px] mx-auto relative z-10 flex flex-col lg:flex-row px-[var(--sys-spacing-edge)] py-[var(--sys-spacing-edge)] gap-[var(--sys-spacing-section)] lg:overflow-hidden min-h-0">
         <LocationToast 
           promptZone={promptZone}
           promptLocationName={promptLocationName}
@@ -509,7 +509,7 @@ export default function App() {
         />
         {/* Left Panel: Analog/Digital Clocks */}
         <section className="flex flex-col w-full lg:w-[50%] xl:w-[55%] lg:overflow-visible pb-2 lg:pb-0 min-h-0 relative z-20">
-          <header className="relative flex items-center gap-3 z-[60] mb-2 flex-wrap shrink-0">
+          <header className="relative flex items-center gap-3 z-[60] mb-6 p-2.5 bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline-variant)]/50 rounded-full shadow-md shrink-0 flex-wrap lg:w-max">
             <ZoneSelector
               selectedZone={selectedZone}
               onZoneSelect={handleManualZoneSelect}
@@ -519,20 +519,22 @@ export default function App() {
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="ml-auto sm:ml-0 shrink-0 inline-flex w-12 h-12 lg:w-[56px] lg:h-[56px]"
+              className="ml-auto sm:ml-2 shrink-0 inline-flex w-12 h-12 lg:w-[48px] lg:h-[48px]"
             >
               {/* @ts-ignore */}
               <md-filled-tonal-icon-button
                 onClick={() => setShowCalendar(true)}
                 title={t("calendarLabel")}
                 aria-label={t("calendarLabel")}
-                style={{ '--md-filled-tonal-icon-button-container-shape': '24px', width: '100%', height: '100%' }}
+                style={{ '--md-filled-tonal-icon-button-container-shape': '999px', width: '100%', height: '100%' }}
               >
-                <CalendarRange className="w-5 h-5 lg:w-[22px] lg:h-[22px] stroke-[2.5]" />
+                <CalendarRange className="w-5 h-5 lg:w-[20px] lg:h-[20px] stroke-[2.5]" />
               </md-filled-tonal-icon-button>
             </motion.div>
-            <ThemeControl />
-            <FullScreenToggle />
+            <div className="flex gap-2 shrink-0 ml-auto sm:ml-0 bg-[var(--md-sys-color-surface-container-highest)] p-1.5 rounded-full">
+              <ThemeControl />
+              <FullScreenToggle />
+            </div>
           </header>
 
           <div className="flex-1 flex flex-col justify-center lg:justify-start xl:justify-center min-h-0 lg:overflow-y-auto no-scrollbar pt-1">
