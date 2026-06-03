@@ -70,13 +70,13 @@ export function EventsListView({ currentDate, type }: EventsListViewProps) {
             whileTap={!isPast ? { scale: 0.96 } : {}}
             key={`${evt.date.toISOString()}-${evt.title}`}
             className={cn(
-               "flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5 p-4 sm:p-5 rounded-[22px] border transition-all duration-300 relative overflow-hidden select-none shadow-xs hover:shadow-md cursor-default",
+               "flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5 p-4 sm:p-5 rounded-[28px] border transition-all duration-300 relative overflow-hidden select-none shadow-sm hover:shadow-md cursor-default",
                isTodayEvent 
-                 ? "bg-[var(--md-sys-color-primary-container)]/15 border-[var(--md-sys-color-primary)] ring-2 ring-[var(--md-sys-color-primary)]/20 shadow-md" 
+                 ? "bg-[var(--md-sys-color-primary-container)]/20 border-[var(--md-sys-color-primary)] ring-2 ring-[var(--md-sys-color-primary)]/20 shadow-md" 
                  : isPast 
                    ? "bg-[var(--md-sys-color-surface-variant)]/10 border-[var(--md-sys-color-outline)]/4 opacity-45 grayscale-[25%]"
-                   : "bg-[var(--md-sys-color-surface-container-low)] border-[var(--md-sys-color-outline)]/8 hover:border-[var(--md-sys-color-primary)]/25",
-               visualStyle === "glass" && "bg-[var(--glass-bg)]/40 backdrop-blur-md border-[var(--glass-border)]",
+                   : "bg-[var(--md-sys-color-surface-container-low)] border-[var(--md-sys-color-outline)]/5 hover:border-[var(--md-sys-color-primary)]/25 hover:bg-[var(--md-sys-color-surface-container)]",
+               visualStyle === "glass" && "border-none",
                visualStyle === "retro" && "border-2 border-[var(--md-sys-color-on-surface)] rounded-none shadow-[2px_2px_0px_0px_var(--md-sys-color-on-surface)]"
             )}
           >

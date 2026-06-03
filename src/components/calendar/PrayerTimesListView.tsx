@@ -67,10 +67,10 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: "spring", stiffness: 350, damping: 24 }}
           className={cn(
-            "bg-[var(--md-sys-color-surface-container)] rounded-[28px] p-6 sm:p-10 flex flex-col items-center text-center gap-4 relative overflow-hidden border border-[var(--md-sys-color-outline)]/8 shadow-sm transition-all duration-300",
+            "bg-[var(--md-sys-color-surface-container)] rounded-[32px] sm:rounded-[40px] p-6 sm:p-10 flex flex-col items-center text-center gap-4 relative overflow-hidden shadow-sm transition-all duration-300",
             isToday && "bg-gradient-to-br from-[var(--md-sys-color-primary-container)] to-[var(--md-sys-color-primary-container)]/40 ring-4 ring-[var(--md-sys-color-primary)]/20 shadow-md",
-            visualStyle === "glass" && "bg-[var(--glass-bg)] backdrop-blur-md border-[var(--glass-border)]",
-            visualStyle === "retro" && "border-[3px] border-[var(--md-sys-color-on-surface)] rounded-none shadow-[4px_4px_0px_0px_var(--md-sys-color-on-surface)]"
+            visualStyle === "glass" && "border-none",
+            visualStyle === "retro" && "border-[4px] border-[var(--md-sys-color-on-surface)] rounded-none shadow-[8px_8px_0px_0px_var(--md-sys-color-on-surface)]"
           )}>
           {isToday && <div className="absolute top-0 left-0 w-full h-1.5 bg-[var(--md-sys-color-primary)] shadow-[0_0_12px_var(--md-sys-color-primary)]" />}
           
@@ -120,10 +120,10 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
                 whileTap={{ scale: 0.95 }}
                 onClick={() => onPrayerSelect({ key: k as PrayerKey, time: timeStr.substring(0, 5), dateValue: day.date, hijriValue: day.hijri })}
                 className={cn(
-                  "relative bg-[var(--md-sys-color-surface-container)] rounded-[24px] border border-[var(--md-sys-color-outline)]/8 p-5 flex flex-col items-center gap-3.5 overflow-hidden shadow-xs hover:shadow-md cursor-pointer transition-all duration-350 focus:outline-none focus:ring-2 focus:ring-[var(--md-sys-color-primary)]",
+                  "relative bg-[var(--md-sys-color-surface-container)] rounded-[32px] sm:rounded-[40px] border border-[var(--md-sys-color-outline)]/5 p-5 sm:p-6 flex flex-col items-center gap-3.5 overflow-hidden shadow-sm hover:shadow-md cursor-pointer transition-all duration-350 focus:outline-none focus:ring-2 focus:ring-[var(--md-sys-color-primary)]",
                   isToday && "bg-[var(--md-sys-color-primary-container)]/10 ring-1 ring-[var(--md-sys-color-primary)]/20",
-                  visualStyle === "glass" && "bg-[var(--glass-bg)] backdrop-blur-md border-[var(--glass-border)]",
-                  visualStyle === "retro" && "border-2 border-[var(--md-sys-color-on-surface)] rounded-none shadow-[2px_2px_0px_0px_var(--md-sys-color-on-surface)]"
+                  visualStyle === "glass" && "border-none",
+                  visualStyle === "retro" && "border-[3px] border-[var(--md-sys-color-on-surface)] rounded-none shadow-[4px_4px_0px_0px_var(--md-sys-color-on-surface)]"
                 )}
               >
                 {/* @ts-ignore */}

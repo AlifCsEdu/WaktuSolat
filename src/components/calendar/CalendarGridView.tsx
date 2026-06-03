@@ -78,11 +78,19 @@ export function CalendarGridView({ currentDate, monthData, onSelectDay, isLoadin
       <div className="flex-1 min-h-0 w-full overflow-hidden relative">
         <motion.div 
           key={currentDate.toISOString()} // Key resets animation on month change
-          initial={{ opacity: 0, x: 10 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }} // Highly optimized out-quintic bezier
-          style={{ willChange: "transform, opacity" }}
-          className="grid grid-cols-7 grid-rows-6 gap-1.5 sm:gap-2.5 h-full w-full justify-items-center items-center sm:justify-items-stretch sm:items-stretch"
+          initial="hidden"
+          animate="visible"
+          variants={{
+            hidden: { opacity: 0 },
+            visible: {
+              opacity: 1,
+              transition: {
+                staggerChildren: 0.015,
+                delayChildren: 0.05
+              }
+            }
+          }}
+          className="grid grid-cols-7 grid-rows-6 gap-1.5 sm:gap-2 h-full w-full justify-items-center items-center sm:justify-items-stretch sm:items-stretch"
         >
           {days.map((d, i) => {
             const isCurrentMonth = isSameMonth(d, monthStart);
@@ -106,37 +114,48 @@ export function CalendarGridView({ currentDate, monthData, onSelectDay, isLoadin
             const hasPublicHoliday = events.some(e => e.type === 'public');
 
             return (
-              <div
+              <motion.div
                 key={d.toISOString()}
+                variants={{
+                  hidden: { opacity: 0, scale: 0.8, y: 10 },
+                  visible: { 
+                    opacity: 1, 
+                    scale: 1, 
+                    y: 0,
+                    transition: { type: "spring", stiffness: 400, damping: 25 }
+                  }
+                }}
+                whileHover={{ scale: 0.96 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={() => {
                   if (pData) onSelectDay(pData);
                 }}
                 className={cn(
-                  "relative flex flex-col items-center sm:items-stretch transition-all border border-[var(--md-sys-color-outline)]/8 select-none group cursor-pointer",
-                  // Mobile Sizing: Compact Circle. Desktop Sizing: Spacious Square tile
-                  "w-full aspect-square max-w-[40px] sm:max-w-none sm:aspect-auto sm:h-full justify-center sm:justify-between p-1 sm:p-2 rounded-full sm:rounded-2xl",
+                  "relative flex flex-col items-center sm:items-stretch transition-colors border border-[var(--md-sys-color-outline)]/5 select-none group cursor-pointer overflow-hidden",
+                  // Sizing: Very squircular/pill shaped
+                  "w-full aspect-square max-w-[44px] sm:max-w-none sm:aspect-auto sm:h-full justify-center sm:justify-between p-1.5 sm:p-2.5",
+                  "rounded-full sm:rounded-[24px] lg:rounded-[32px]",
                   // Colors
                   isCurrentMonth 
                     ? "text-[var(--md-sys-color-on-surface)]" 
-                    : "opacity-35 text-[var(--md-sys-color-on-surface-variant)]/20 hover:opacity-50",
+                    : "opacity-35 text-[var(--md-sys-color-on-surface-variant)]/20",
                   isCurrentDay 
                     ? "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-md shadow-[var(--md-sys-color-primary)]/20 font-bold z-[2]"
                     : isCurrentMonth
-                      ? "bg-[var(--md-sys-color-surface-container)] hover:bg-[var(--md-sys-color-primary-container)]/10"
-                      : "bg-[var(--md-sys-color-surface-container-lowest)]/40",
+                      ? "bg-[var(--md-sys-color-surface-container)] hover:bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-surface)] hover:text-[var(--md-sys-color-on-primary-container)]"
+                      : "bg-transparent",
                   // Visual Styles adaptation
                   visualStyle === "retro" && "border-2 border-[var(--md-sys-color-on-surface)] rounded-none shadow-[2px_2px_0px_0px_var(--md-sys-color-on-surface)] sm:hover:translate-y-[-2px] sm:hover:shadow-[4px_4px_0px_0px_var(--md-sys-color-on-surface)]",
-                  visualStyle === "glass" && isCurrentMonth && !isCurrentDay && "bg-[var(--glass-bg)] backdrop-blur-[var(--glass-blur)] border-[var(--glass-border)]",
+                  visualStyle === "glass" && "border-none",
                   visualStyle === "soft" && !isCurrentDay && "shadow-[var(--soft-shadow-light)]"
                 )}
               >
-                {/* Top Row: Date labels (centered on mobile, split on desktop) */}
-                <div className="flex justify-center sm:justify-between items-center sm:items-start shrink-0 w-full">
+                {/* Top Row: Date labels */}
+                <div className="flex justify-center sm:justify-between items-center sm:items-start shrink-0 w-full z-10 relative">
                   <span className={cn(
-                    "text-xs sm:text-sm lg:text-lg font-black tabular-nums tracking-tighter transition-all",
-                    isCurrentDay ? "text-[var(--md-sys-color-on-primary)] scale-110" : !isCurrentMonth ? "text-[var(--md-sys-color-on-surface-variant)]/40" : "",
-                    !isCurrentDay && hasPublicHoliday && isCurrentMonth && "text-[var(--md-sys-color-error)]",
-                    isCurrentMonth && !isCurrentDay && !hasPublicHoliday && "group-hover:text-[var(--md-sys-color-primary)]"
+                    "text-sm sm:text-lg lg:text-2xl font-black tabular-nums tracking-tighter transition-all",
+                    isCurrentDay ? "text-[var(--md-sys-color-on-primary)]" : !isCurrentMonth ? "text-[var(--md-sys-color-on-surface-variant)]/40" : "",
+                    !isCurrentDay && hasPublicHoliday && isCurrentMonth && "text-[var(--md-sys-color-error)] group-hover:text-[var(--md-sys-color-on-error-container)]",
                   )}>
                     {formattedDate}
                   </span>
@@ -151,43 +170,47 @@ export function CalendarGridView({ currentDate, monthData, onSelectDay, isLoadin
                   )}
                 </div>
                 
-                {/* Event Indicators Row (centered under date) */}
-                <div className="flex flex-col justify-end w-full shrink-0 mt-0.5 sm:mt-1">
-                  {/* Circle Dots representing holidays (perfect for mobile & tablet/desktop) */}
-                  <div className="flex gap-1 justify-center sm:justify-start items-center h-1.5 overflow-hidden">
-                    {events.map((evt, idx) => (
-                      <div
-                        key={idx}
-                        className={cn(
-                          "w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full shrink-0",
-                          evt.type === 'public' 
-                            ? isCurrentDay ? "bg-white" : "bg-[var(--md-sys-color-error)]" 
-                            : isCurrentDay ? "bg-white" : "bg-[var(--md-sys-color-primary)]"
-                        )}
-                        title={evt.title}
-                      />
-                    ))}
-                  </div>
-
-                  {/* Horizontal pill badge describing first holiday on large screens */}
-                  <div className="hidden lg:flex flex-col gap-1 w-full mt-1.5 overflow-hidden">
-                    {events.slice(0, 1).map((evt, idx) => (
+                {/* Event Indicators Row */}
+                <div className="flex flex-col justify-end w-full shrink-0 mt-0.5 sm:mt-auto z-10 relative">
+                  {/* Distinctive Badges for desktop */}
+                  <div className="hidden lg:flex flex-col gap-1 w-full overflow-hidden">
+                    {events.slice(0, 2).map((evt, idx) => (
                       <div 
                         key={idx} 
                         className={cn(
-                          "text-[8px] px-1 py-0.5 rounded-md truncate font-black tracking-wider uppercase text-white shadow-xs w-full text-left select-none",
+                          "text-[9px] px-1.5 py-0.5 rounded-[6px] truncate font-black tracking-wider uppercase shadow-xs w-full text-left select-none",
                           evt.type === 'public' 
-                            ? "bg-[var(--md-sys-color-error)]" 
-                            : "bg-[var(--md-sys-color-primary)]"
+                            ? isCurrentDay ? "bg-white/20 text-white" : "bg-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)]" 
+                            : isCurrentDay ? "bg-black/10 text-white" : "bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]"
                         )}
                         title={evt.title}
                       >
                         {evt.title}
                       </div>
                     ))}
+                    {events.length > 2 && (
+                      <div className="text-[9px] px-1 font-black text-[var(--md-sys-color-on-surface-variant)]/60">
+                        +{events.length - 2} more
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Expressive Dots for mobile/tablet */}
+                  <div className="flex lg:hidden gap-1 justify-center sm:justify-start items-center h-2 overflow-hidden mt-1">
+                    {events.slice(0, 3).map((evt, idx) => (
+                      <div
+                        key={idx}
+                        className={cn(
+                          "w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full shrink-0",
+                          evt.type === 'public' 
+                            ? isCurrentDay ? "bg-white" : "bg-[var(--md-sys-color-error)]" 
+                            : isCurrentDay ? "bg-white/80" : "bg-[var(--md-sys-color-tertiary)]"
+                        )}
+                      />
+                    ))}
                   </div>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </motion.div>
