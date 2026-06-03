@@ -540,21 +540,23 @@ export default function App() {
               </md-filled-tonal-icon-button>
             </motion.div>
             <div className="flex gap-2 shrink-0 ml-auto sm:ml-0 bg-[var(--md-sys-color-surface-container-highest)] p-1.5 rounded-full">
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="inline-flex shrink-0 w-12 h-12 lg:w-[56px] lg:h-[56px]"
-              >
-                {/* @ts-ignore */}
-                <md-filled-tonal-icon-button
-                  onClick={() => setIsTvMode(true)}
-                  title={settings.language === "ms" ? "Mod TV Masjid" : "Mosque TV Mode"}
-                  aria-label={settings.language === "ms" ? "Mod TV Masjid" : "Mosque TV Mode"}
-                  style={{ '--md-filled-tonal-icon-button-container-shape': '24px', width: '100%', height: '100%' }}
+              {settings.showTvShortcut && (
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="inline-flex shrink-0 w-12 h-12 lg:w-[56px] lg:h-[56px]"
                 >
-                  <Tv size={24} className="stroke-[2.5]" />
-                </md-filled-tonal-icon-button>
-              </motion.div>
+                  {/* @ts-ignore */}
+                  <md-filled-tonal-icon-button
+                    onClick={() => setIsTvMode(true)}
+                    title={settings.language === "ms" ? "Mod TV Masjid" : "Mosque TV Mode"}
+                    aria-label={settings.language === "ms" ? "Mod TV Masjid" : "Mosque TV Mode"}
+                    style={{ '--md-filled-tonal-icon-button-container-shape': '24px', width: '100%', height: '100%' }}
+                  >
+                    <Tv size={24} className="stroke-[2.5]" />
+                  </md-filled-tonal-icon-button>
+                </motion.div>
+              )}
               <ThemeControl />
               <FullScreenToggle />
             </div>
@@ -719,6 +721,8 @@ export default function App() {
           iqamahCountdownActive={iqamahCountdownActive}
           iqamahRemainingSeconds={iqamahRemainingSeconds}
           iqamahTotalSeconds={iqamahTotalSeconds}
+          activeWallpaperUrl={activeWallpaperUrl}
+          computedWallpaperDim={computedWallpaperDim}
         />
       )}
     </div>

@@ -100,6 +100,8 @@ export interface GeneralSettings {
   tvModeEnabled?: boolean;
   tvModeReminderInterval?: number;
   tvModeCustomReminders?: string;
+  showTvShortcut?: boolean;
+  mosqueName?: string;
 }
 
 // Default preferences
@@ -158,5 +160,7 @@ export const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
   weatherProvider: 'best_match',
   tvModeEnabled: false,
   tvModeReminderInterval: 15,
-  tvModeCustomReminders: ""
+  tvModeCustomReminders: "",
+  showTvShortcut: false,
+  mosqueName: ""
 };

@@ -1767,7 +1767,7 @@ export function SettingsModal({
       tab: "mosque",
       categoryLabel: settings.language === "ms" ? "MASJID > MOD TV" : "MOSQUE > TV MODE",
       title: settings.language === "ms" ? "Mod TV Masjid" : "Mosque TV Mode",
-      keywords: "mosque tv mode enabled custom reminders interval hadith display",
+      keywords: "mosque tv mode enabled custom reminders interval hadith display shortcut branding name",
       render: () => (
         <div className={cn("relative p-6 sm:p-8 rounded-[var(--md-sys-shape-corner-extra-large)] space-y-6 overflow-hidden", getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface-container-high)] ring-1 ring-[var(--md-sys-color-outline)]/10 shadow-sm"))}>
           <md-elevation></md-elevation>
@@ -1786,7 +1786,27 @@ export function SettingsModal({
           </div>
 
           <div className="space-y-4 pt-2 border-t border-[var(--md-sys-color-outline)]/10 relative z-10">
+            {/* TV Shortcut visibility toggle */}
             <div className="flex items-center justify-between p-1">
+              <div>
+                <h4 className="text-sm font-bold text-[var(--md-sys-color-on-surface)]">
+                  {t("showTvShortcut" as any)}
+                </h4>
+                <p className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] leading-relaxed mt-0.5 max-w-[200px] sm:max-w-xs">
+                  {t("showTvShortcutDesc" as any)}
+                </p>
+              </div>
+              {/* @ts-ignore */}
+              <md-switch
+                selected={!!settings.showTvShortcut}
+                onChange={(e: any) =>
+                  updateSettings({ showTvShortcut: e.target.selected })
+                }
+                icons
+              ></md-switch>
+            </div>
+
+            <div className="flex items-center justify-between p-1 border-t border-[var(--md-sys-color-outline)]/5 pt-3">
               <div>
                 <h4 className="text-sm font-bold text-[var(--md-sys-color-on-surface)]">
                   {t("tvModeEnabled" as any)}
@@ -1814,6 +1834,25 @@ export function SettingsModal({
                 exit={{ opacity: 0, height: 0 }}
                 className="space-y-6 pt-4 border-t border-[var(--md-sys-color-outline)]/5 mt-4"
               >
+                {/* Mosque custom name/branding input */}
+                <div className="flex flex-col p-4 bg-[var(--md-sys-color-surface)] rounded-[2rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5">
+                  <span className="font-bold text-[var(--md-sys-color-on-surface)] text-sm block">
+                    {t("mosqueNameLabel" as any)}
+                  </span>
+                  <span className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] block mt-0.5 leading-relaxed">
+                    {settings.language === "ms"
+                      ? "Masukkan nama masjid atau surau untuk dipaparkan pada kepala Mod TV (Contoh: Masjid Negara)."
+                      : "Enter mosque or surau name to show in the TV Mode header (e.g. National Mosque)."}
+                  </span>
+                  <input
+                    type="text"
+                    value={settings.mosqueName ?? ""}
+                    onChange={(e) => updateSettings({ mosqueName: e.target.value })}
+                    placeholder={t("mosqueNamePlaceholder" as any)}
+                    className="w-full mt-3 px-4 py-3 text-sm rounded-2xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 focus:border-[var(--md-sys-color-primary)] focus:ring-1 focus:ring-[var(--md-sys-color-primary)] outline-none transition-all placeholder-[var(--md-sys-color-on-surface-variant)]/30 font-sans font-medium"
+                  />
+                </div>
+
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-[var(--md-sys-color-surface)] rounded-[2rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5 gap-3">
                   <div>
                     <span className="font-bold text-[var(--md-sys-color-on-surface)] text-sm block">

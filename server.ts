@@ -4,7 +4,7 @@ import path from "path";
 
 async function startServer() {
   const app = express();
-  const PORT = 3001;
+  const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
 
   // API routes FIRST
   // Simple in-memory geocoding cache

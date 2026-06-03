@@ -35,6 +35,8 @@ interface TvModeViewProps {
   iqamahCountdownActive: boolean;
   iqamahRemainingSeconds: number;
   iqamahTotalSeconds: number;
+  activeWallpaperUrl?: string | null;
+  computedWallpaperDim?: number;
 }
 
 export function TvModeView({
@@ -52,11 +54,22 @@ export function TvModeView({
   iqamahCountdownActive,
   iqamahRemainingSeconds,
   iqamahTotalSeconds,
+  activeWallpaperUrl,
+  computedWallpaperDim,
 }: TvModeViewProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isWakeLockSupported, setIsWakeLockSupported] = useState(false);
   const [isWakeLockActive, setIsWakeLockActive] = useState(false);
+  const [showEscToast, setShowEscToast] = useState(true);
   const isMalay = settings.language === "ms";
+
+  // Hide the ESC toast after 5 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowEscToast(false);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Screen Wake Lock API Integration
   useEffect(() => {
@@ -236,18 +249,59 @@ export function TvModeView({
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col bg-[var(--md-sys-color-surface-container-lowest)] text-[var(--md-sys-color-on-surface)] select-none overflow-hidden font-sans">
       
+      {/* Dynamic Wallpaper Overlay Layer */}
+      {settings.wallpaperEnabled && activeWallpaperUrl && (
+        <div className="app-wallpaper-layer absolute inset-0 z-0 overflow-hidden pointer-events-none">
+          <img
+            src={activeWallpaperUrl}
+            alt=""
+            className="app-wallpaper-image"
+            style={{
+              filter: `blur(${settings.wallpaperBlur ?? 10}px)`,
+            }}
+          />
+          {settings.wallpaperVignette && <div className="app-wallpaper-vignette" />}
+          <div
+            className="app-wallpaper-overlay"
+            style={{
+              backgroundColor:
+                settings.wallpaperOverlayStyle === 'dark'
+                  ? '#0f172a'
+                  : settings.wallpaperOverlayStyle === 'light'
+                  ? '#ffffff'
+                  : 'var(--md-sys-color-background)',
+              opacity: computedWallpaperDim ?? 0.4,
+            }}
+          />
+        </div>
+      )}
+
       {/* Dynamic Background Light Orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         <div className="absolute -top-[10%] -left-[10%] w-[45vw] h-[45vw] bg-[var(--md-sys-color-primary)]/8 rounded-full blur-[100px]" />
         <div className="absolute -bottom-[15%] -right-[15%] w-[50vw] h-[50vw] bg-[var(--md-sys-color-secondary)]/8 rounded-full blur-[120px]" />
       </div>
 
+      {/* ESC exit instruction overlay */}
+      <AnimatePresence>
+        {showEscToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 30, scale: 0.95 }}
+            className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[10000] px-6 py-3 rounded-full bg-[var(--md-sys-color-inverse-surface)] text-[var(--md-sys-color-inverse-on-surface)] text-xs font-black shadow-2xl border border-[var(--md-sys-color-outline-variant)]/20 tracking-widest uppercase text-center cursor-default"
+          >
+            {isMalay ? "Tekan ESC untuk keluar" : "Press ESC to exit TV mode"}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Header bar */}
       <div className="relative z-10 flex items-center justify-between px-10 py-5 bg-[var(--md-sys-color-surface-container-low)]/40 backdrop-blur-xl border-b border-[var(--md-sys-color-outline-variant)]/20 shrink-0">
         <div className="flex items-center gap-6">
           <h1 className="text-3xl font-black tracking-tighter text-[var(--md-sys-color-primary)] flex items-center gap-3">
             <Tv className="w-8 h-8 text-[var(--md-sys-color-primary)]" />
-            <span>AlurWaktu TV</span>
+            <span>{settings.mosqueName || "AlurWaktu TV"}</span>
           </h1>
           <div className="flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[var(--md-sys-color-surface-container-high)] text-sm font-bold border border-[var(--md-sys-color-outline-variant)]/40">
             <MapPin size={16} className="text-[var(--md-sys-color-primary)]" />
@@ -415,7 +469,7 @@ export function TvModeView({
                     isCurrent
                       ? "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] border-[var(--md-sys-color-primary)]/10 shadow-lg scale-[1.02] z-10"
                       : isNext
-                      ? "bg-[var(--md-sys-color-primary-container)]/30 text-[var(--md-sys-color-on-primary-container)] border-[var(--md-sys-color-primary)]/20"
+                      ? "bg-[var(--md-sys-color-primary-container)]/35 text-[var(--md-sys-color-on-primary-container)] border-[var(--md-sys-color-primary)]/30 border-l-8 border-l-[var(--md-sys-color-primary)] shadow-sm"
                       : "bg-[var(--md-sys-color-surface)]/40 border-transparent hover:bg-[var(--md-sys-color-surface-container-high)]/60 hover:border-[var(--md-sys-color-outline-variant)]/30"
                   )}
                 >
@@ -434,6 +488,13 @@ export function TvModeView({
                     {isCurrent && (
                       <span className="px-3 py-1 rounded-full bg-[var(--md-sys-color-on-primary)] text-[var(--md-sys-color-primary)] text-[9px] font-black tracking-widest uppercase">
                         {isMalay ? "SEKARANG" : "ACTIVE"}
+                      </span>
+                    )}
+                    
+                    {/* Next prayer highlight badge */}
+                    {isNext && (
+                      <span className="px-2.5 py-1 rounded-full bg-[var(--md-sys-color-primary)]/20 text-[var(--md-sys-color-primary)] text-[9px] font-black tracking-widest uppercase animate-pulse">
+                        {isMalay ? "SELEPAS INI" : "UP NEXT"}
                       </span>
                     )}
                   </div>
