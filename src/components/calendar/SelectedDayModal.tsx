@@ -236,6 +236,7 @@ export function SelectedDayModal({ day, onClose, onPrayerSelect }: SelectedDayMo
             >
               {timesToDisplay.map((k) => {
                 const Icon = PRAYER_ICONS[k] as React.ComponentType<any>;
+                const isNext = nextPrayerInfo && nextPrayerInfo.name === k;
                 return (
                   <motion.button
                     key={k}
@@ -252,14 +253,25 @@ export function SelectedDayModal({ day, onClose, onPrayerSelect }: SelectedDayMo
                     whileTap={{ scale: 0.95 }}
                     onClick={() => onPrayerSelect(k)}
                     className={cn(
-                      "flex flex-col items-start justify-center p-4 sm:p-5 bg-[var(--md-sys-color-surface-container-low)] border border-[var(--md-sys-color-outline)]/5 hover:border-[var(--md-sys-color-primary)]/30 hover:bg-[var(--md-sys-color-primary-container)]/10 rounded-[24px] sm:rounded-[32px] transition-colors duration-250 group cursor-pointer shadow-sm relative overflow-hidden",
-                      visualStyle === "glass" && "border-none",
-                      visualStyle === "retro" && "border-[3px] border-[var(--md-sys-color-on-surface)] rounded-none shadow-[4px_4px_0px_0px_var(--md-sys-color-on-surface)]"
+                      "flex flex-col items-start justify-center p-4 sm:p-5 border transition-colors duration-250 group cursor-pointer shadow-sm relative overflow-hidden",
+                      isNext
+                        ? "bg-[var(--md-sys-color-primary-container)]/10 border-[var(--md-sys-color-primary)]/40 ring-1 ring-[var(--md-sys-color-primary)]/30 hover:bg-[var(--md-sys-color-primary-container)]/25"
+                        : "bg-[var(--md-sys-color-surface-container-low)] border-[var(--md-sys-color-outline)]/5 hover:border-[var(--md-sys-color-primary)]/30 hover:bg-[var(--md-sys-color-primary-container)]/10",
+                      // Visual styles overrides
+                      visualStyle === "glass" && "border-none shadow-none",
+                      visualStyle === "retro" && "border-[3px] border-[var(--md-sys-color-on-surface)] rounded-none shadow-[4px_4px_0px_0px_var(--md-sys-color-on-surface)]",
+                      // Corner roundness scaling
+                      visualStyle !== "retro" && "rounded-[24px] sm:rounded-[32px]"
                     )}
                   >
                     {/* @ts-ignore */}
                     <md-ripple></md-ripple>
-                    <Icon size={24} strokeWidth={iconStroke} className="text-[var(--md-sys-color-primary)] opacity-70 group-hover:opacity-100 mb-2 sm:mb-3 shrink-0 transition-opacity" />
+                    {isNext && (
+                      <span className="absolute top-3 right-3 px-2 py-0.5 bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] rounded-md text-[8px] font-black uppercase tracking-wider shadow-xs z-10">
+                        {isMalay ? "Seterusnya" : "Next"}
+                      </span>
+                    )}
+                    <Icon size={24} strokeWidth={iconStroke} className={cn("opacity-70 group-hover:opacity-100 mb-2 sm:mb-3 shrink-0 transition-opacity", isNext ? "text-[var(--md-sys-color-primary)] opacity-100" : "text-[var(--md-sys-color-primary)]")} />
                     <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-[var(--md-sys-color-on-surface-variant)]">{t(k)}</span>
                     <span className="text-2xl sm:text-3xl font-black font-mono text-[var(--md-sys-color-on-surface)] mt-1 tracking-tighter">{day[k] ? day[k].substring(0, 5) : "--:--"}</span>
                     

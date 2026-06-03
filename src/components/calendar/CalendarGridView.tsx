@@ -157,7 +157,7 @@ export function CalendarGridView({ currentDate, monthData, onSelectDay, isLoadin
                   backgroundImage: !isCurrentMonth
                     ? "radial-gradient(var(--md-sys-color-outline-variant) 1px, transparent 1px)"
                     : isWeekend && !isCurrentDay
-                      ? "repeating-linear-gradient(45deg, var(--md-sys-color-primary-container)/8 0, var(--md-sys-color-primary-container)/8 1.5px, transparent 1.5px, transparent 8px)"
+                      ? "repeating-linear-gradient(45deg, color-mix(in srgb, var(--md-sys-color-primary-container) 8%, transparent) 0, color-mix(in srgb, var(--md-sys-color-primary-container) 8%, transparent) 1.5px, transparent 1.5px, transparent 8px)"
                       : undefined,
                   backgroundSize: !isCurrentMonth ? "8px 8px" : undefined
                 }}
@@ -176,8 +176,10 @@ export function CalendarGridView({ currentDate, monthData, onSelectDay, isLoadin
                   
                   {hijriParts && isCurrentMonth && (
                     <span className={cn(
-                      "hidden sm:inline text-[9px] font-black opacity-50 tabular-nums group-hover:text-[var(--md-sys-color-primary)] transition-colors",
-                      isCurrentDay ? "text-[var(--md-sys-color-on-primary)] opacity-80" : "text-[var(--md-sys-color-on-surface-variant)]"
+                      "hidden sm:inline text-[9px] font-black opacity-50 tabular-nums transition-colors",
+                      isCurrentDay 
+                        ? "text-[var(--md-sys-color-on-primary)] opacity-80" 
+                        : "text-[var(--md-sys-color-on-surface-variant)] group-hover:text-[var(--md-sys-color-primary)]"
                     )}>
                        {parseInt(hijriParts[2], 10)}
                     </span>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { parse, isSameWeek, format } from "date-fns";
 import { ms, enUS } from "date-fns/locale";
@@ -26,6 +26,51 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
 
   // State to track individual row copying success
   const [copiedRowDate, setCopiedRowDate] = useState<string | null>(null);
+
+  // State to track next prayer key for today's daily view
+  const [nextPrayerKey, setNextPrayerKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (view !== "daily" || data.length === 0) {
+      setNextPrayerKey(null);
+      return;
+    }
+    const day = data[0];
+    if (!day || day.date !== format(new Date(), "dd-MMM-yyyy")) {
+      setNextPrayerKey(null);
+      return;
+    }
+
+    const parsePrayerTime = (timeStr: string, date: Date) => {
+      if (!timeStr) return null;
+      const [h, m, s] = timeStr.split(":").map(Number);
+      const d = new Date(date);
+      d.setHours(h, m, s || 0, 0);
+      return d;
+    };
+
+    const updateTimer = () => {
+      const now = new Date();
+      const prayers = ["imsak", "fajr", "syuruk", "dhuhr", "asr", "maghrib", "isha"] as const;
+      
+      let nextKey: string | null = null;
+      for (const k of prayers) {
+        const timeStr = day[k];
+        if (timeStr) {
+          const pTime = parsePrayerTime(timeStr, now);
+          if (pTime && pTime > now) {
+            nextKey = k;
+            break;
+          }
+        }
+      }
+      setNextPrayerKey(nextKey);
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 60000);
+    return () => clearInterval(interval);
+  }, [data, view]);
 
   const handleCopyDaySchedule = (day: PrayerData) => {
     const formattedHijri = getHijriFormatted(day.date, settings.hijriMethod, settings.hijriAdjustment, settings.hijriFormat || "both", settings.language, day.hijri);
@@ -110,6 +155,7 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
             const Icon = PRAYER_ICONS[k] as React.ComponentType<any>;
             const timeStr = day[k as keyof PrayerData] as string;
             if (!timeStr || !Icon) return null;
+            const isNext = nextPrayerKey === k;
             return (
               <motion.button
                 key={k}
@@ -120,20 +166,37 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
                 whileTap={{ scale: 0.95 }}
                 onClick={() => onPrayerSelect({ key: k as PrayerKey, time: timeStr.substring(0, 5), dateValue: day.date, hijriValue: day.hijri })}
                 className={cn(
-                  "relative bg-[var(--md-sys-color-surface-container)] rounded-[32px] sm:rounded-[40px] border border-[var(--md-sys-color-outline)]/5 p-5 sm:p-6 flex flex-col items-center gap-3.5 overflow-hidden shadow-sm hover:shadow-md cursor-pointer transition-all duration-350 focus:outline-none focus:ring-2 focus:ring-[var(--md-sys-color-primary)]",
-                  isToday && "bg-[var(--md-sys-color-primary-container)]/10 ring-1 ring-[var(--md-sys-color-primary)]/20",
-                  visualStyle === "glass" && "border-none",
-                  visualStyle === "retro" && "border-[3px] border-[var(--md-sys-color-on-surface)] rounded-none shadow-[4px_4px_0px_0px_var(--md-sys-color-on-surface)]"
+                  "relative border p-5 sm:p-6 flex flex-col items-center gap-3.5 overflow-hidden shadow-sm hover:shadow-md cursor-pointer transition-all duration-350 focus:outline-none focus:ring-2 focus:ring-[var(--md-sys-color-primary)]",
+                  isNext
+                    ? "bg-[var(--md-sys-color-primary-container)]/15 border-[var(--md-sys-color-primary)]/40 ring-1 ring-[var(--md-sys-color-primary)]/30"
+                    : "bg-[var(--md-sys-color-surface-container)] border-[var(--md-sys-color-outline)]/5",
+                  isToday && !isNext && "bg-[var(--md-sys-color-primary-container)]/10 ring-1 ring-[var(--md-sys-color-primary)]/20",
+                  visualStyle === "glass" && "border-none shadow-none",
+                  visualStyle === "retro" && "border-[3px] border-[var(--md-sys-color-on-surface)] rounded-none shadow-[4px_4px_0px_0px_var(--md-sys-color-on-surface)]",
+                  visualStyle !== "retro" && "rounded-[32px] sm:rounded-[40px]"
                 )}
               >
                 {/* @ts-ignore */}
                 <md-ripple></md-ripple>
-                <div className="w-10 h-10 rounded-full bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] flex items-center justify-center relative z-10 shrink-0 shadow-inner">
+                {isNext && (
+                  <span className="absolute top-2.5 right-2.5 px-2 py-0.5 bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] rounded-md text-[7px] font-black uppercase tracking-wider shadow-xs z-10">
+                    {isMalay ? "Seterusnya" : "Next"}
+                  </span>
+                )}
+                <div className={cn(
+                  "w-10 h-10 rounded-full flex items-center justify-center relative z-10 shrink-0 shadow-inner",
+                  isNext 
+                    ? "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)]" 
+                    : "bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]"
+                )}>
                   <Icon size={18} strokeWidth={iconStroke} />
                 </div>
                 <div className="flex flex-col items-center z-10 select-none">
                   <span className="text-[10px] font-black opacity-80 uppercase tracking-widest text-[var(--md-sys-color-on-surface-variant)]">{t(k)}</span>
-                  <span className="md3-headline-small font-black font-mono tracking-tighter mt-1 text-[var(--md-sys-color-on-surface)]">{timeStr.substring(0, 5)}</span>
+                  <span className={cn(
+                    "md3-headline-small font-black font-mono tracking-tighter mt-1",
+                    isNext ? "text-[var(--md-sys-color-primary)]" : "text-[var(--md-sys-color-on-surface)]"
+                  )}>{timeStr.substring(0, 5)}</span>
                 </div>
               </motion.button>
             );
