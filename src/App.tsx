@@ -510,7 +510,7 @@ export default function App() {
           onDismiss={dismissPrompt}
         />
         {/* Left Panel: Analog/Digital Clocks */}
-        <section className="flex flex-col w-full lg:w-[50%] xl:w-[55%] lg:overflow-visible pb-2 lg:pb-0 min-h-0 relative z-20">
+        <section className="flex flex-col w-full lg:w-[50%] xl:w-[55%] lg:overflow-hidden pb-2 lg:pb-0 min-h-0 relative z-20">
           <header className="relative flex items-center gap-3 z-[60] mb-6 p-2.5 bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline-variant)]/50 rounded-full shadow-md shrink-0 flex-wrap lg:w-max">
             <ZoneSelector
               selectedZone={selectedZone}

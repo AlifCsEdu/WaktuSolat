@@ -12,8 +12,8 @@ import "@material/web/elevation/elevation.js";
 import "@material/web/focus/md-focus-ring.js";
 import "@material/web/switch/switch.js";
 import "@material/web/tabs/tabs.js";
-import "@material/web/tabs/primary-tab.js";
 import "@material/web/icon/icon.js";
+import "@material/web/chips/filter-chip.js";
 import "@material/web/textfield/outlined-text-field.js";
 import { MapModal } from "./MapModal";
 import { useVisualStyle } from "../hooks/useVisualStyle";
@@ -481,219 +481,154 @@ export function ZoneSelector({
                   </motion.div>
                 ) : (
                   <motion.div
-                    initial="hidden"
-                    animate="show"
-                    variants={{
-                      hidden: { opacity: 0 },
-                      show: {
-                        opacity: 1,
-                        transition: { staggerChildren: 0.04 }
-                      }
-                    }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.2 }}
                   >
                     {/* Recent Zones Section */}
                     {!searchQuery && (() => {
                       const filtered = StorageManager.getRecentZones()
                         .filter((z: string) => z !== selectedZone)
-                        .slice(0, 3);
+                        .slice(0, 5); // Show up to 5 in a row
                       if (filtered.length > 0) {
                         return (
-                          <motion.div 
-                            variants={{
-                              hidden: { opacity: 0, y: 15, scale: 0.98 },
-                              show: { opacity: 1, y: 0, scale: 1, transition: M3_MOTION.expressiveSpring }
-                            }}
-                            className="px-6 md:px-8 pt-8 pb-4"
-                          >
-                            <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--md-sys-color-primary)] mb-4 flex items-center gap-2">
+                          <div className="px-6 md:px-8 pt-6 pb-2">
+                            <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--md-sys-color-primary)] mb-3 flex items-center gap-2">
                               <span className="w-1.5 h-1.5 rounded-full bg-[var(--md-sys-color-primary)] opacity-80"></span>
                               {t('recentLocations' as any) || "Recent Locations"}
                             </h3>
-                            {/* @ts-ignore */}
-                            <md-list className="bg-transparent overflow-visible flex flex-col gap-3 p-0">
+                            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 pt-1 -mx-2 px-2 snap-x">
                               {filtered.map((code: string) => {
                                 let label = code;
-                                let stateName = "";
                                 for (const state of JAKIM_ZONES) {
                                   const found = state.zones.find(z => z.v === code);
-                                  if (found) { label = found.l; stateName = state.state; break; }
+                                  if (found) { label = found.l; break; }
                                 }
                                 return (
                                   /* @ts-ignore */
-                                  <md-list-item
+                                  <md-filter-chip
                                     key={`recent-${code}`}
-                                    type="button"
+                                    label={label}
+                                    className="snap-start shrink-0"
                                     onClick={() => {
                                       onZoneSelect(code);
                                       setIsOpen(false);
                                     }}
-                                    className="bg-[var(--md-sys-color-surface-container-low)] hover:bg-[var(--md-sys-color-surface-container-high)] rounded-[20px] overflow-hidden shadow-sm border border-[var(--md-sys-color-outline)]/5 transition-all duration-300"
-                                  >
-                                    {STATE_FLAGS[stateName] && (
-                                      <div slot="start" className="w-[36px] h-[24px] bg-white overflow-hidden shadow-sm shrink-0 rounded-[4px] mr-3">
-                                        <img
-                                          src={STATE_FLAGS[stateName]}
-                                          alt=""
-                                          className="w-full h-full object-cover"
-                                        />
-                                      </div>
-                                    )}
-                                    <div slot="headline" className="font-black text-base text-[var(--md-sys-color-on-surface)] truncate tracking-tight">{label}</div>
-                                    <div slot="supporting-text" className="text-xs font-bold opacity-80 truncate text-[var(--md-sys-color-on-surface-variant)]">{stateName}</div>
-                                    <div slot="end" className="text-[11px] font-mono font-black tracking-wider bg-[var(--md-sys-color-secondary-container)]/80 text-[var(--md-sys-color-on-secondary-container)] px-2.5 py-1 rounded-md shrink-0 shadow-sm">
-                                      {code}
-                                    </div>
-                                  </md-list-item>
+                                  ></md-filter-chip>
                                 );
                               })}
-                            </md-list>
-                          </motion.div>
+                            </div>
+                          </div>
                         );
                       }
                       return null;
                     })()}
 
                     {/* Active Scroll Indicator & List */}
-                <AnimatePresence>
-                  {activeScrollState && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.8, y: -20, rotateX: 20 }}
-                      animate={{ opacity: 1, scale: 1, y: 0, rotateX: 0 }}
-                      exit={{ opacity: 0, scale: 0.8, y: 20, rotateX: -20 }}
-                      transition={M3_MOTION.expressiveSpring}
-                      className="fixed top-[45%] left-1/2 -translate-x-1/2 z-[300] pointer-events-none bg-[var(--md-sys-color-surface-container-highest)]/80 backdrop-blur-3xl px-8 py-6 rounded-[32px] shadow-[0_32px_64px_rgba(0,0,0,0.4)] flex flex-col items-center justify-center gap-4 border border-[var(--md-sys-color-outline)]/20"
-                      style={{ transformStyle: "preserve-3d" }}
-                    >
-                      {STATE_FLAGS[activeScrollState] && (
-                        <div className="w-[84px] h-[56px] bg-white rounded-[6px] overflow-hidden shadow-md">
-                           <img src={STATE_FLAGS[activeScrollState]} className="w-full h-full object-cover" />
-                        </div>
-                      )}
-                      <h3 className="text-2xl md:text-3xl font-black text-[var(--md-sys-color-on-surface)] uppercase tracking-[0.15em] leading-none drop-shadow-md">
-                        {activeScrollState}
-                      </h3>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {filteredZones.length === 0 ? (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="h-full flex flex-col items-center justify-center opacity-70 space-y-4 p-4 md:p-6"
-                  >
-                    <div className="w-20 h-20 rounded-full bg-[var(--md-sys-color-surface-variant)] flex items-center justify-center shadow-inner">
-                      <Search
-                        size={40}
-                        className="text-[var(--md-sys-color-on-surface-variant)]"
-                      />
-                    </div>
-                    <p className="text-[var(--md-sys-color-on-surface-variant)] font-bold text-xl">
-                      {t("noMatch")} "{searchQuery}"
-                    </p>
-                  </motion.div>
-                ) : (
-                  <div className="pb-16">
-                    {filteredZones.map((state) => (
-                      <div key={state.state} className="mb-10 state-group-marker relative" data-state={state.state}>
-                        <div className="flex items-center gap-3 sm:gap-4 sticky top-0 md:top-0 z-20 bg-[var(--md-sys-color-surface)]/85 backdrop-blur-2xl py-4 px-4 md:px-8 shadow-sm border-b border-[var(--md-sys-color-outline)]/10 transition-colors">
-                          <div className="flex items-center justify-center w-[28px] h-[18px] sm:w-[32px] sm:h-[22px] bg-white overflow-hidden shadow-sm shrink-0 rounded-[3px]">
-                            {STATE_FLAGS[state.state] ? (
-                              <img
-                                src={STATE_FLAGS[state.state]}
-                                alt={`Bendera ${state.state}`}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <MapPin size={18} className="text-gray-400" />
-                            )}
-                          </div>
-                          <h3 className="text-[var(--md-sys-color-primary)] font-black uppercase tracking-[0.15em] text-sm sm:text-base pr-2 inline-block">
-                            {state.state}
+                    <AnimatePresence>
+                      {activeScrollState && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.8, y: -20 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.8, y: 20 }}
+                          transition={M3_MOTION.expressiveSpring}
+                          className="fixed top-[45%] left-1/2 -translate-x-1/2 z-[300] pointer-events-none bg-[var(--md-sys-color-surface-container-highest)]/90 backdrop-blur-3xl px-8 py-6 rounded-[32px] shadow-[0_32px_64px_rgba(0,0,0,0.4)] flex flex-col items-center justify-center gap-4 border border-[var(--md-sys-color-outline)]/20"
+                        >
+                          {STATE_FLAGS[activeScrollState] && (
+                            <div className="w-[84px] h-[56px] bg-white rounded-[6px] overflow-hidden shadow-md">
+                               <img src={STATE_FLAGS[activeScrollState]} className="w-full h-full object-cover" />
+                            </div>
+                          )}
+                          <h3 className="text-2xl md:text-3xl font-black text-[var(--md-sys-color-on-surface)] uppercase tracking-[0.15em] leading-none drop-shadow-md">
+                            {activeScrollState}
                           </h3>
-                          {/* @ts-ignore */}
-                          <md-divider className="flex-1 opacity-50"></md-divider>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 px-4 md:px-8 pt-5">
-                          {state.zones.map((zone) => {
-                            const isSelected = selectedZone === zone.v;
-                            return (
-                              <motion.div
-                                variants={{
-                                  hidden: { opacity: 0, y: 30, rotateX: 15, scale: 0.95 },
-                                  show: { opacity: 1, y: 0, rotateX: 0, scale: 1, transition: M3_MOTION.expressiveSpring }
-                                }}
-                                key={zone.v}
-                                className="h-full"
-                              >
-                                <motion.button
-                                  whileHover={{ scale: 1.03, y: -4, rotateX: 2 }}
-                                  whileTap={{ scale: 0.97, y: 0 }}
-                                  onClick={() => {
-                                    onZoneSelect(zone.v);
-                                    setIsOpen(false);
-                                  }}
-                                  className={cn(
-                                    "relative overflow-hidden group text-left px-6 py-6 h-full min-h-[140px] rounded-[28px] flex flex-col focus:outline-none transition-colors",
-                                    isSelected
-                                      ? "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)]"
-                                      : "bg-[var(--md-sys-color-surface-container)] hover:bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface)]",
-                                  )}
-                                  style={{ transformStyle: "preserve-3d" }}
-                                >
-                                  {/* @ts-ignore */}
-                                  <md-ripple></md-ripple>
-                                  {/* @ts-ignore */}
-                                  <md-focus-ring part="focus-ring"></md-focus-ring>
-                                  {/* @ts-ignore */}
-                                  <md-elevation></md-elevation>
-                                  
-                                  {/* Watermark Background */}
-                                  <div className={cn(
-                                    "absolute -right-4 -bottom-6 text-[6rem] font-black pointer-events-none transition-all duration-700 ease-out group-hover:scale-125 group-hover:-rotate-6 group-hover:opacity-[0.08]",
-                                    isSelected ? "opacity-[0.15] text-[var(--md-sys-color-on-primary)]" : "opacity-[0.03] text-[var(--md-sys-color-on-surface)]"
-                                  )}>
-                                    {zone.v}
-                                  </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
 
-                                  <div className="flex items-start justify-between w-full relative z-10 flex-1 gap-2">
-                                    <span
+                    {filteredZones.length === 0 ? (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="h-full flex flex-col items-center justify-center opacity-70 space-y-4 p-4 md:p-6 mt-12"
+                      >
+                        <div className="w-20 h-20 rounded-full bg-[var(--md-sys-color-surface-variant)] flex items-center justify-center shadow-inner">
+                          <Search
+                            size={40}
+                            className="text-[var(--md-sys-color-on-surface-variant)]"
+                          />
+                        </div>
+                        <p className="text-[var(--md-sys-color-on-surface-variant)] font-bold text-xl">
+                          {t("noMatch")} "{searchQuery}"
+                        </p>
+                      </motion.div>
+                    ) : (
+                      <div className="pb-16 px-4 md:px-6">
+                        {/* @ts-ignore */}
+                        <md-list className="bg-transparent p-0">
+                          {filteredZones.map((state) => (
+                            <div key={state.state} className="mb-6 state-group-marker relative" data-state={state.state}>
+                              <div className="flex items-center gap-3 sm:gap-4 sticky top-0 z-20 bg-[var(--md-sys-color-surface)]/95 backdrop-blur-2xl py-3 px-2 shadow-sm border-b border-[var(--md-sys-color-outline)]/10">
+                                <div className="flex items-center justify-center w-[28px] h-[18px] sm:w-[32px] sm:h-[22px] bg-white overflow-hidden shadow-sm shrink-0 rounded-[3px]">
+                                  {STATE_FLAGS[state.state] ? (
+                                    <img
+                                      src={STATE_FLAGS[state.state]}
+                                      alt={`Bendera ${state.state}`}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <MapPin size={18} className="text-gray-400" />
+                                  )}
+                                </div>
+                                <h3 className="text-[var(--md-sys-color-primary)] font-black uppercase tracking-[0.15em] text-sm sm:text-base pr-2">
+                                  {state.state}
+                                </h3>
+                              </div>
+                              <div className="flex flex-col mt-2">
+                                {state.zones.map((zone) => {
+                                  const isSelected = selectedZone === zone.v;
+                                  return (
+                                    /* @ts-ignore */
+                                    <md-list-item
+                                      key={zone.v}
+                                      type="button"
+                                      onClick={() => {
+                                        onZoneSelect(zone.v);
+                                        setIsOpen(false);
+                                      }}
                                       className={cn(
-                                        "text-lg sm:text-xl font-black tracking-tight leading-snug line-clamp-3 pr-2 transition-colors",
-                                        isSelected
-                                          ? "text-[var(--md-sys-color-on-primary)]"
-                                          : "text-[var(--md-sys-color-on-surface)] group-hover:text-[var(--md-sys-color-primary)]",
+                                        "rounded-2xl my-0.5 transition-colors duration-200",
+                                        isSelected ? "bg-[var(--md-sys-color-primary-container)]" : "hover:bg-[var(--md-sys-color-surface-container-high)]"
                                       )}
                                     >
-                                      {zone.l}
-                                    </span>
-                                    {isSelected && (
-                                      <CheckCircle2
-                                        size={28}
-                                        className="text-[var(--md-sys-color-on-primary)] shrink-0 drop-shadow-md"
-                                        strokeWidth={3}
-                                      />
-                                    )}
-                                  </div>
-                                  <span
-                                    className={cn(
-                                      "text-[12px] font-black tracking-widest px-3 py-1.5 rounded-xl inline-flex self-start mt-5 transition-colors relative z-10 shadow-sm",
-                                      isSelected
-                                        ? "bg-[var(--md-sys-color-on-primary)] text-[var(--md-sys-color-primary)]"
-                                        : "bg-[var(--md-sys-color-surface-variant)]/60 text-[var(--md-sys-color-on-surface-variant)]",
-                                    )}
-                                  >
-                                    {zone.v}
-                                  </span>
-                                </motion.button>
-                              </motion.div>
-                            );
-                          })}
-                        </div>
+                                      {/* @ts-ignore */}
+                                      <div slot="headline" className={cn(
+                                        "font-bold text-[15px] leading-tight transition-colors",
+                                        isSelected ? "text-[var(--md-sys-color-on-primary-container)]" : "text-[var(--md-sys-color-on-surface)]"
+                                      )}>
+                                        {zone.l}
+                                      </div>
+                                      {/* @ts-ignore */}
+                                      <div slot="supporting-text" className={cn(
+                                        "text-xs font-mono font-bold tracking-wider mt-0.5 transition-colors",
+                                        isSelected ? "text-[var(--md-sys-color-primary)]" : "text-[var(--md-sys-color-on-surface-variant)]"
+                                      )}>
+                                        {zone.v}
+                                      </div>
+                                      {isSelected && (
+                                        <div slot="end" className="text-[var(--md-sys-color-primary)] flex items-center justify-center w-8 h-8 rounded-full bg-[var(--md-sys-color-on-primary)] shadow-sm shrink-0">
+                                          <CheckCircle2 size={18} strokeWidth={3} />
+                                        </div>
+                                      )}
+                                    </md-list-item>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ))}
+                        </md-list>
                       </div>
-                    ))}
-                  </div>
-                )}
+                    )}
                   </motion.div>
                 )}
               </div>

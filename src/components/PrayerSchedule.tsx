@@ -400,12 +400,10 @@ export function PrayerSchedule({
                       className={cn(
                         "font-black tracking-tight",
                         isNext
-                          ? "md3-headline-medium lg:md3-headline-large drop-shadow-sm"
+                          ? "text-4xl sm:text-5xl lg:text-6xl drop-shadow-sm font-black"
                           : isCurrent
-                            ? "md3-headline-small lg:md3-headline-medium"
-                            : "md3-title-large sm:md3-headline-small lg:md3-headline-small",
-                        isCurrent &&
-                          "text-[var(--md-sys-color-on-tertiary-container)]",
+                            ? "text-3xl sm:text-4xl lg:text-5xl font-black"
+                            : "text-2xl sm:text-3xl lg:text-4xl lg:leading-tight font-bold",
                       )}
                     >
                       {getPrayerDisplayName(key)}
@@ -436,12 +434,10 @@ export function PrayerSchedule({
                     className={cn(
                       "font-black tracking-[-0.04em] tabular-nums whitespace-nowrap",
                       isNext
-                        ? "md3-headline-medium lg:md3-headline-large text-[var(--md-sys-color-primary)]"
+                        ? "text-4xl sm:text-5xl lg:text-6xl text-[var(--md-sys-color-primary)] font-black"
                         : isCurrent
-                          ? "md3-headline-small lg:md3-headline-medium"
-                          : "md3-title-large sm:md3-headline-small lg:md3-headline-small",
-                      isCurrent &&
-                        "text-[var(--md-sys-color-on-tertiary-container)]",
+                          ? "text-3xl sm:text-4xl lg:text-5xl font-black text-[var(--md-sys-color-on-tertiary-container)]"
+                          : "text-2xl sm:text-3xl lg:text-4xl lg:leading-tight font-bold",
                     )}
                   >
                     {timeLabel}

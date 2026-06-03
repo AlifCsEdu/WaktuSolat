@@ -2117,31 +2117,32 @@ export function SettingsModal({
                   )}
                 >
                   {/* Collapsible toggle header */}
-                  <div className="flex items-center justify-between h-10 mb-4 px-2 relative">
-                    <AnimatePresence initial={false}>
-                      {!sidebarCollapsed && (
-                        <motion.span
-                          initial={{ opacity: 0, width: 0 }}
-                          animate={{ opacity: 1, width: "auto" }}
-                          exit={{ opacity: 0, width: 0 }}
-                          transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                          className="text-[10px] uppercase font-black tracking-widest text-[var(--md-sys-color-on-surface-variant)]/60 whitespace-nowrap overflow-hidden"
-                        >
-                          {t("settings")}
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
+                  <div className="flex items-center mb-6 px-2">
                     <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={toggleSidebar}
                       type="button"
                       className={cn(
-                        "w-8 h-8 rounded-full flex items-center justify-center bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors focus:outline-none cursor-pointer",
-                        sidebarCollapsed && "mx-auto"
+                        "h-9 rounded-full flex items-center bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline)]/10 text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors focus:outline-none cursor-pointer overflow-hidden shadow-sm",
+                        sidebarCollapsed ? "w-9 justify-center mx-auto" : "px-3 justify-between w-full"
                       )}
                     >
-                      {sidebarCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+                      <AnimatePresence initial={false}>
+                        {!sidebarCollapsed && (
+                          <motion.span
+                            initial={{ opacity: 0, width: 0 }}
+                            animate={{ opacity: 1, width: "auto" }}
+                            exit={{ opacity: 0, width: 0 }}
+                            className="text-[10px] uppercase font-black tracking-widest whitespace-nowrap overflow-hidden pl-1"
+                          >
+                            {t("settings")}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                      <div className="shrink-0">
+                        {sidebarCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+                      </div>
                     </motion.button>
                   </div>
 
@@ -2159,14 +2160,18 @@ export function SettingsModal({
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as any)}
                         title={sidebarCollapsed ? tab.label : undefined}
-                        className="relative select-none flex items-center h-12 pl-4 pr-4 rounded-2xl outline-none focus:outline-none cursor-pointer w-full transition-all duration-300 overflow-hidden"
+                        className="relative group select-none flex items-center h-12 pl-4 pr-4 rounded-2xl outline-none focus:outline-none cursor-pointer w-full transition-all duration-300 overflow-hidden"
                       >
                         {isActive && (
                           <motion.div
                             layoutId="active-tab-indicator"
-                            className="absolute inset-0 bg-[var(--md-sys-color-secondary-container)] z-0 rounded-2xl"
+                            className="absolute inset-0 bg-[var(--md-sys-color-secondary-container)] border border-[var(--md-sys-color-outline)]/10 shadow-sm z-0 rounded-2xl"
                             transition={{ type: "spring", stiffness: 380, damping: 30 }}
                           />
+                        )}
+                        {/* Hover indicator for non-active items */}
+                        {!isActive && (
+                          <div className="absolute inset-0 bg-[var(--md-sys-color-on-surface)] opacity-0 group-hover:opacity-5 transition-opacity duration-200 z-0 rounded-2xl" />
                         )}
                         {/* @ts-ignore */}
                         <md-ripple></md-ripple>
