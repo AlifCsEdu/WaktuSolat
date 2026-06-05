@@ -136,7 +136,7 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
                <span className="opacity-40">•</span>
              )}
              {(!settings.hijriFormat || settings.hijriFormat === 'both' || settings.hijriFormat === 'number') && (
-               <span className="font-mono font-black text-[10px] opacity-75">
+               <span className="font-sans font-black text-[10px] opacity-75">
                  {getHijriFormatted(day.date, settings.hijriMethod, settings.hijriAdjustment, "number", settings.language, day.hijri)}
                </span>
              )}
@@ -194,7 +194,7 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
                 <div className="flex flex-col items-center z-10 select-none">
                   <span className="text-[10px] font-black opacity-80 uppercase tracking-widest text-[var(--md-sys-color-on-surface-variant)]">{t(k)}</span>
                   <span className={cn(
-                    "md3-headline-small font-black font-mono tracking-tighter mt-1",
+                    "md3-headline-small font-black font-sans tracking-tighter mt-1",
                     isNext ? "text-[var(--md-sys-color-primary)]" : "text-[var(--md-sys-color-on-surface)]"
                   )}>{timeStr.substring(0, 5)}</span>
                 </div>
@@ -241,10 +241,10 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
                 <span className="text-[10px] font-black opacity-80 uppercase tracking-widest text-[var(--md-sys-color-on-surface-variant)] mt-0.5">
                   {format(parse(day.date, "dd-MMM-yyyy", new Date()), "EEEE", { locale: settings.language === 'ms' ? ms : enUS })}
                 </span>
-                <span className="text-[9px] font-mono font-black opacity-55 mt-1">
+                <span className="text-[9px] font-sans font-black opacity-55 mt-1">
                   {(!settings.hijriFormat || settings.hijriFormat === 'both' || settings.hijriFormat === 'text') && getHijriFormatted(day.date, settings.hijriMethod, settings.hijriAdjustment, "text", settings.language, day.hijri)}
                 </span>
-                <span className="font-mono opacity-60 font-black">
+                <span className="font-sans opacity-60 font-black">
                   {(!settings.hijriFormat || settings.hijriFormat === 'both' || settings.hijriFormat === 'number') && getHijriFormatted(day.date, settings.hijriMethod, settings.hijriAdjustment, "number", settings.language, day.hijri)}
                 </span>
                 
@@ -284,7 +284,7 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
                       </div>
                       <div className="flex flex-col items-center lg:items-start leading-none z-10 select-none">
                         <span className="text-[9px] font-black uppercase tracking-widest opacity-60 text-[var(--md-sys-color-on-surface-variant)]">{t(k)}</span>
-                        <span className="font-mono font-black text-xs sm:text-sm mt-0.5 text-[var(--md-sys-color-on-surface)]">{day[k] ? day[k].substring(0, 5) : "--:--"}</span>
+                        <span className="font-sans font-black text-xs sm:text-sm mt-0.5 text-[var(--md-sys-color-on-surface)]">{day[k] ? day[k].substring(0, 5) : "--:--"}</span>
                       </div>
                     </motion.button>
                   );
@@ -380,7 +380,7 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
                     className="flex flex-col items-center flex-1 min-w-[40px] p-1.5 rounded-lg bg-[var(--md-sys-color-surface-container-low)] hover:bg-[var(--md-sys-color-primary-container)]/25 active:scale-95 transition-all cursor-pointer border border-transparent hover:border-[var(--md-sys-color-primary)]/15"
                   >
                     <span className="text-[7px] font-black uppercase opacity-65 text-[var(--md-sys-color-on-surface-variant)]">{t(k).slice(0, 3)}</span>
-                    <span className="font-mono font-black text-[10px] text-[var(--md-sys-color-on-surface)] mt-0.5">{day[k] ? day[k].substring(0, 5) : "--:--"}</span>
+                    <span className="font-sans font-black text-[10px] text-[var(--md-sys-color-on-surface)] mt-0.5">{day[k] ? day[k].substring(0, 5) : "--:--"}</span>
                   </button>
                 ))}
               </div>
@@ -448,7 +448,7 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
                         <span className="text-xs font-black whitespace-nowrap">{getHijriFormatted(day.date, settings.hijriMethod, settings.hijriAdjustment, "text", settings.language, day.hijri).split(" (")[0]}</span>
                       )}
                       {(!settings.hijriFormat || settings.hijriFormat === 'both' || settings.hijriFormat === 'number') && (
-                        <span className="text-[9px] font-mono font-black opacity-55 tabular-nums">
+                        <span className="text-[9px] font-sans font-black opacity-55 tabular-nums">
                           {getHijriFormatted(day.date, settings.hijriMethod, settings.hijriAdjustment, "number", settings.language, day.hijri)}
                         </span>
                       )}
@@ -493,7 +493,7 @@ export function PrayerTimesListView({ data, view = "monthly", isLoading, onPraye
                         >
                           {/* @ts-ignore */}
                           <md-ripple></md-ripple>
-                          <span className="tabular-nums font-mono text-[11px] sm:text-xs font-black whitespace-nowrap">{day[k] ? day[k].substring(0, 5) : "--:--"}</span>
+                          <span className="tabular-nums font-sans text-[11px] sm:text-xs font-black whitespace-nowrap">{day[k] ? day[k].substring(0, 5) : "--:--"}</span>
                         </motion.button>
                       </td>
                     );

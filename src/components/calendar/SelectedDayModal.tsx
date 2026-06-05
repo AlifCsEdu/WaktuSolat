@@ -170,7 +170,7 @@ export function SelectedDayModal({ day, onClose, onPrayerSelect }: SelectedDayMo
                      <span className="opacity-40">•</span>
                    )}
                    {(!settings.hijriFormat || settings.hijriFormat === 'both' || settings.hijriFormat === 'number') && (
-                     <span className="font-mono opacity-70 font-black">
+                     <span className="font-sans opacity-70 font-black">
                        {getHijriFormatted(day.date, settings.hijriMethod, settings.hijriAdjustment, "number", settings.language, day.hijri)}
                      </span>
                    )}
@@ -180,7 +180,7 @@ export function SelectedDayModal({ day, onClose, onPrayerSelect }: SelectedDayMo
 
                  {/* Countdown Widget */}
                  {nextPrayerInfo && (
-                   <div className="flex items-center gap-3 p-3 px-4 rounded-2xl bg-[var(--md-sys-color-surface)] border border-[var(--md-sys-color-outline)]/5 shadow-inner sm:max-w-xs md:w-full mt-5 font-mono">
+                   <div className="flex items-center gap-3 p-3 px-4 rounded-2xl bg-[var(--md-sys-color-surface)] border border-[var(--md-sys-color-outline)]/5 shadow-inner sm:max-w-xs md:w-full mt-5 font-sans">
                      <Clock size={16} className="text-[var(--md-sys-color-primary)] animate-pulse" />
                      <div className="flex flex-col leading-none">
                        <span className="text-[8px] font-black uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)]">{t(nextPrayerInfo.name as any)} {isMalay ? "Seterusnya" : "Next"}</span>
@@ -273,7 +273,7 @@ export function SelectedDayModal({ day, onClose, onPrayerSelect }: SelectedDayMo
                     )}
                     <Icon size={24} strokeWidth={iconStroke} className={cn("opacity-70 group-hover:opacity-100 mb-2 sm:mb-3 shrink-0 transition-opacity", isNext ? "text-[var(--md-sys-color-primary)] opacity-100" : "text-[var(--md-sys-color-primary)]")} />
                     <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-[var(--md-sys-color-on-surface-variant)]">{t(k)}</span>
-                    <span className="text-2xl sm:text-3xl font-black font-mono text-[var(--md-sys-color-on-surface)] mt-1 tracking-tighter">{day[k] ? day[k].substring(0, 5) : "--:--"}</span>
+                    <span className="text-2xl sm:text-3xl font-black font-sans text-[var(--md-sys-color-on-surface)] mt-1 tracking-tighter">{day[k] ? day[k].substring(0, 5) : "--:--"}</span>
                     
                     {/* Decorative Background Icon */}
                     <Icon size={120} strokeWidth={iconStroke} className="absolute -right-6 -bottom-6 text-[var(--md-sys-color-on-surface)] opacity-[0.02] group-hover:opacity-[0.05] transition-opacity pointer-events-none" />

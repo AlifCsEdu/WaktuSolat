@@ -508,7 +508,26 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <main className="flex-1 w-full max-w-[2560px] mx-auto relative z-10 flex flex-col lg:flex-row px-[var(--sys-spacing-edge)] py-[var(--sys-spacing-edge)] gap-[var(--sys-spacing-section)] lg:overflow-hidden min-h-0">
+      <motion.main
+        variants={{
+          hidden: { opacity: 0 },
+          show: {
+            opacity: 1,
+            transition: {
+              staggerChildren: 0.08,
+              delayChildren: 0.05
+            }
+          }
+        }}
+        initial="hidden"
+        animate="show"
+        className={cn(
+          "flex-1 w-full max-w-[2560px] mx-auto relative z-10 flex flex-col lg:flex-row px-[var(--sys-spacing-edge)] py-[var(--sys-spacing-edge)] gap-[var(--sys-spacing-section)] lg:overflow-hidden min-h-0",
+          !(settings.wallpaperEnabled && activeWallpaperUrl) && "bg-[var(--md-sys-color-background)]",
+          !(settings.wallpaperEnabled && activeWallpaperUrl) && visualStyle === 'glass' && "bg-gradient-to-br from-[var(--md-sys-color-background)] via-[var(--md-sys-color-surface-variant)] to-[var(--md-sys-color-primary-container)]",
+          settings.wallpaperEnabled && activeWallpaperUrl && settings.wallpaperTextGlow && "text-glow-boost"
+        )}
+      >
         <LocationToast 
           promptZone={promptZone}
           promptLocationName={promptLocationName}
@@ -518,8 +537,29 @@ export default function App() {
           onDismiss={dismissPrompt}
         />
         {/* Left Panel: Analog/Digital Clocks */}
-        <section className="flex flex-col w-full lg:w-[50%] xl:w-[55%] lg:overflow-hidden pb-2 lg:pb-0 min-h-0 relative z-20">
-          <header className="relative flex items-center gap-3 z-[60] mb-6 p-2.5 bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline-variant)]/50 rounded-full shadow-md shrink-0 flex-wrap lg:w-full">
+        <motion.section
+          variants={{
+            hidden: { opacity: 0, y: 15, scale: 0.99 },
+            show: { 
+              opacity: 1, 
+              y: 0, 
+              scale: 1, 
+              transition: { type: "spring", stiffness: 100, damping: 20 } 
+            }
+          }}
+          className="flex flex-col w-full lg:w-[50%] xl:w-[55%] lg:overflow-hidden pb-2 lg:pb-0 min-h-0 relative z-20"
+        >
+          <motion.header
+            variants={{
+              hidden: { opacity: 0, y: -10 },
+              show: { 
+                opacity: 1, 
+                y: 0, 
+                transition: { type: "spring", stiffness: 120, damping: 20 } 
+              }
+            }}
+            className="relative flex items-center gap-3 z-[60] mb-6 p-2.5 bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline-variant)]/50 rounded-full shadow-md shrink-0 flex-wrap lg:w-full"
+          >
             <ZoneSelector
               selectedZone={selectedZone}
               onZoneSelect={handleManualZoneSelect}
@@ -562,7 +602,7 @@ export default function App() {
               <ThemeControl />
               <FullScreenToggle />
             </div>
-          </header>
+          </motion.header>
 
           <div className="flex-1 flex flex-col justify-center lg:justify-start xl:justify-center min-h-0 lg:overflow-y-visible no-scrollbar pt-1">
             <ClockPanel
@@ -586,10 +626,21 @@ export default function App() {
               onIqamahAddMinute={handleIqamahAddMinute}
             />
           </div>
-        </section>
+        </motion.section>
 
         {/* Right Panel: Weather & Prayer Schedules Grid */}
-        <section className="m3e-panel-right">
+        <motion.section
+          variants={{
+            hidden: { opacity: 0, x: 15, scale: 0.99 },
+            show: { 
+              opacity: 1, 
+              x: 0, 
+              scale: 1, 
+              transition: { type: "spring", stiffness: 100, damping: 20 } 
+            }
+          }}
+          className="m3e-panel-right"
+        >
           {error && (
             <div className="bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] p-4 rounded-4xl mb-6 shrink-0 shadow-sm">
               {error}
@@ -623,8 +674,8 @@ export default function App() {
               />
             </div>
           </div>
-        </section>
-      </main>
+        </motion.section>
+      </motion.main>
 
       <SharePanel
         isOpen={showSharePanel}

@@ -1074,18 +1074,6 @@ html[data-style="retro"] md-list-item {
     50% { opacity: 0.2; }
 }
 
-@keyframes tv-active-glow {
-    0%, 100% {
-        box-shadow:
-            0 0 8px 0 var(--md-sys-color-primary),
-            0 4px 16px -4px var(--md-sys-color-primary);
-    }
-    50% {
-        box-shadow:
-            0 0 20px 2px var(--md-sys-color-primary),
-            0 4px 24px -2px var(--md-sys-color-primary);
-    }
-}
 
 @keyframes tv-badge-enter {
     from {

@@ -498,7 +498,7 @@ export function TvModeView({
           <div className="flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[var(--md-sys-color-surface-container-high)] text-sm font-bold border border-[var(--md-sys-color-outline-variant)]/40">
             <MapPin size={16} className="text-[var(--md-sys-color-primary)]" />
             <span className="truncate max-w-[200px]">{currentLocationName || t("selectedZone")}</span>
-            <span className="font-mono text-xs opacity-60">({selectedZone})</span>
+            <span className="font-sans font-bold text-xs opacity-60">({selectedZone})</span>
           </div>
 
           {/* Wake Lock Active Indicator */}
@@ -617,7 +617,7 @@ export function TvModeView({
                     <span className="text-[10px] uppercase tracking-[0.2em] font-black text-[var(--md-sys-color-on-surface-variant)]">
                       {isMalay ? "HITUNG MUNDUR" : "COUNTDOWN"} — {nextPrayerName}
                     </span>
-                    <span className="text-2xl sm:text-3xl font-mono font-black text-[var(--md-sys-color-primary)] tracking-tight mt-0.5 tabular-nums">
+                    <span className="text-2xl sm:text-3xl font-sans font-black text-[var(--md-sys-color-primary)] tracking-tight mt-0.5 tabular-nums">
                       {countdownString}
                     </span>
                   </div>
@@ -682,7 +682,7 @@ export function TvModeView({
                       </span>
                     </div>
 
-                    <div className="text-3xl sm:text-4xl font-mono font-black tracking-tight mt-1.5 relative z-10 tabular-nums">
+                    <div className="text-3xl sm:text-4xl font-sans font-black tracking-tight mt-1.5 relative z-10 tabular-nums">
                       {Math.floor(iqamahRemainingSeconds / 60)}:
                       {String(iqamahRemainingSeconds % 60).padStart(2, "0")}
                     </div>
@@ -794,7 +794,7 @@ export function TvModeView({
                     </div>
                     
                     <span className={cn(
-                      "font-mono text-base sm:text-lg lg:text-xl xl:text-2xl tracking-tighter mt-3 relative z-10 tabular-nums",
+                      "font-sans text-base sm:text-lg lg:text-xl xl:text-2xl tracking-tighter mt-3 relative z-10 tabular-nums",
                       isCurrent ? "font-black text-[var(--md-sys-color-on-primary)]" : "font-extrabold text-[var(--md-sys-color-on-surface)]/90"
                     )}>
                       {formattedTime}
@@ -862,7 +862,7 @@ export function TvModeView({
                   <span className="text-xs uppercase tracking-[0.25em] font-black text-[var(--md-sys-color-on-surface-variant)]">
                     {isMalay ? "HITUNG MUNDUR" : "COUNTDOWN"} — {nextPrayerName}
                   </span>
-                  <span className="text-4xl sm:text-5xl font-mono font-black text-[var(--md-sys-color-primary)] tracking-tight mt-1 tabular-nums">
+                  <span className="text-4xl sm:text-5xl font-sans font-black text-[var(--md-sys-color-primary)] tracking-tight mt-1 tabular-nums">
                     {countdownString}
                   </span>
                 </div>
@@ -931,7 +931,7 @@ export function TvModeView({
                   </div>
 
                   {/* Large countdown time */}
-                  <div className="text-5xl sm:text-6xl font-mono font-black tracking-tight mt-2 relative z-10 tabular-nums">
+                  <div className="text-5xl sm:text-6xl font-sans font-black tracking-tight mt-2 relative z-10 tabular-nums">
                     {Math.floor(iqamahRemainingSeconds / 60)}:
                     {String(iqamahRemainingSeconds % 60).padStart(2, "0")}
                   </div>
@@ -1061,7 +1061,7 @@ export function TvModeView({
                     </div>
                     
                     <span className={cn(
-                      "font-mono text-2xl sm:text-3xl lg:text-4xl tracking-tighter relative z-10 tabular-nums",
+                      "font-sans text-2xl sm:text-3xl lg:text-4xl tracking-tighter relative z-10 tabular-nums",
                       isCurrent ? "font-black text-[var(--md-sys-color-on-primary)]" : "font-extrabold text-[var(--md-sys-color-on-surface)]/90"
                     )}>
                       {formattedTime}

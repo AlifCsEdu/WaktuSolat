@@ -89,7 +89,7 @@ function ExternalDigitalComplication() {
         {/* @ts-ignore */}
         <md-elevation level={visualStyle === 'retro' || visualStyle === 'soft' ? '0' : '1'}></md-elevation>
         
-        <span className="font-mono drop-shadow-sm tabular-nums">{timeString}</span>
+        <span className="font-sans drop-shadow-sm tabular-nums">{timeString}</span>
         {ampm && <span className="ml-1.5 sm:ml-2 lg:ml-4 text-[10px] sm:text-xs md:text-base lg:text-2xl xl:text-3xl opacity-70 font-sans font-extrabold uppercase tracking-widest">{ampm}</span>}
       </div>
     </div>
@@ -334,7 +334,7 @@ export function ClockPanel({
                       <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--md-sys-color-on-primary-container)]/70 mb-1">
                         {t("timeRemaining")}
                       </span>
-                      <div className="flex items-baseline font-mono text-[var(--md-sys-color-primary)] text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter drop-shadow-sm">
+                      <div className="flex items-baseline font-sans text-[var(--md-sys-color-primary)] text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter drop-shadow-sm">
                         {countdownParts.active ? (
                           <>
                             {countdownParts.h > 0 && (
@@ -602,7 +602,7 @@ export function ClockPanel({
                   {t("qibla")}
                 </h3>
                 <div>
-                  <p className="text-lg sm:text-xl lg:text-2xl font-black font-mono tracking-tighter leading-none">
+                  <p className="text-lg sm:text-xl lg:text-2xl font-black font-sans tracking-tighter leading-none">
                     292.41°
                   </p>
                   <p className="text-[9px] sm:text-[10px] opacity-80 font-bold mt-1 tracking-wide">
@@ -665,7 +665,7 @@ export function ClockPanel({
                     </h3>
                     <div className="flex flex-col items-center">
                       <p className={cn(
-                        "font-black font-mono tracking-tighter leading-none text-center transition-all duration-300",
+                        "font-black font-sans tracking-tighter leading-none text-center transition-all duration-300",
                         iqamahRemainingSeconds <= 10 ? "text-3xl sm:text-4xl lg:text-5xl text-white" : iqamahRemainingSeconds <= 30 ? "text-2.5xl sm:text-3xl lg:text-4xl text-white" : "text-xl sm:text-2xl lg:text-3xl"
                       )}>
                         {Math.floor(iqamahRemainingSeconds / 60)}:
@@ -740,7 +740,7 @@ export function ClockPanel({
               {t("sunrise")}
             </h3>
             <div>
-              <p className="text-lg sm:text-xl lg:text-2xl font-black font-mono tracking-tighter leading-none">
+              <p className="text-lg sm:text-xl lg:text-2xl font-black font-sans tracking-tighter leading-none">
                 {syurukTime || "--:--"}
               </p>
               <p className="text-[9px] sm:text-[10px] opacity-80 font-bold mt-1 tracking-wide">

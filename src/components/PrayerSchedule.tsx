@@ -344,6 +344,7 @@ export function PrayerSchedule({
                 type: "spring",
                 stiffness: 400,
                 damping: 25,
+                delay: index * 0.04
               }}
               whileHover={{ scale: 0.98 }}
               whileTap={{ scale: 0.96 }}

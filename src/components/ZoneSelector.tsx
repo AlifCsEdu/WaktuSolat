@@ -275,7 +275,7 @@ export function ZoneSelector({
                   </div>
                 )}
                 <span className="truncate">{selectedState}</span>
-                <span className="font-mono font-black ml-auto flex-shrink-0 opacity-70">
+                <span className="font-sans font-black ml-auto flex-shrink-0 opacity-70">
                   {selectedZone}
                 </span>
               </span>
@@ -478,7 +478,7 @@ export function ZoneSelector({
                       <p className="text-2xl font-black leading-tight text-[var(--md-sys-color-on-surface)] mb-2 truncate relative z-10">
                         {isAutoDetecting ? "Sedang menjejak..." : (currentLocationName || selectedLabel)}
                       </p>
-                      <div className="inline-flex bg-[var(--md-sys-color-surface-variant)]/60 px-3 py-1 rounded-lg text-sm font-mono font-bold text-[var(--md-sys-color-on-surface-variant)] mt-1 relative z-10 shadow-sm border border-[var(--md-sys-color-outline)]/5">
+                      <div className="inline-flex bg-[var(--md-sys-color-surface-variant)]/60 px-3 py-1 rounded-lg text-sm font-sans font-bold text-[var(--md-sys-color-on-surface-variant)] mt-1 relative z-10 shadow-sm border border-[var(--md-sys-color-outline)]/5">
                         {selectedZone}
                       </div>
                     </div>
@@ -619,7 +619,7 @@ export function ZoneSelector({
                                       </div>
                                       {/* @ts-ignore */}
                                       <div slot="supporting-text" className={cn(
-                                        "text-xs font-mono font-bold tracking-wider mt-0.5 transition-colors",
+                                        "text-xs font-sans font-bold tracking-wider mt-0.5 transition-colors",
                                         isSelected ? "text-[var(--md-sys-color-primary)]" : "text-[var(--md-sys-color-on-surface-variant)]"
                                       )}>
                                         {zone.v}
