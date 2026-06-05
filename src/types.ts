@@ -134,6 +134,9 @@ export interface GeneralSettings {
   tvModeShowCountdown?: boolean;
   tvModeShowDateBar?: boolean;
   tvModeClockColonBlink?: boolean;
+  tvModeHideSeconds?: boolean;
+  tvModeTickerSpeed?: 'slow' | 'medium' | 'fast';
+  tvModeTickerSize?: number;
 }
 
 // Default preferences
@@ -215,6 +218,9 @@ export const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
   tvModeShowCountdown: true,
   tvModeShowDateBar: true,
   tvModeClockColonBlink: true,
+  tvModeHideSeconds: false,
+  tvModeTickerSpeed: 'medium',
+  tvModeTickerSize: 100,
   tvModeRemindersList: [
     {
       id: "1",

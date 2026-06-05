@@ -522,6 +522,84 @@ export function MosqueTvSettings() {
                 icons
               ></md-switch>
             </div>
+
+            {/* Clock Hide Seconds Toggle */}
+            <div className="flex items-center justify-between p-1 border-t border-[var(--md-sys-color-outline)]/5 pt-3">
+              <div>
+                <h4 className="text-sm font-bold text-[var(--md-sys-color-on-surface)]">
+                  {t("tvModeHideSecondsLabel" as any)}
+                </h4>
+                <p className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] leading-relaxed mt-0.5 max-w-[200px] sm:max-w-xs">
+                  {t("tvModeHideSecondsDesc" as any)}
+                </p>
+              </div>
+              {/* @ts-ignore */}
+              <md-switch
+                selected={!!settings.tvModeHideSeconds}
+                onChange={(e: any) =>
+                  updateSettings({ tvModeHideSeconds: e.target.selected })
+                }
+                icons
+              ></md-switch>
+            </div>
+
+            {/* Scrolling Ticker Speed */}
+            <div className="flex flex-col p-4 bg-[var(--md-sys-color-surface-container-low)] rounded-2xl shadow-sm border border-[var(--md-sys-color-outline)]/5 pt-3 border-t border-[var(--md-sys-color-outline)]/5 mt-3">
+              <span className="font-bold text-[var(--md-sys-color-on-surface)] text-sm block">
+                {t("tvModeTickerSpeedLabel" as any)}
+              </span>
+              <span className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] block mt-0.5 leading-relaxed">
+                {t("tvModeTickerSpeedDesc" as any)}
+              </span>
+              <div className="flex flex-wrap gap-2 mt-3">
+                {/* @ts-ignore */}
+                <md-filter-chip
+                  label={t("tickerSpeedSlow" as any)}
+                  selected={settings.tvModeTickerSpeed === "slow"}
+                  onClick={() => updateSettings({ tvModeTickerSpeed: "slow" })}
+                ></md-filter-chip>
+                {/* @ts-ignore */}
+                <md-filter-chip
+                  label={t("tickerSpeedMedium" as any)}
+                  selected={settings.tvModeTickerSpeed === "medium" || !settings.tvModeTickerSpeed}
+                  onClick={() => updateSettings({ tvModeTickerSpeed: "medium" })}
+                ></md-filter-chip>
+                {/* @ts-ignore */}
+                <md-filter-chip
+                  label={t("tickerSpeedFast" as any)}
+                  selected={settings.tvModeTickerSpeed === "fast"}
+                  onClick={() => updateSettings({ tvModeTickerSpeed: "fast" })}
+                ></md-filter-chip>
+              </div>
+            </div>
+
+            {/* Scrolling Ticker Text Size */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-[var(--md-sys-color-surface-container-low)] rounded-2xl border border-[var(--md-sys-color-outline)]/5 gap-3 mt-3">
+              <div>
+                <span className="font-bold text-[var(--md-sys-color-on-surface)] text-sm block">
+                  {t("tvModeTickerSizeLabel" as any)}
+                </span>
+                <span className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] block mt-0.5 font-sans">
+                  {t("tvModeTickerSizeDesc" as any)}
+                </span>
+              </div>
+              <div className="flex items-center gap-3 flex-1 max-w-[250px] w-full self-end sm:self-auto justify-end">
+                {/* @ts-ignore */}
+                <md-slider
+                  min="70"
+                  max="130"
+                  step="5"
+                  value={settings.tvModeTickerSize ?? 100}
+                  labeled
+                  ticks
+                  onChange={(e: any) => updateSettings({ tvModeTickerSize: parseInt(e.target.value) })}
+                  className="flex-1"
+                ></md-slider>
+                <span className="w-12 text-right font-mono font-bold text-[var(--md-sys-color-primary)] tabular-nums text-sm">
+                  {settings.tvModeTickerSize ?? 100}%
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 

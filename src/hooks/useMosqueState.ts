@@ -112,6 +112,27 @@ export function useMosqueState(
     }
   }, [prevPrayerKey, iqamahPausedState]);
 
+  const handleIqamahSubMinute = useCallback(() => {
+    if (!prevPrayerKey) return;
+    
+    // Subtract 1 minute from the modifier
+    setIqamahModifier((prev: Record<string, number>) => ({
+      ...prev,
+      [prevPrayerKey]: (prev[prevPrayerKey] || 0) - 1,
+    }));
+    
+    // If paused, also subtract 60 seconds (clamp to 0)
+    if (iqamahPausedState[prevPrayerKey]?.paused) {
+      setIqamahPausedState((prev: Record<string, { paused: boolean; remainingSecs: number }>) => ({
+        ...prev,
+        [prevPrayerKey]: {
+          paused: true,
+          remainingSecs: Math.max(0, (prev[prevPrayerKey]?.remainingSecs || 0) - 60),
+        },
+      }));
+    }
+  }, [prevPrayerKey, iqamahPausedState]);
+
   // Compute Active States for Azan Alert, Iqamah Countdown, and Solat Mode
   let azanAlertActive = false;
   let azanAlertRemainingSeconds = 0;
@@ -207,6 +228,7 @@ export function useMosqueState(
     iqamahPausedState,
     handleIqamahTogglePause,
     handleIqamahAddMinute,
+    handleIqamahSubMinute,
     azanAlertActive,
     azanAlertRemainingSeconds,
     azanAlertPrayerName,

@@ -315,6 +315,7 @@ export default function App() {
     iqamahPausedState,
     handleIqamahTogglePause,
     handleIqamahAddMinute,
+    handleIqamahSubMinute,
     azanAlertActive,
     azanAlertRemainingSeconds,
     azanAlertPrayerName,
@@ -499,6 +500,7 @@ export default function App() {
             showClock={settings.solatModeShowClock}
             showQibla={settings.solatModeShowQibla}
             isDuaStage={isSolatDuaStage}
+            isTvMode={isTvMode}
             onExit={() => {
               if (prevPrayerKey) setManuallyExitedSolatPrayer(prevPrayerKey);
             }}
@@ -727,6 +729,7 @@ export default function App() {
           iqamahPaused={prevPrayerKey ? !!iqamahPausedState[prevPrayerKey]?.paused : false}
           onIqamahTogglePause={handleIqamahTogglePause}
           onIqamahAddMinute={handleIqamahAddMinute}
+          onIqamahSubMinute={handleIqamahSubMinute}
           onSettingsClick={() => setShowNotificationSettings(true)}
         />
       )}

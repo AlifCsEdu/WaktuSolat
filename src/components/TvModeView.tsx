@@ -19,6 +19,7 @@ import {
   Play,
   Pause,
   Plus,
+  Minus,
   Settings
 } from "lucide-react";
 import { PrayerData, GeneralSettings, TvModeReminder } from "../types";
@@ -48,6 +49,7 @@ interface TvModeViewProps {
   iqamahPaused: boolean;
   onIqamahTogglePause: () => void;
   onIqamahAddMinute: () => void;
+  onIqamahSubMinute: () => void;
   onSettingsClick?: () => void;
 }
 
@@ -72,6 +74,7 @@ export function TvModeView({
   iqamahPaused,
   onIqamahTogglePause,
   onIqamahAddMinute,
+  onIqamahSubMinute,
   onSettingsClick,
 }: TvModeViewProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -82,6 +85,36 @@ export function TvModeView({
   const [isMobile, setIsMobile] = useState(false);
 
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+
+  // OLED Burn-in Prevention: Pixel Shifter
+  const [pixelShift, setPixelShift] = useState({ x: 0, y: 0 });
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const dx = Math.floor(Math.random() * 7) - 3; // -3px to +3px
+      const dy = Math.floor(Math.random() * 7) - 3;
+      setPixelShift({ x: dx, y: dy });
+    }, 60000 * 2); // Shift every 2 minutes
+    return () => clearInterval(interval);
+  }, []);
+
+  // TV Remote HUD Confirmation bubble
+  const [hudMessage, setHudMessage] = useState<string | null>(null);
+  const [hudIcon, setHudIcon] = useState<'play' | 'pause' | 'plus' | 'minus' | null>(null);
+
+  const showHud = (msg: string, icon: 'play' | 'pause' | 'plus' | 'minus') => {
+    setHudMessage(msg);
+    setHudIcon(icon);
+  };
+
+  useEffect(() => {
+    if (hudMessage) {
+      const timer = setTimeout(() => {
+        setHudMessage(null);
+        setHudIcon(null);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [hudMessage]);
 
   useEffect(() => {
     let active = true;
@@ -193,6 +226,44 @@ export function TvModeView({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
+  // TV Remote keybind control listeners
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase();
+      
+      // Avoid keys when editing form inputs
+      if (document.activeElement?.tagName === "INPUT" || document.activeElement?.tagName === "TEXTAREA") {
+        return;
+      }
+
+      if (key === " " || key === "k") {
+        e.preventDefault();
+        onIqamahTogglePause();
+        const willBePaused = !iqamahPaused;
+        showHud(
+          willBePaused ? t("hudIqamahPaused" as any) : t("hudIqamahResumed" as any),
+          willBePaused ? 'pause' : 'play'
+        );
+      } else if (key === "+" || key === "=" || key === "arrowup") {
+        e.preventDefault();
+        onIqamahAddMinute();
+        showHud(t("hudIqamahAdd" as any), 'plus');
+      } else if (key === "-" || key === "arrowdown") {
+        e.preventDefault();
+        onIqamahSubMinute();
+        showHud(t("hudIqamahSub" as any), 'minus');
+      } else if (key === "s" || e.key === "Enter") {
+        e.preventDefault();
+        if (onSettingsClick) {
+          onSettingsClick();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [iqamahPaused, onIqamahTogglePause, onIqamahAddMinute, onIqamahSubMinute, onSettingsClick, t]);
+
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch((err) => {
@@ -231,7 +302,11 @@ export function TvModeView({
   }
 
   // Clock calculations
-  const timeString = format(currentTime, settings.timeFormat === "12h" ? "h:mm:ss" : "HH:mm:ss");
+  const hasHideSeconds = settings.tvModeHideSeconds === true;
+  const timeFormatString = settings.timeFormat === "12h" 
+    ? (hasHideSeconds ? "h:mm" : "h:mm:ss") 
+    : (hasHideSeconds ? "HH:mm" : "HH:mm:ss");
+  const timeString = format(currentTime, timeFormatString);
   const ampm = settings.timeFormat === "12h" ? format(currentTime, "a") : "";
   const dateString = format(currentTime, isMalay ? "EEEE, d MMMM yyyy" : "EEEE, MMMM d, yyyy");
 
@@ -296,13 +371,7 @@ export function TvModeView({
     }
   }, [announcements, currentAnnouncementIdx]);
 
-  useEffect(() => {
-    const intervalSec = settings.tvModeReminderInterval ?? 15;
-    const timer = setInterval(() => {
-      setCurrentAnnouncementIdx((prev) => (prev + 1) % announcements.length);
-    }, intervalSec * 1000);
-    return () => clearInterval(timer);
-  }, [announcements, settings.tvModeReminderInterval]);
+
 
   const activeKeys = ["imsak", "fajr", "syuruk", "dhuhr", "asr", "maghrib", "isha"];
 
@@ -332,7 +401,7 @@ export function TvModeView({
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col bg-[var(--md-sys-color-surface-container-lowest)] text-[var(--md-sys-color-on-surface)] select-none overflow-hidden font-sans">
+    <div className="fixed inset-0 z-[9999] flex flex-col bg-[var(--md-sys-color-surface-container-lowest)] text-[var(--md-sys-color-on-surface)] select-none overflow-hidden font-sans" style={{ transform: `translate(${pixelShift.x}px, ${pixelShift.y}px)` }}>
       
       {/* Dynamic Wallpaper Overlay Layer */}
       {settings.wallpaperEnabled && activeWallpaperUrl && (
@@ -526,16 +595,18 @@ export function TvModeView({
 
                 {/* Digital Clock */}
                 <div className="flex items-baseline justify-center select-text w-full max-w-full px-4 overflow-hidden">
-                  <span className="text-[4.5rem] sm:text-[5.5rem] lg:text-[6.5rem] font-mono font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)] truncate">
+                  <span className={cn("font-mono font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)] truncate", settings.tvModeHideSeconds ? "text-[5.5rem] sm:text-[6.5rem] lg:text-[7.8rem]" : "text-[4.5rem] sm:text-[5.5rem] lg:text-[6.5rem]")}>
                     {timeString.split(":")[0]}
                   </span>
-                  <span className={cn("text-[4.5rem] sm:text-[5.5rem] lg:text-[6.5rem] font-mono font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)]", colonBlink && "tv-colon-blink")}>:</span>
-                  <span className="text-[4.5rem] sm:text-[5.5rem] lg:text-[6.5rem] font-mono font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)] truncate">
+                  <span className={cn("font-mono font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)]", settings.tvModeHideSeconds ? "text-[5.5rem] sm:text-[6.5rem] lg:text-[7.8rem]" : "text-[4.5rem] sm:text-[5.5rem] lg:text-[6.5rem]", colonBlink && "tv-colon-blink")}>:</span>
+                  <span className={cn("font-mono font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)] truncate", settings.tvModeHideSeconds ? "text-[5.5rem] sm:text-[6.5rem] lg:text-[7.8rem]" : "text-[4.5rem] sm:text-[5.5rem] lg:text-[6.5rem]")}>
                     {timeString.split(":")[1]}
                   </span>
-                  <span className="text-3xl sm:text-4xl lg:text-5xl font-mono font-bold tracking-tighter text-[var(--md-sys-color-on-surface)]/60 ml-2 select-none tabular-nums">
-                    :{timeString.split(":")[2]}
-                  </span>
+                  {!settings.tvModeHideSeconds && (
+                    <span className="text-3xl sm:text-4xl lg:text-5xl font-mono font-bold tracking-tighter text-[var(--md-sys-color-on-surface)]/60 ml-2 select-none tabular-nums">
+                      :{timeString.split(":")[2]}
+                    </span>
+                  )}
                   {ampm && (
                     <span className="ml-3 text-xl lg:text-2xl font-black uppercase text-[var(--md-sys-color-primary)] tracking-widest">
                       {ampm}
@@ -630,19 +701,23 @@ export function TvModeView({
                     <span className="text-[10px] font-black uppercase tracking-widest">{isMalay ? "PERINGATAN" : "REMINDER"}:</span>
                   </div>
                   
-                  <div className="flex-1 pl-40 overflow-hidden relative">
-                    <AnimatePresence mode="wait">
-                      <motion.p
-                        key={currentAnnouncementIdx}
-                        initial={{ opacity: 0, x: 40 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -40 }}
-                        transition={{ duration: 0.35, ease: "easeOut" }}
-                        className="text-base sm:text-lg font-bold text-[var(--md-sys-color-on-surface-variant)] leading-snug tracking-tight text-left"
-                      >
-                        {announcements[currentAnnouncementIdx]}
-                      </motion.p>
-                    </AnimatePresence>
+                  <div className="flex-1 pl-40 overflow-hidden relative flex items-center">
+                    <motion.p
+                      key={currentAnnouncementIdx}
+                      initial={{ x: "100%" }}
+                      animate={{ x: "-100%" }}
+                      onAnimationComplete={() => {
+                        setCurrentAnnouncementIdx((prev) => (prev + 1) % announcements.length);
+                      }}
+                      transition={{
+                        duration: settings.tvModeTickerSpeed === 'slow' ? 24 : settings.tvModeTickerSpeed === 'fast' ? 12 : 18,
+                        ease: "linear"
+                      }}
+                      className="whitespace-nowrap font-bold text-[var(--md-sys-color-on-surface-variant)] tracking-wide shrink-0"
+                      style={{ fontSize: `${settings.tvModeTickerSize ?? 100}%` }}
+                    >
+                      {announcements[currentAnnouncementIdx]}
+                    </motion.p>
                   </div>
                 </div>
               )}
@@ -765,16 +840,18 @@ export function TvModeView({
 
               {/* Massive Ticking Digital Clock */}
               <div className="flex items-baseline justify-center select-text w-full max-w-full px-4 overflow-hidden">
-                <span className="text-[5.5rem] sm:text-[6.5rem] lg:text-[7.5rem] font-mono font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)] truncate">
+                <span className={cn("font-mono font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)] truncate", settings.tvModeHideSeconds ? "text-[6.5rem] sm:text-[7.8rem] lg:text-[9.0rem]" : "text-[5.5rem] sm:text-[6.5rem] lg:text-[7.5rem]")}>
                   {timeString.split(":")[0]}
                 </span>
-                <span className={cn("text-[5.5rem] sm:text-[6.5rem] lg:text-[7.5rem] font-mono font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)]", colonBlink && "tv-colon-blink")}>:</span>
-                <span className="text-[5.5rem] sm:text-[6.5rem] lg:text-[7.5rem] font-mono font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)] truncate">
+                <span className={cn("font-mono font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)]", settings.tvModeHideSeconds ? "text-[6.5rem] sm:text-[7.8rem] lg:text-[9.0rem]" : "text-[5.5rem] sm:text-[6.5rem] lg:text-[7.5rem]", colonBlink && "tv-colon-blink")}>:</span>
+                <span className={cn("font-mono font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)] truncate", settings.tvModeHideSeconds ? "text-[6.5rem] sm:text-[7.8rem] lg:text-[9.0rem]" : "text-[5.5rem] sm:text-[6.5rem] lg:text-[7.5rem]")}>
                   {timeString.split(":")[1]}
                 </span>
-                <span className="text-5xl sm:text-6xl lg:text-7xl font-mono font-bold tracking-tighter text-[var(--md-sys-color-on-surface)]/60 ml-2 select-none tabular-nums">
-                  :{timeString.split(":")[2]}
-                </span>
+                {!settings.tvModeHideSeconds && (
+                  <span className="text-5xl sm:text-6xl lg:text-7xl font-mono font-bold tracking-tighter text-[var(--md-sys-color-on-surface)]/60 ml-2 select-none tabular-nums">
+                    :{timeString.split(":")[2]}
+                  </span>
+                )}
                 {ampm && (
                   <span className="ml-4 text-3xl lg:text-4xl font-black uppercase text-[var(--md-sys-color-primary)] tracking-widest">
                     {ampm}
@@ -886,19 +963,23 @@ export function TvModeView({
                   <span className="text-xs font-black uppercase tracking-widest">{isMalay ? "PERINGATAN" : "REMINDER"}:</span>
                 </div>
                 
-                <div className="flex-1 pl-44 overflow-hidden relative">
-                  <AnimatePresence mode="wait">
-                    <motion.p
-                      key={currentAnnouncementIdx}
-                      initial={{ opacity: 0, x: 50 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -50 }}
-                      transition={{ duration: 0.35, ease: "easeOut" }}
-                      className="text-lg font-bold text-[var(--md-sys-color-on-surface-variant)] leading-snug tracking-tight text-left"
-                    >
-                      {announcements[currentAnnouncementIdx]}
-                    </motion.p>
-                  </AnimatePresence>
+                <div className="flex-1 pl-44 overflow-hidden relative flex items-center">
+                  <motion.p
+                    key={currentAnnouncementIdx}
+                    initial={{ x: "100%" }}
+                    animate={{ x: "-100%" }}
+                    onAnimationComplete={() => {
+                      setCurrentAnnouncementIdx((prev) => (prev + 1) % announcements.length);
+                    }}
+                    transition={{
+                      duration: settings.tvModeTickerSpeed === 'slow' ? 24 : settings.tvModeTickerSpeed === 'fast' ? 12 : 18,
+                      ease: "linear"
+                    }}
+                    className="whitespace-nowrap font-bold text-[var(--md-sys-color-on-surface-variant)] tracking-wide shrink-0"
+                    style={{ fontSize: `${settings.tvModeTickerSize ?? 100}%` }}
+                  >
+                    {announcements[currentAnnouncementIdx]}
+                  </motion.p>
                 </div>
               </div>
             )}
@@ -995,6 +1076,24 @@ export function TvModeView({
           </div>
         </div>
       )}
+      {/* Centered HUD Overlay Confirmation Toast */}
+      <AnimatePresence>
+        {hudMessage && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.6 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ type: "spring", damping: 15, stiffness: 200 }}
+            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[10000] flex flex-col items-center justify-center bg-black/75 dark:bg-black/85 text-white backdrop-blur-md rounded-[40px] px-10 py-8 border border-white/10 shadow-2xl min-w-[200px] pointer-events-none"
+          >
+            {hudIcon === 'play' && <Play size={48} className="text-[var(--md-sys-color-primary)] fill-current mb-3 animate-pulse" />}
+            {hudIcon === 'pause' && <Pause size={48} className="text-amber-500 fill-current mb-3" />}
+            {hudIcon === 'plus' && <Plus size={48} className="text-[var(--md-sys-color-primary)] mb-3 stroke-[2.5]" />}
+            {hudIcon === 'minus' && <Minus size={48} className="text-[var(--md-sys-color-error)] mb-3 stroke-[2.5]" />}
+            <span className="text-lg font-black tracking-wider uppercase">{hudMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
