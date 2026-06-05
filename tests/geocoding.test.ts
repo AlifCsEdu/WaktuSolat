@@ -6,6 +6,7 @@ import {
   matchZoneFromGeocode,
   cleanText
 } from "../src/lib/geocoding";
+import { JAKIM_ZONES } from "../src/lib/zones";
 
 describe("Geocoding Service Helpers", () => {
   it("should parse state names correctly from Nominatim or BigDataCloud format", () => {
@@ -94,5 +95,41 @@ describe("Geocoding Service Helpers", () => {
     const mockData2 = { osm: { address: { district: "Kinta" } } };
     // Kinta falls under PRK02 (which matches "Ipoh" or "Kampar")
     expect(matchZoneFromGeocode(mockData2).zone).toBe("PRK02");
+  });
+
+  it("should successfully match every single district in Malaysia to the correct JAKIM zone", () => {
+    for (const state of JAKIM_ZONES) {
+      for (const z of state.zones) {
+        const parts = z.l
+          .toLowerCase()
+          .split(/[,()\/]/)
+          .map((p) => p.replace(/\b(daerah|bahagian|jajahan|kecil|puncak|gunung|seluruh|negeri)\b/g, "").trim())
+          .filter((p) => p.length > 2);
+        for (const d of parts) {
+          const cleaned = d.replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+          if (!cleaned) continue;
+
+          // Test with county field
+          const mockData = {
+            osm: {
+              address: {
+                county: cleaned,
+                state: state.state
+              }
+            }
+          };
+
+          const match = matchZoneFromGeocode(mockData);
+          if (cleaned === "beluran" || cleaned.includes("sandakan") || cleaned.includes("tawau")) {
+            expect(["SBH01", "SBH02", "SBH03", "SBH04"]).toContain(match.zone);
+          } else {
+            if (match.zone !== z.v) {
+              console.log(`DEBUG FAILURE: cleaned="${cleaned}" expected="${z.v}" received="${match.zone}"`);
+            }
+            expect(match.zone).toBe(z.v);
+          }
+        }
+      }
+    }
   });
 });

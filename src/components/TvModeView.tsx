@@ -139,7 +139,7 @@ export function TvModeView({
 
   useEffect(() => {
     const checkSize = () => {
-      setIsMobile(window.innerWidth < 768);
+      setIsMobile(window.innerWidth < 1024 || window.innerHeight > window.innerWidth);
     };
     checkSize();
     window.addEventListener("resize", checkSize);
@@ -274,32 +274,6 @@ export function TvModeView({
     }
   };
 
-  if (isMobile) {
-    return (
-      <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-8 bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] select-none overflow-hidden font-sans">
-        <div className="max-w-md w-full bg-[var(--md-sys-color-surface)] border border-[var(--md-sys-color-outline)]/15 rounded-[32px] p-8 shadow-2xl text-center space-y-6 flex flex-col items-center">
-          <div className="w-16 h-16 rounded-full bg-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)] flex items-center justify-center">
-            <Tv size={32} className="animate-pulse" />
-          </div>
-          <div className="space-y-2">
-            <h2 className="text-2xl font-black text-[var(--md-sys-color-on-surface)]">
-              {t("mobileWarningTitle" as any)}
-            </h2>
-            <p className="text-sm text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
-              {t("mobileWarningDesc" as any)}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-6 py-3 w-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] rounded-full font-bold shadow-lg transition-all hover:opacity-90 active:scale-95 cursor-pointer"
-          >
-            {t("backToDashboard" as any)}
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   // Clock calculations
   const hasHideSeconds = settings.tvModeHideSeconds === true;
@@ -399,6 +373,33 @@ export function TvModeView({
     }
     return t(key as any).toUpperCase();
   };
+
+  if (isMobile) {
+    return (
+      <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-8 bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] select-none overflow-hidden font-sans">
+        <div className="max-w-md w-full bg-[var(--md-sys-color-surface)] border border-[var(--md-sys-color-outline)]/15 rounded-[32px] p-8 shadow-2xl text-center space-y-6 flex flex-col items-center">
+          <div className="w-16 h-16 rounded-full bg-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)] flex items-center justify-center">
+            <Tv size={32} className="animate-pulse" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black text-[var(--md-sys-color-on-surface)]">
+              {t("mobileWarningTitle" as any)}
+            </h2>
+            <p className="text-sm text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
+              {t("mobileWarningDesc" as any)}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-6 py-3 w-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] rounded-full font-bold shadow-lg transition-all hover:opacity-90 active:scale-95 cursor-pointer"
+          >
+            {t("backToDashboard" as any)}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col bg-[var(--md-sys-color-surface-container-lowest)] text-[var(--md-sys-color-on-surface)] select-none overflow-hidden font-sans" style={{ transform: `translate(${pixelShift.x}px, ${pixelShift.y}px)` }}>
@@ -571,13 +572,13 @@ export function TvModeView({
               showCenterWidget ? "flex-[1.1]" : "flex-[2]"
             )}>
               {/* Clock Panel */}
-              <div className="flex-1 flex flex-col justify-center items-center bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/15 rounded-[48px] p-8 shadow-2xl relative overflow-hidden group hover:border-[var(--md-sys-color-primary)]/20 transition-all" style={{ transform: `scale(${clockScale})`, transformOrigin: 'center center' }}>
+              <div className="flex-1 flex flex-col justify-center items-center bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/15 rounded-[48px] py-5 lg:py-8 px-6 shadow-2xl relative overflow-hidden group hover:border-[var(--md-sys-color-primary)]/20 transition-all" style={{ transform: `scale(${clockScale})`, transformOrigin: 'center center' }}>
                 {/* Shimmer overlay */}
                 <div className="absolute inset-0 tv-shimmer-overlay pointer-events-none" />
                 
                 {/* Dates */}
                 {showDateBar && (
-                  <div className="flex flex-col items-center mb-4">
+                  <div className="flex flex-col items-center mb-2">
                     <span className="text-lg sm:text-xl font-bold tracking-tight text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
                       <Calendar size={20} className="text-[var(--md-sys-color-primary)]" />
                       {dateString}
@@ -592,20 +593,20 @@ export function TvModeView({
 
                 {/* Digital Clock */}
                 <div className="flex items-baseline justify-center select-text w-full max-w-full px-4 overflow-hidden">
-                  <span className={cn("font-sans font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)] truncate", settings.tvModeHideSeconds ? "text-[5.5rem] sm:text-[6.5rem] lg:text-[7.8rem]" : "text-[4.5rem] sm:text-[5.5rem] lg:text-[6.5rem]")}>
+                  <span className={cn("font-sans font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)] truncate", settings.tvModeHideSeconds ? "text-[clamp(4rem,13vh,7rem)]" : "text-[clamp(3.5rem,11vh,6rem)]")}>
                     {timeString.split(":")[0]}
                   </span>
-                  <span className={cn("font-sans font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)]", settings.tvModeHideSeconds ? "text-[5.5rem] sm:text-[6.5rem] lg:text-[7.8rem]" : "text-[4.5rem] sm:text-[5.5rem] lg:text-[6.5rem]", colonBlink && "tv-colon-blink")}>:</span>
-                  <span className={cn("font-sans font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)] truncate", settings.tvModeHideSeconds ? "text-[5.5rem] sm:text-[6.5rem] lg:text-[7.8rem]" : "text-[4.5rem] sm:text-[5.5rem] lg:text-[6.5rem]")}>
+                  <span className={cn("font-sans font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)]", settings.tvModeHideSeconds ? "text-[clamp(4rem,13vh,7rem)]" : "text-[clamp(3.5rem,11vh,6rem)]", colonBlink && "tv-colon-blink")}>:</span>
+                  <span className={cn("font-sans font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)] truncate", settings.tvModeHideSeconds ? "text-[clamp(4rem,13vh,7rem)]" : "text-[clamp(3.5rem,11vh,6rem)]")}>
                     {timeString.split(":")[1]}
                   </span>
                   {!settings.tvModeHideSeconds && (
-                    <span className="text-3xl sm:text-4xl lg:text-5xl font-sans font-bold tracking-tighter text-[var(--md-sys-color-on-surface)]/60 ml-2 select-none tabular-nums">
+                    <span className="text-[clamp(2rem,6vh,3.5rem)] font-sans font-bold tracking-tighter text-[var(--md-sys-color-on-surface)]/60 ml-2 select-none tabular-nums">
                       :{timeString.split(":")[2]}
                     </span>
                   )}
                   {ampm && (
-                    <span className="ml-3 text-xl lg:text-2xl font-black uppercase text-[var(--md-sys-color-primary)] tracking-widest">
+                    <span className="ml-3 text-[clamp(1.2rem,3.5vh,2rem)] font-black uppercase text-[var(--md-sys-color-primary)] tracking-widest">
                       {ampm}
                     </span>
                   )}
@@ -613,7 +614,7 @@ export function TvModeView({
 
                 {/* Next Prayer Countdown Sub-panel */}
                 {showCountdown && nextPrayerName && (
-                  <div className="mt-4 flex flex-col items-center bg-[var(--md-sys-color-surface-container-high)]/60 backdrop-blur-md border border-[var(--md-sys-color-outline-variant)]/20 px-6 py-2 rounded-2xl w-full max-w-sm shadow-sm">
+                  <div className="mt-2 flex flex-col items-center bg-[var(--md-sys-color-surface-container-high)]/60 backdrop-blur-md border border-[var(--md-sys-color-outline-variant)]/20 px-6 py-2 rounded-2xl w-full max-w-sm shadow-sm">
                     <span className="text-[10px] uppercase tracking-[0.2em] font-black text-[var(--md-sys-color-on-surface-variant)]">
                       {isMalay ? "HITUNG MUNDUR" : "COUNTDOWN"} — {nextPrayerName}
                     </span>
@@ -816,13 +817,13 @@ export function TvModeView({
           )}>
             
             {/* Main Massive Clock Panel */}
-            <div className="flex-1 flex flex-col justify-center items-center bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/15 rounded-[48px] p-10 shadow-2xl relative overflow-hidden group transition-all duration-500 hover:border-[var(--md-sys-color-primary)]/20" style={{ transform: `scale(${clockScale})`, transformOrigin: 'center center' }}>
+            <div className="flex-1 flex flex-col justify-center items-center bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/15 rounded-[48px] py-6 lg:py-10 px-8 shadow-2xl relative overflow-hidden group transition-all duration-500 hover:border-[var(--md-sys-color-primary)]/20" style={{ transform: `scale(${clockScale})`, transformOrigin: 'center center' }}>
               {/* Shimmer overlay */}
               <div className="absolute inset-0 tv-shimmer-overlay pointer-events-none" />
               
               {/* Top Info row (dates) */}
               {showDateBar && (
-                <div className="flex flex-col items-center mb-6">
+                <div className="flex flex-col items-center mb-3">
                   <span className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
                     <Calendar size={22} className="text-[var(--md-sys-color-primary)]" />
                     {dateString}
@@ -837,20 +838,20 @@ export function TvModeView({
 
               {/* Massive Ticking Digital Clock */}
               <div className="flex items-baseline justify-center select-text w-full max-w-full px-4 overflow-hidden">
-                <span className={cn("font-sans font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)] truncate", settings.tvModeHideSeconds ? "text-[6.5rem] sm:text-[7.8rem] lg:text-[9.0rem]" : "text-[5.5rem] sm:text-[6.5rem] lg:text-[7.5rem]")}>
+                <span className={cn("font-sans font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)] truncate", settings.tvModeHideSeconds ? "text-[clamp(5rem,15vh,8.5rem)]" : "text-[clamp(4rem,12vh,7rem)]")}>
                   {timeString.split(":")[0]}
                 </span>
-                <span className={cn("font-sans font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)]", settings.tvModeHideSeconds ? "text-[6.5rem] sm:text-[7.8rem] lg:text-[9.0rem]" : "text-[5.5rem] sm:text-[6.5rem] lg:text-[7.5rem]", colonBlink && "tv-colon-blink")}>:</span>
-                <span className={cn("font-sans font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)] truncate", settings.tvModeHideSeconds ? "text-[6.5rem] sm:text-[7.8rem] lg:text-[9.0rem]" : "text-[5.5rem] sm:text-[6.5rem] lg:text-[7.5rem]")}>
+                <span className={cn("font-sans font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)]", settings.tvModeHideSeconds ? "text-[clamp(5rem,15vh,8.5rem)]" : "text-[clamp(4rem,12vh,7rem)]", colonBlink && "tv-colon-blink")}>:</span>
+                <span className={cn("font-sans font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)] truncate", settings.tvModeHideSeconds ? "text-[clamp(5rem,15vh,8.5rem)]" : "text-[clamp(4rem,12vh,7rem)]")}>
                   {timeString.split(":")[1]}
                 </span>
                 {!settings.tvModeHideSeconds && (
-                  <span className="text-5xl sm:text-6xl lg:text-7xl font-sans font-bold tracking-tighter text-[var(--md-sys-color-on-surface)]/60 ml-2 select-none tabular-nums">
+                  <span className="text-[clamp(2.5rem,7vh,4rem)] font-sans font-bold tracking-tighter text-[var(--md-sys-color-on-surface)]/60 ml-2 select-none tabular-nums">
                     :{timeString.split(":")[2]}
                   </span>
                 )}
                 {ampm && (
-                  <span className="ml-4 text-3xl lg:text-4xl font-black uppercase text-[var(--md-sys-color-primary)] tracking-widest">
+                  <span className="ml-4 text-[clamp(1.5rem,4vh,2.5rem)] font-black uppercase text-[var(--md-sys-color-primary)] tracking-widest">
                     {ampm}
                   </span>
                 )}
@@ -858,7 +859,7 @@ export function TvModeView({
 
               {/* Next Prayer Countdown Sub-panel */}
               {showCountdown && nextPrayerName && (
-                <div className="mt-8 flex flex-col items-center bg-[var(--md-sys-color-surface-container-high)]/60 backdrop-blur-md border border-[var(--md-sys-color-outline-variant)]/20 px-8 py-3 rounded-3xl w-full max-w-md shadow-sm">
+                <div className="mt-4 flex flex-col items-center bg-[var(--md-sys-color-surface-container-high)]/60 backdrop-blur-md border border-[var(--md-sys-color-outline-variant)]/20 px-8 py-3 rounded-3xl w-full max-w-md shadow-sm">
                   <span className="text-xs uppercase tracking-[0.25em] font-black text-[var(--md-sys-color-on-surface-variant)]">
                     {isMalay ? "HITUNG MUNDUR" : "COUNTDOWN"} — {nextPrayerName}
                   </span>

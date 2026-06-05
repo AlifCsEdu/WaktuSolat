@@ -558,7 +558,7 @@ export default function App() {
                 transition: { type: "spring", stiffness: 120, damping: 20 } 
               }
             }}
-            className="relative flex items-center gap-3 z-[60] mb-6 p-2.5 bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline-variant)]/50 rounded-full shadow-md shrink-0 flex-wrap lg:w-full"
+            className="relative flex items-center gap-2 sm:gap-3 z-[60] mb-6 p-2 bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline-variant)]/50 rounded-[24px] sm:rounded-full shadow-md shrink-0 flex-wrap lg:w-full"
           >
             <ZoneSelector
               selectedZone={selectedZone}

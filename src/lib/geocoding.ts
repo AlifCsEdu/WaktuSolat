@@ -561,7 +561,7 @@ function getDistrictToZoneMap(): Record<string, string> {
         .map((p) => p.replace(/\b(daerah|bahagian|jajahan|kecil|puncak|gunung|seluruh|negeri)\b/g, "").trim())
         .filter((p) => p.length > 2);
       for (const d of parts) {
-        const cleaned = d.replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+        const cleaned = cleanText(d);
         if (cleaned) {
           map[cleaned] = z.v;
         }

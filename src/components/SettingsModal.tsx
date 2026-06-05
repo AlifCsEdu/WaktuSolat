@@ -2241,35 +2241,35 @@ export function SettingsModal({
 
               {/* Horizontal Tabs (Mobile Only) - Conditionally hidden during active search */}
               {!searchQuery && (
-                <div className="md:hidden w-full overflow-x-auto no-scrollbar border-b border-[var(--md-sys-color-outline)]/10 shrink-0 bg-[var(--md-sys-color-surface-container-low)]">
-                  {/* @ts-ignore */}
-                  <md-tabs className="min-w-max w-full" activeTabIndex={activeTab === 'general' ? 0 : activeTab === 'notifications' ? 1 : activeTab === 'adjustments' ? 2 : activeTab === 'advanced' ? 3 : 4}>
-                    {/* @ts-ignore */}
-                    <md-primary-tab onClick={() => setActiveTab("general")}>
-                      {t("general")}
-                      <span slot="icon"><Settings size={18} /></span>
-                    </md-primary-tab>
-                    {/* @ts-ignore */}
-                    <md-primary-tab onClick={() => setActiveTab("notifications")}>
-                      {t("notifications")}
-                      <span slot="icon"><Bell size={18} /></span>
-                    </md-primary-tab>
-                    {/* @ts-ignore */}
-                    <md-primary-tab onClick={() => setActiveTab("adjustments")}>
-                      {t("offset")}
-                      <span slot="icon"><Clock size={18} /></span>
-                    </md-primary-tab>
-                    {/* @ts-ignore */}
-                    <md-primary-tab onClick={() => setActiveTab("advanced")}>
-                      {t("sunnahAndOptional" as any) || "Lanjutan"}
-                      <span slot="icon"><Sliders size={18} /></span>
-                    </md-primary-tab>
-                    {/* @ts-ignore */}
-                    <md-primary-tab onClick={() => setActiveTab("mosque")}>
-                      {t("mosqueMode" as any)}
-                      <span slot="icon"><Tv size={18} /></span>
-                    </md-primary-tab>
-                  </md-tabs>
+                <div className="md:hidden w-full overflow-x-auto no-scrollbar border-b border-[var(--md-sys-color-outline)]/10 shrink-0 bg-[var(--md-sys-color-surface-container-low)] px-4 py-2.5">
+                  <div className="flex gap-2 min-w-max">
+                    {[
+                      { id: "general", label: t("general"), icon: Settings },
+                      { id: "notifications", label: t("notifications"), icon: Bell },
+                      { id: "adjustments", label: t("offset"), icon: Clock },
+                      { id: "advanced", label: t("sunnahAndOptional" as any) || "Lanjutan", icon: Sliders },
+                      { id: "mosque", label: t("mosqueMode" as any), icon: Tv }
+                    ].map((tab) => {
+                      const Icon = tab.icon;
+                      const isActive = activeTab === tab.id;
+                      return (
+                        <button
+                          key={tab.id}
+                          onClick={() => setActiveTab(tab.id as any)}
+                          type="button"
+                          className={cn(
+                            "flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 outline-none focus:outline-none cursor-pointer select-none",
+                            isActive
+                              ? "bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] shadow-sm border border-[var(--md-sys-color-outline)]/10"
+                              : "text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-high)]"
+                          )}
+                        >
+                          <Icon size={14} className="shrink-0" />
+                          <span>{tab.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
 
