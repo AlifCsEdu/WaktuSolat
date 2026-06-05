@@ -147,12 +147,20 @@ export function usePrayerTimes(
             throw new Error("Invalid prayer data JSON");
           }
         })
-        .then((data: JakimResponse) => {
+        .then(async (data: JakimResponse) => {
           if (isMounted) {
             if (data && data.prayerTime) {
               setWeekData(data.prayerTime);
               setIsOfflineModeActive(false);
               StorageManager.setCachedPrayerData(selectedZone, data.prayerTime);
+              
+              // Automatically write to IndexedDB cache
+              try {
+                const range = settings.offlineCachedRange || 'month';
+                await saveOfflinePrayers(selectedZone, data.prayerTime, range);
+              } catch (saveErr) {
+                console.warn("Auto-save offline prayers failed:", saveErr);
+              }
             }
             setError(null);
           }
