@@ -430,11 +430,8 @@ export function TvModeView({
         </div>
       )}
 
-      {/* Dynamic Background Light Orbs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute -top-[10%] -left-[10%] w-[45vw] h-[45vw] bg-[var(--md-sys-color-primary)]/8 rounded-full blur-[100px]" />
-        <div className="absolute -bottom-[15%] -right-[15%] w-[50vw] h-[50vw] bg-[var(--md-sys-color-secondary)]/8 rounded-full blur-[120px]" />
-      </div>
+      {/* Repeating Islamic geometric pattern background */}
+      <div className="absolute inset-0 islamic-pattern-overlay opacity-30 z-0 pointer-events-none" />
 
       {/* ESC exit instruction overlay */}
       <AnimatePresence>
@@ -595,15 +592,15 @@ export function TvModeView({
 
                 {/* Digital Clock */}
                 <div className="flex items-baseline justify-center select-text w-full max-w-full px-4 overflow-hidden">
-                  <span className={cn("font-mono font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)] truncate", settings.tvModeHideSeconds ? "text-[5.5rem] sm:text-[6.5rem] lg:text-[7.8rem]" : "text-[4.5rem] sm:text-[5.5rem] lg:text-[6.5rem]")}>
+                  <span className={cn("font-sans font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)] truncate", settings.tvModeHideSeconds ? "text-[5.5rem] sm:text-[6.5rem] lg:text-[7.8rem]" : "text-[4.5rem] sm:text-[5.5rem] lg:text-[6.5rem]")}>
                     {timeString.split(":")[0]}
                   </span>
-                  <span className={cn("font-mono font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)]", settings.tvModeHideSeconds ? "text-[5.5rem] sm:text-[6.5rem] lg:text-[7.8rem]" : "text-[4.5rem] sm:text-[5.5rem] lg:text-[6.5rem]", colonBlink && "tv-colon-blink")}>:</span>
-                  <span className={cn("font-mono font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)] truncate", settings.tvModeHideSeconds ? "text-[5.5rem] sm:text-[6.5rem] lg:text-[7.8rem]" : "text-[4.5rem] sm:text-[5.5rem] lg:text-[6.5rem]")}>
+                  <span className={cn("font-sans font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)]", settings.tvModeHideSeconds ? "text-[5.5rem] sm:text-[6.5rem] lg:text-[7.8rem]" : "text-[4.5rem] sm:text-[5.5rem] lg:text-[6.5rem]", colonBlink && "tv-colon-blink")}>:</span>
+                  <span className={cn("font-sans font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)] truncate", settings.tvModeHideSeconds ? "text-[5.5rem] sm:text-[6.5rem] lg:text-[7.8rem]" : "text-[4.5rem] sm:text-[5.5rem] lg:text-[6.5rem]")}>
                     {timeString.split(":")[1]}
                   </span>
                   {!settings.tvModeHideSeconds && (
-                    <span className="text-3xl sm:text-4xl lg:text-5xl font-mono font-bold tracking-tighter text-[var(--md-sys-color-on-surface)]/60 ml-2 select-none tabular-nums">
+                    <span className="text-3xl sm:text-4xl lg:text-5xl font-sans font-bold tracking-tighter text-[var(--md-sys-color-on-surface)]/60 ml-2 select-none tabular-nums">
                       :{timeString.split(":")[2]}
                     </span>
                   )}
@@ -840,15 +837,15 @@ export function TvModeView({
 
               {/* Massive Ticking Digital Clock */}
               <div className="flex items-baseline justify-center select-text w-full max-w-full px-4 overflow-hidden">
-                <span className={cn("font-mono font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)] truncate", settings.tvModeHideSeconds ? "text-[6.5rem] sm:text-[7.8rem] lg:text-[9.0rem]" : "text-[5.5rem] sm:text-[6.5rem] lg:text-[7.5rem]")}>
+                <span className={cn("font-sans font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)] truncate", settings.tvModeHideSeconds ? "text-[6.5rem] sm:text-[7.8rem] lg:text-[9.0rem]" : "text-[5.5rem] sm:text-[6.5rem] lg:text-[7.5rem]")}>
                   {timeString.split(":")[0]}
                 </span>
-                <span className={cn("font-mono font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)]", settings.tvModeHideSeconds ? "text-[6.5rem] sm:text-[7.8rem] lg:text-[9.0rem]" : "text-[5.5rem] sm:text-[6.5rem] lg:text-[7.5rem]", colonBlink && "tv-colon-blink")}>:</span>
-                <span className={cn("font-mono font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)] truncate", settings.tvModeHideSeconds ? "text-[6.5rem] sm:text-[7.8rem] lg:text-[9.0rem]" : "text-[5.5rem] sm:text-[6.5rem] lg:text-[7.5rem]")}>
+                <span className={cn("font-sans font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)]", settings.tvModeHideSeconds ? "text-[6.5rem] sm:text-[7.8rem] lg:text-[9.0rem]" : "text-[5.5rem] sm:text-[6.5rem] lg:text-[7.5rem]", colonBlink && "tv-colon-blink")}>:</span>
+                <span className={cn("font-sans font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)] truncate", settings.tvModeHideSeconds ? "text-[6.5rem] sm:text-[7.8rem] lg:text-[9.0rem]" : "text-[5.5rem] sm:text-[6.5rem] lg:text-[7.5rem]")}>
                   {timeString.split(":")[1]}
                 </span>
                 {!settings.tvModeHideSeconds && (
-                  <span className="text-5xl sm:text-6xl lg:text-7xl font-mono font-bold tracking-tighter text-[var(--md-sys-color-on-surface)]/60 ml-2 select-none tabular-nums">
+                  <span className="text-5xl sm:text-6xl lg:text-7xl font-sans font-bold tracking-tighter text-[var(--md-sys-color-on-surface)]/60 ml-2 select-none tabular-nums">
                     :{timeString.split(":")[2]}
                   </span>
                 )}
@@ -1076,21 +1073,21 @@ export function TvModeView({
           </div>
         </div>
       )}
-      {/* Centered HUD Overlay Confirmation Toast */}
+      {/* Floating Dynamic HUD Pill Toast at top center */}
       <AnimatePresence>
         {hudMessage && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.6 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ type: "spring", damping: 15, stiffness: 200 }}
-            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[10000] flex flex-col items-center justify-center bg-black/75 dark:bg-black/85 text-white backdrop-blur-md rounded-[40px] px-10 py-8 border border-white/10 shadow-2xl min-w-[200px] pointer-events-none"
+            initial={{ opacity: 0, y: -30, scale: 0.9, x: "-50%" }}
+            animate={{ opacity: 1, y: 0, scale: 1, x: "-50%" }}
+            exit={{ opacity: 0, y: -20, scale: 0.95, x: "-50%" }}
+            transition={{ type: "spring", damping: 18, stiffness: 220 }}
+            className="fixed top-28 left-1/2 z-[10000] flex items-center gap-3 bg-[var(--md-sys-color-surface-container-highest)]/80 text-[var(--md-sys-color-on-surface)] backdrop-blur-xl rounded-full px-6 py-3 border border-[var(--md-sys-color-outline-variant)]/40 shadow-xl pointer-events-none"
           >
-            {hudIcon === 'play' && <Play size={48} className="text-[var(--md-sys-color-primary)] fill-current mb-3 animate-pulse" />}
-            {hudIcon === 'pause' && <Pause size={48} className="text-amber-500 fill-current mb-3" />}
-            {hudIcon === 'plus' && <Plus size={48} className="text-[var(--md-sys-color-primary)] mb-3 stroke-[2.5]" />}
-            {hudIcon === 'minus' && <Minus size={48} className="text-[var(--md-sys-color-error)] mb-3 stroke-[2.5]" />}
-            <span className="text-lg font-black tracking-wider uppercase">{hudMessage}</span>
+            {hudIcon === 'play' && <Play size={20} className="text-[var(--md-sys-color-primary)] fill-current animate-pulse" />}
+            {hudIcon === 'pause' && <Pause size={20} className="text-amber-500 fill-current" />}
+            {hudIcon === 'plus' && <Plus size={20} className="text-[var(--md-sys-color-primary)] stroke-[2.5]" />}
+            {hudIcon === 'minus' && <Minus size={20} className="text-[var(--md-sys-color-error)] stroke-[2.5]" />}
+            <span className="text-xs font-black tracking-widest uppercase">{hudMessage}</span>
           </motion.div>
         )}
       </AnimatePresence>

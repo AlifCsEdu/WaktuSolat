@@ -120,19 +120,8 @@ export function SolatMode({
       {/* Calm ambient breathing backdrop */}
       <div className="absolute inset-0 bg-black/40 dark:bg-black/60 pointer-events-none" />
       
-      {/* Subtle pulsing color blob in center */}
-      <motion.div
-        animate={{
-          scale: isDuaStage ? [1, 1.1, 1] : [1, 1.2, 1],
-          opacity: isDuaStage ? [0.05, 0.1, 0.05] : [0.08, 0.15, 0.08],
-        }}
-        transition={{
-          repeat: Infinity,
-          duration: isDuaStage ? 12 : 8,
-          ease: "easeInOut",
-        }}
-        className="absolute w-[80vw] h-[80vw] sm:w-[50vw] sm:h-[50vw] rounded-full bg-[var(--md-sys-color-primary)]/10 blur-[120px] pointer-events-none"
-      />
+      {/* Repeating Islamic geometric pattern background */}
+      <div className="absolute inset-0 islamic-pattern-overlay opacity-30 z-0 pointer-events-none" />
 
       {/* Top Header: Solat Mode Indicator & Clock */}
       <div className="w-full flex items-center justify-between z-10">
@@ -154,7 +143,7 @@ export function SolatMode({
             isTvMode ? "gap-3.5 text-3xl px-6 py-3 rounded-3xl" : "gap-2 text-xl px-4 py-2 rounded-2xl"
           )}>
             <Clock size={isTvMode ? 26 : 18} className="text-[var(--md-sys-color-on-surface-variant)] shrink-0" />
-            <span className="font-mono">{formattedClock}</span>
+            <span className="font-sans tabular-nums">{formattedClock}</span>
           </div>
         )}
       </div>
@@ -291,38 +280,67 @@ export function SolatMode({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className={cn(
-              "absolute inset-x-0 mx-auto w-fit z-20 flex flex-col items-center",
-              isTvMode ? "bottom-36 gap-4" : "bottom-24 gap-2"
-            )}
+            className="absolute bottom-24 inset-x-0 mx-auto w-fit z-20 flex flex-col items-center gap-2"
           >
             {/* @ts-ignore */}
             <md-filled-tonal-button
               onClick={handleExitClick}
               className="shadow-xl"
               style={{ 
-                '--md-filled-tonal-button-container-shape': isTvMode ? '32px' : '24px', 
-                '--md-filled-tonal-button-container-height': isTvMode ? '64px' : '48px',
-                '--md-filled-tonal-button-label-text-size': isTvMode ? '16px' : '14px'
+                '--md-filled-tonal-button-container-shape': '24px', 
+                '--md-filled-tonal-button-container-height': '48px',
+                '--md-filled-tonal-button-label-text-size': '14px'
               } as any}
             >
-              <X slot="icon" size={isTvMode ? 22 : 16} className="stroke-[2.5]" />
+              <X slot="icon" size={16} className="stroke-[2.5]" />
               {exitTapCount > 0 
-                ? (isTvMode ? t("wakeUpPrompt") : t("doubleTapExit")) 
+                ? t("doubleTapExit")
                 : t("exitSolatMode")}
             </md-filled-tonal-button>
             {exitTapCount > 0 && (
               <motion.span 
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={cn(
-                  "text-[var(--md-sys-color-on-error-container)] font-bold bg-[var(--md-sys-color-error-container)] px-4 py-2 rounded-full shadow-sm text-center",
-                  isTvMode ? "text-sm" : "text-[10px]"
-                )}
+                className="text-[var(--md-sys-color-on-error-container)] font-bold bg-[var(--md-sys-color-error-container)] px-4 py-2 rounded-full shadow-sm text-center text-[10px]"
               >
-                {isTvMode ? t("wakeUpPrompt") : t("doubleTapExit")}
+                {t("doubleTapExit")}
               </motion.span>
             )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Typographic remote exit prompt for TV Mode */}
+      <AnimatePresence>
+        {isTvMode && showExitButton && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/85 backdrop-blur-md text-center p-12"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 15 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 15 }}
+              transition={{ type: "spring", damping: 18, stiffness: 200 }}
+              className="space-y-6 max-w-3xl flex flex-col items-center"
+            >
+              <div className="w-24 h-24 rounded-full bg-[var(--md-sys-color-primary)]/10 text-[var(--md-sys-color-primary)] flex items-center justify-center mx-auto mb-4 border border-[var(--md-sys-color-primary)]/20 shadow-inner">
+                <Clock size={48} className="animate-pulse" />
+              </div>
+              <h2 className="text-4xl sm:text-5xl font-black text-white tracking-tight leading-tight uppercase">
+                {t("exitSolatMode")}
+              </h2>
+              <p className="text-xl sm:text-2xl text-white/70 max-w-2xl mx-auto leading-relaxed">
+                {t("wakeUpPrompt")}
+              </p>
+              <div className="pt-8">
+                <span className="text-xs font-black tracking-widest text-[var(--md-sys-color-primary)] uppercase bg-[var(--md-sys-color-primary-container)]/20 px-5 py-2.5 rounded-full border border-[var(--md-sys-color-primary)]/30">
+                  {exitTapCount > 0 ? "PRESS ANY KEY AGAIN TO EXIT" : "PRESS ANY KEY TO WAKE SCREEN"}
+                </span>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

@@ -1107,10 +1107,6 @@ html[data-style="retro"] md-list-item {
     animation: tv-colon-blink 1s ease-in-out infinite;
 }
 
-.tv-active-glow {
-    animation: tv-active-glow 2.5s ease-in-out infinite;
-}
-
 .tv-badge-enter {
     animation: tv-badge-enter 0.35s var(--ease-m3-emphasized-decelerate) both;
 }
@@ -1141,4 +1137,14 @@ html[data-style="retro"] md-list-item {
 .settings-accordion-content[data-open="true"] {
     max-height: 5000px;
     opacity: 1;
+}
+
+.tv-active-glow {
+    border: 2px solid var(--md-sys-color-tertiary) !important;
+    box-shadow: 0 16px 40px -6px rgba(0, 0, 0, 0.25) !important;
+}
+
+.islamic-pattern-overlay {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cpath d='M40 0 L80 40 L40 80 L0 40 Z M40 8 L72 40 L40 72 L8 40 Z M20 20 L60 20 L60 60 L20 60 Z' fill='none' stroke='currentColor' stroke-width='0.5' stroke-opacity='0.035'/%3E%3C/svg%3E");
+    background-repeat: repeat;
 }
