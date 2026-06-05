@@ -376,20 +376,50 @@ export function TvModeView({
       </AnimatePresence>
 
       {/* Header bar */}
-      <div className="relative z-10 flex items-center justify-between px-10 py-5 bg-[var(--md-sys-color-surface-container-low)]/40 backdrop-blur-xl border-b border-[var(--md-sys-color-outline-variant)]/20 shrink-0">
+      <div className={cn(
+        "relative z-10 flex items-center justify-between px-10 py-5 bg-[var(--md-sys-color-surface-container-low)]/40 backdrop-blur-xl border-b border-[var(--md-sys-color-outline-variant)]/20 shrink-0",
+        settings.mosqueLogoAlignment === 'top' && "py-3"
+      )}>
         <div className="flex items-center gap-6">
-          <h1 className="text-3xl font-black tracking-tighter text-[var(--md-sys-color-primary)] flex items-center gap-4">
+          <h1 className={cn(
+            "text-3xl font-black tracking-tighter text-[var(--md-sys-color-primary)] flex transition-all duration-300",
+            settings.mosqueLogoAlignment === 'top' ? "flex-col items-center gap-2 text-center" :
+            settings.mosqueLogoAlignment === 'right' ? "flex-row-reverse items-center gap-4" :
+            "flex-row items-center gap-4"
+          )}>
             {settings.mosqueLogoEnabled && logoUrl ? (
-              <div className="h-12 w-12 flex items-center justify-center bg-transparent shrink-0">
+              <div
+                className={cn(
+                  "flex items-center justify-center shrink-0 overflow-hidden shadow-sm transition-all duration-300",
+                  settings.mosqueLogoBgMode === 'white' ? 'bg-white' :
+                  settings.mosqueLogoBgMode === 'theme-container' ? 'bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline-variant)]/10' :
+                  settings.mosqueLogoBgMode === 'theme-primary' ? 'bg-[var(--md-sys-color-primary)]' :
+                  'bg-transparent',
+                  settings.mosqueLogoShape === 'circle' ? 'rounded-full' :
+                  settings.mosqueLogoShape === 'square' ? 'rounded-none' :
+                  settings.mosqueLogoShape === 'rounded' ? 'rounded-2xl' :
+                  ''
+                )}
+                style={{
+                  width: `${settings.mosqueLogoSize ?? 48}px`,
+                  height: `${settings.mosqueLogoSize ?? 48}px`,
+                  padding: `${settings.mosqueLogoPadding ?? 0}px`,
+                }}
+              >
                 <img
                   src={logoUrl}
                   alt="Mosque Logo"
                   className="max-h-full max-w-full object-contain"
+                  style={{
+                    mixBlendMode: settings.mosqueLogoBlendMode === 'multiply' ? 'multiply' :
+                                   settings.mosqueLogoBlendMode === 'screen' ? 'screen' :
+                                   'normal'
+                  }}
                   onError={() => setLogoUrl(null)}
                 />
               </div>
             ) : (
-              <Tv className="w-8 h-8 text-[var(--md-sys-color-primary)]" />
+              <Tv className="w-8 h-8 text-[var(--md-sys-color-primary)] shrink-0" />
             )}
             <span>{settings.mosqueName || "AlurWaktu TV"}</span>
           </h1>
@@ -458,256 +488,487 @@ export function TvModeView({
         </div>
       </div>
 
-      {/* Main Split Grid */}
-      <div className="flex-1 relative z-10 flex flex-row items-stretch p-8 gap-8 min-h-0 w-full">
-        
-        {/* Left Container: Clock & Announcements */}
-        <div className={cn(
-          "flex flex-col justify-between items-stretch gap-6 min-w-0",
-          showCenterWidget ? "flex-[0.8]" : "flex-[1.2]"
-        )}>
-          
-          {/* Main Massive Clock Panel */}
-          <div className="flex-1 flex flex-col justify-center items-center bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/15 rounded-[48px] p-10 shadow-2xl relative overflow-hidden group transition-all duration-500 hover:border-[var(--md-sys-color-primary)]/20">
-            
-            {/* Top Info row (dates) */}
-            <div className="flex flex-col items-center mb-6">
-              <span className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
-                <Calendar size={22} className="text-[var(--md-sys-color-primary)]" />
-                {dateString}
-              </span>
-              {hijriString && (
-                <span className="text-lg sm:text-xl font-bold text-[var(--md-sys-color-tertiary)] mt-1.5 uppercase tracking-wide">
-                  {hijriString}
-                </span>
-              )}
-            </div>
-
-            {/* Massive Ticking Digital Clock */}
-            <div className="flex items-baseline justify-center select-text">
-              <span className="text-[6.5rem] sm:text-[8rem] lg:text-[10rem] font-mono font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)]">
-                {timeString.split(":")[0]}:{timeString.split(":")[1]}
-              </span>
-              <span className="text-5xl sm:text-6xl lg:text-7xl font-mono font-bold tracking-tighter text-[var(--md-sys-color-on-surface)]/60 ml-2 select-none tabular-nums">
-                :{timeString.split(":")[2]}
-              </span>
-              {ampm && (
-                <span className="ml-4 text-3xl lg:text-4xl font-black uppercase text-[var(--md-sys-color-primary)] tracking-widest">
-                  {ampm}
-                </span>
-              )}
-            </div>
-
-            {/* Next Prayer Countdown Sub-panel */}
-            {nextPrayerName && (
-              <div className="mt-8 flex flex-col items-center bg-[var(--md-sys-color-surface-container-high)]/60 backdrop-blur-md border border-[var(--md-sys-color-outline-variant)]/20 px-8 py-3 rounded-3xl w-full max-w-md shadow-sm">
-                <span className="text-xs uppercase tracking-[0.25em] font-black text-[var(--md-sys-color-on-surface-variant)]">
-                  {isMalay ? "HITUNG MUNDUR" : "COUNTDOWN"} — {nextPrayerName}
-                </span>
-                <span className="text-4xl sm:text-5xl font-mono font-black text-[var(--md-sys-color-primary)] tracking-tight mt-1 tabular-nums">
-                  {countdownString}
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Weather Widget */}
-          <div className="shrink-0 rounded-[32px] overflow-hidden">
-            <WeatherWidget selectedZone={selectedZone} userCoords={userCoords} currentLocationName={currentLocationName} />
-          </div>
-
-          {/* Dynamic Iqamah Countdown Banner */}
-          <AnimatePresence>
-            {iqamahCountdownActive && (
-              <motion.div
-                initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                onClick={onIqamahTogglePause}
-                className={cn(
-                  "rounded-[32px] p-6 flex flex-col items-center justify-center border shadow-2xl relative overflow-hidden cursor-pointer select-none transition-all duration-300 active:scale-[0.99]",
-                  iqamahRemainingSeconds <= 60
-                    ? "bg-gradient-to-r from-[var(--md-sys-color-error)] via-orange-600 to-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)] border-[var(--md-sys-color-error)]/25 animate-pulse"
-                    : "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] border-[var(--md-sys-color-primary)]/10"
-                )}
-              >
-                {/* Flashing ambient effect */}
-                <div className="absolute inset-0 bg-white/5" />
+      {settings.tvModeLayout === 'bottom' ? (
+        /* Horizontal Bottom Schedule Layout */
+        <div className="flex-1 relative z-10 flex flex-col justify-between p-8 gap-8 min-h-0 w-full">
+          {/* Top grid (Clock + Widgets) */}
+          <div className="flex-1 flex flex-row items-stretch gap-8 min-h-0 w-full">
+            {/* Left part: Clock, Dates, Iqamah, Weather, and Announcements banner if center widget is off */}
+            <div className={cn(
+              "flex flex-col justify-between items-stretch gap-6 min-w-0",
+              showCenterWidget ? "flex-[1.1]" : "flex-[2]"
+            )}>
+              {/* Clock Panel */}
+              <div className="flex-1 flex flex-col justify-center items-center bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/15 rounded-[48px] p-8 shadow-2xl relative overflow-hidden group hover:border-[var(--md-sys-color-primary)]/20 transition-all">
                 
-                {/* Plus 1 minute button */}
-                <div className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center z-20">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation(); // Prevent toggling pause
-                      onIqamahAddMinute();
-                    }}
-                    className={cn(
-                      "w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-95 shadow-md",
-                      iqamahRemainingSeconds <= 60
-                        ? "bg-white/30 hover:bg-white/45 text-white"
-                        : "bg-[var(--md-sys-color-on-primary)]/20 hover:bg-[var(--md-sys-color-on-primary)]/35 text-[var(--md-sys-color-on-primary)]"
-                    )}
-                    title="+1 Min"
-                  >
-                    <Plus size={20} className="stroke-[3]" />
-                  </button>
-                </div>
-
-                {/* Status text with play/pause indicators */}
-                <div className="flex items-center gap-2 text-sm uppercase tracking-[0.25em] font-black opacity-90 relative z-10">
-                  {iqamahPaused ? (
-                    <Play size={16} className="fill-current animate-pulse shrink-0" />
-                  ) : (
-                    <Pause size={16} className="fill-current shrink-0" />
-                  )}
-                  <span>
-                    {iqamahPaused
-                      ? (isMalay ? "IQAMAH DITANGGUH (KETIK UNTUK SAMBUNG)" : "IQAMAH PAUSED (TAP TO RESUME)")
-                      : iqamahRemainingSeconds <= 60
-                      ? (isMalay ? "SILA RAPATKAN SAF & SENYAPKAN TELEFON" : "PLEASE STRAIGHTEN ROWS & SILENCE PHONES")
-                      : (isMalay ? "BERSEDIA UNTUK SOLAT (IQAMAH)" : "PREPARE FOR PRAYER (IQAMAH)")}
+                {/* Dates */}
+                <div className="flex flex-col items-center mb-4">
+                  <span className="text-lg sm:text-xl font-bold tracking-tight text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
+                    <Calendar size={20} className="text-[var(--md-sys-color-primary)]" />
+                    {dateString}
                   </span>
-                </div>
-
-                {/* Large countdown time */}
-                <div className="text-5xl sm:text-6xl font-mono font-black tracking-tight mt-2 relative z-10 tabular-nums">
-                  {Math.floor(iqamahRemainingSeconds / 60)}:
-                  {String(iqamahRemainingSeconds % 60).padStart(2, "0")}
-                </div>
-
-                {/* Progress bar */}
-                <div className="absolute bottom-0 left-0 right-0 h-2 bg-black/20 overflow-hidden">
-                  <motion.div
-                    className={cn(
-                      "h-full",
-                      iqamahRemainingSeconds <= 60 ? "bg-white" : "bg-[var(--md-sys-color-on-primary)]/80"
-                    )}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${Math.max(0, Math.min(100, ((iqamahTotalSeconds - iqamahRemainingSeconds) / iqamahTotalSeconds) * 100))}%` }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
-                  />
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Running announcement banner */}
-          {!showCenterWidget && (
-            <div className="h-28 bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/10 rounded-[32px] p-6 shadow-md overflow-hidden flex items-center relative transition-all duration-500 hover:border-[var(--md-sys-color-primary)]/15">
-              <div className="absolute left-6 text-[var(--md-sys-color-primary)] shrink-0 bg-[var(--md-sys-color-surface-container-high)]/90 backdrop-blur-xl px-4 py-2 rounded-2xl border border-[var(--md-sys-color-outline-variant)]/20 shadow-sm z-10 flex items-center gap-2">
-                <BookOpen size={20} className="stroke-[2.5]" />
-                <span className="text-xs font-black uppercase tracking-widest">{isMalay ? "PERINGATAN" : "REMINDER"}:</span>
-              </div>
-              
-              <div className="flex-1 pl-44 overflow-hidden relative">
-                <AnimatePresence mode="wait">
-                  <motion.p
-                    key={currentAnnouncementIdx}
-                    initial={{ opacity: 0, x: 50 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -50 }}
-                    transition={{ duration: 0.35, ease: "easeOut" }}
-                    className="text-lg font-bold text-[var(--md-sys-color-on-surface-variant)] leading-snug tracking-tight text-left"
-                  >
-                    {announcements[currentAnnouncementIdx]}
-                  </motion.p>
-                </AnimatePresence>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Center Container: Active Center Widget (Reminders, Slideshow, Camera) */}
-        {showCenterWidget && (
-          <div className="flex-[1.4] flex flex-col justify-stretch items-stretch min-w-0 bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/15 rounded-[48px] p-8 shadow-2xl relative overflow-hidden transition-all duration-500 hover:border-[var(--md-sys-color-primary)]/20">
-            {settings.tvModeCenterWidget === 'reminders' && (
-              <TvModeRemindersWidget
-                reminders={settings.tvModeRemindersList || []}
-                interval={settings.tvModeReminderInterval ?? 15}
-                language={settings.language}
-                t={t}
-              />
-            )}
-            {settings.tvModeCenterWidget === 'slideshow' && (
-              <TvModeSlideshowWidget
-                urls={settings.tvModeSlideshowUrls || ""}
-                interval={settings.tvModeSlideshowInterval ?? 15}
-                language={settings.language}
-              />
-            )}
-            {settings.tvModeCenterWidget === 'camera' && (
-              <TvModeCameraWidget
-                deviceId={settings.tvModeCameraDeviceId || ""}
-                language={settings.language}
-                t={t}
-              />
-            )}
-          </div>
-        )}
-
-        {/* Right Container: Massive Prayer Schedule list */}
-        <div className={cn(
-          "flex flex-col justify-between items-stretch bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/15 rounded-[48px] p-8 shadow-2xl min-w-0 transition-all duration-500 hover:border-[var(--md-sys-color-primary)]/20",
-          showCenterWidget ? "flex-[0.8]" : "flex-[0.9]"
-        )}>
-          <div className="flex flex-col h-full justify-between gap-2.5">
-            {activeKeys.map((key) => {
-              const rawTime = todayData ? todayData[key as keyof PrayerData] : "--:--";
-              const formattedTime = formatPrayerTime(rawTime as string);
-              const isCurrent = key === prevPrayerName; // Matches active prayer
-              const isNext = key === nextPrayerName?.toLowerCase() || (key === "dhuhr" && nextPrayerName?.toLowerCase() === "jumaat") || (key === "dhuhr" && nextPrayerName?.toLowerCase() === "jumu'ah");
-
-              return (
-                <div
-                  key={key}
-                  className={cn(
-                    "flex items-center justify-between px-6 py-4 rounded-[24px] border transition-all duration-300 relative overflow-hidden flex-1",
-                    isCurrent
-                      ? "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] border-[var(--md-sys-color-primary)]/10 shadow-lg scale-[1.02] z-10"
-                      : isNext
-                      ? "bg-[var(--md-sys-color-primary-container)]/35 text-[var(--md-sys-color-on-primary-container)] border-[var(--md-sys-color-primary)]/30 border-l-8 border-l-[var(--md-sys-color-primary)] shadow-sm"
-                      : "bg-[var(--md-sys-color-surface)]/40 border-transparent hover:bg-[var(--md-sys-color-surface-container-high)]/60 hover:border-[var(--md-sys-color-outline-variant)]/30"
-                  )}
-                >
-                  {/* Backdrop highlight flash */}
-                  {isCurrent && <div className="absolute inset-0 bg-white/5 animate-pulse" />}
-
-                  <div className="flex items-center gap-4 relative z-10">
-                    <span className={cn(
-                      "text-xl sm:text-2xl font-black tracking-tight",
-                      isCurrent ? "text-[var(--md-sys-color-on-primary)]" : "text-[var(--md-sys-color-on-surface)]"
-                    )}>
-                      {getPrayerDisplayLabel(key)}
+                  {hijriString && (
+                    <span className="text-sm sm:text-base font-bold text-[var(--md-sys-color-tertiary)] mt-1 uppercase tracking-wide">
+                      {hijriString}
                     </span>
-                    
-                    {/* Active highlight label badge */}
-                    {isCurrent && (
-                      <span className="px-3 py-1 rounded-full bg-[var(--md-sys-color-on-primary)] text-[var(--md-sys-color-primary)] text-[9px] font-black tracking-widest uppercase">
-                        {isMalay ? "SEKARANG" : "ACTIVE"}
-                      </span>
+                  )}
+                </div>
+
+                {/* Digital Clock */}
+                <div className="flex items-baseline justify-center select-text w-full max-w-full px-4 overflow-hidden">
+                  <span className="text-[4.5rem] sm:text-[5.5rem] lg:text-[6.5rem] font-mono font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)] truncate">
+                    {timeString.split(":")[0]}:{timeString.split(":")[1]}
+                  </span>
+                  <span className="text-3xl sm:text-4xl lg:text-5xl font-mono font-bold tracking-tighter text-[var(--md-sys-color-on-surface)]/60 ml-2 select-none tabular-nums">
+                    :{timeString.split(":")[2]}
+                  </span>
+                  {ampm && (
+                    <span className="ml-3 text-xl lg:text-2xl font-black uppercase text-[var(--md-sys-color-primary)] tracking-widest">
+                      {ampm}
+                    </span>
+                  )}
+                </div>
+
+                {/* Next Prayer Countdown Sub-panel */}
+                {nextPrayerName && (
+                  <div className="mt-4 flex flex-col items-center bg-[var(--md-sys-color-surface-container-high)]/60 backdrop-blur-md border border-[var(--md-sys-color-outline-variant)]/20 px-6 py-2 rounded-2xl w-full max-w-sm shadow-sm">
+                    <span className="text-[10px] uppercase tracking-[0.2em] font-black text-[var(--md-sys-color-on-surface-variant)]">
+                      {isMalay ? "HITUNG MUNDUR" : "COUNTDOWN"} — {nextPrayerName}
+                    </span>
+                    <span className="text-2xl sm:text-3xl font-mono font-black text-[var(--md-sys-color-primary)] tracking-tight mt-0.5 tabular-nums">
+                      {countdownString}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Weather Widget */}
+              <div className="shrink-0 rounded-[32px] overflow-hidden">
+                <WeatherWidget selectedZone={selectedZone} userCoords={userCoords} currentLocationName={currentLocationName} />
+              </div>
+
+              {/* Dynamic Iqamah Countdown Banner */}
+              <AnimatePresence>
+                {iqamahCountdownActive && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 15, scale: 0.98 }}
+                    onClick={onIqamahTogglePause}
+                    className={cn(
+                      "rounded-[32px] p-5 flex flex-col items-center justify-center border shadow-2xl relative overflow-hidden cursor-pointer select-none transition-all duration-300 active:scale-[0.99] shrink-0",
+                      iqamahRemainingSeconds <= 60
+                        ? "bg-gradient-to-r from-[var(--md-sys-color-error)] via-orange-600 to-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)] border-[var(--md-sys-color-error)]/25 animate-pulse"
+                        : "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] border-[var(--md-sys-color-primary)]/10"
                     )}
+                  >
+                    <div className="absolute inset-0 bg-white/5" />
                     
-                    {/* Next prayer highlight badge */}
-                    {isNext && (
-                      <span className="px-2.5 py-1 rounded-full bg-[var(--md-sys-color-primary)]/20 text-[var(--md-sys-color-primary)] text-[9px] font-black tracking-widest uppercase animate-pulse">
-                        {isMalay ? "SELEPAS INI" : "UP NEXT"}
+                    <div className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center z-20">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onIqamahAddMinute();
+                        }}
+                        className={cn(
+                          "w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-95 shadow-md",
+                          iqamahRemainingSeconds <= 60
+                            ? "bg-white/30 hover:bg-white/45 text-white"
+                            : "bg-[var(--md-sys-color-on-primary)]/20 hover:bg-[var(--md-sys-color-on-primary)]/35 text-[var(--md-sys-color-on-primary)]"
+                        )}
+                        title="+1 Min"
+                      >
+                        <Plus size={18} className="stroke-[3]" />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] font-black opacity-90 relative z-10">
+                      {iqamahPaused ? (
+                        <Play size={12} className="fill-current animate-pulse shrink-0" />
+                      ) : (
+                        <Pause size={12} className="fill-current shrink-0" />
+                      )}
+                      <span>
+                        {iqamahPaused
+                          ? (isMalay ? "IQAMAH DITANGGUH (KETIK UNTUK SAMBUNG)" : "IQAMAH PAUSED (TAP TO RESUME)")
+                          : iqamahRemainingSeconds <= 60
+                          ? (isMalay ? "SILA RAPATKAN SAF & SENYAPKAN TELEFON" : "PLEASE STRAIGHTEN ROWS & SILENCE PHONES")
+                          : (isMalay ? "BERSEDIA UNTUK SOLAT (IQAMAH)" : "PREPARE FOR PRAYER (IQAMAH)")}
                       </span>
-                    )}
+                    </div>
+
+                    <div className="text-3xl sm:text-4xl font-mono font-black tracking-tight mt-1.5 relative z-10 tabular-nums">
+                      {Math.floor(iqamahRemainingSeconds / 60)}:
+                      {String(iqamahRemainingSeconds % 60).padStart(2, "0")}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Running announcement banner if center widget is off */}
+              {!showCenterWidget && (
+                <div className="h-24 bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/10 rounded-[32px] px-6 py-4 shadow-md overflow-hidden flex items-center relative transition-all duration-500 hover:border-[var(--md-sys-color-primary)]/15 shrink-0">
+                  <div className="absolute left-6 text-[var(--md-sys-color-primary)] shrink-0 bg-[var(--md-sys-color-surface-container-high)]/90 backdrop-blur-xl px-4 py-2 rounded-2xl border border-[var(--md-sys-color-outline-variant)]/20 shadow-sm z-10 flex items-center gap-2">
+                    <BookOpen size={18} className="stroke-[2.5]" />
+                    <span className="text-[10px] font-black uppercase tracking-widest">{isMalay ? "PERINGATAN" : "REMINDER"}:</span>
                   </div>
                   
-                  <span className={cn(
-                    "font-mono text-2xl sm:text-3xl lg:text-4xl tracking-tighter relative z-10 tabular-nums",
-                    isCurrent ? "font-black text-[var(--md-sys-color-on-primary)]" : "font-extrabold text-[var(--md-sys-color-on-surface)]/90"
-                  )}>
-                    {formattedTime}
-                  </span>
+                  <div className="flex-1 pl-40 overflow-hidden relative">
+                    <AnimatePresence mode="wait">
+                      <motion.p
+                        key={currentAnnouncementIdx}
+                        initial={{ opacity: 0, x: 40 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -40 }}
+                        transition={{ duration: 0.35, ease: "easeOut" }}
+                        className="text-base sm:text-lg font-bold text-[var(--md-sys-color-on-surface-variant)] leading-snug tracking-tight text-left"
+                      >
+                        {announcements[currentAnnouncementIdx]}
+                      </motion.p>
+                    </AnimatePresence>
+                  </div>
                 </div>
-              );
-            })}
+              )}
+            </div>
+
+            {/* Right part: Center Widget (announcements, slideshow, camera) if enabled */}
+            {showCenterWidget && (
+              <div className="flex-[0.9] flex flex-col justify-stretch items-stretch min-w-0 bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/15 rounded-[48px] p-6 shadow-xl relative overflow-hidden transition-all duration-500 hover:border-[var(--md-sys-color-primary)]/20">
+                {settings.tvModeCenterWidget === 'reminders' && (
+                  <TvModeRemindersWidget
+                    reminders={settings.tvModeRemindersList || []}
+                    interval={settings.tvModeReminderInterval ?? 15}
+                    language={settings.language}
+                    t={t}
+                  />
+                )}
+                {settings.tvModeCenterWidget === 'slideshow' && (
+                  <TvModeSlideshowWidget
+                    urls={settings.tvModeSlideshowUrls || ""}
+                    interval={settings.tvModeSlideshowInterval ?? 15}
+                    language={settings.language}
+                  />
+                )}
+                {settings.tvModeCenterWidget === 'camera' && (
+                  <TvModeCameraWidget
+                    deviceId={settings.tvModeCameraDeviceId || ""}
+                    language={settings.language}
+                    t={t}
+                  />
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Bottom horizontal schedule strip */}
+          <div className="shrink-0 bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/15 rounded-[36px] p-4 shadow-xl">
+            <div className="grid grid-cols-7 gap-3 w-full">
+              {activeKeys.map((key) => {
+                const rawTime = todayData ? todayData[key as keyof PrayerData] : "--:--";
+                const formattedTime = formatPrayerTime(rawTime as string);
+                const isCurrent = key === prevPrayerName; // Matches active prayer
+                const isNext = key === nextPrayerName?.toLowerCase() || (key === "dhuhr" && nextPrayerName?.toLowerCase() === "jumaat") || (key === "dhuhr" && nextPrayerName?.toLowerCase() === "jumu'ah");
+
+                return (
+                  <div
+                    key={key}
+                    className={cn(
+                      "flex flex-col justify-between items-center p-3 rounded-2xl border transition-all duration-300 relative overflow-hidden text-center min-h-[120px]",
+                      isCurrent
+                        ? "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] border-[var(--md-sys-color-primary)]/10 shadow-lg scale-[1.03] z-10"
+                        : isNext
+                        ? "bg-[var(--md-sys-color-primary-container)]/35 text-[var(--md-sys-color-on-primary-container)] border-[var(--md-sys-color-primary)]/30 border-t-4 border-t-[var(--md-sys-color-primary)] shadow-sm"
+                        : "bg-[var(--md-sys-color-surface)]/40 border-transparent hover:bg-[var(--md-sys-color-surface-container-high)]/60 hover:border-[var(--md-sys-color-outline-variant)]/30"
+                    )}
+                  >
+                    {isCurrent && <div className="absolute inset-0 bg-white/5 animate-pulse" />}
+
+                    <div className="flex flex-col items-center gap-1.5 relative z-10">
+                      <span className={cn(
+                        "text-xs sm:text-sm font-black tracking-tight",
+                        isCurrent ? "text-[var(--md-sys-color-on-primary)]" : "text-[var(--md-sys-color-on-surface)]"
+                      )}>
+                        {getPrayerDisplayLabel(key)}
+                      </span>
+                      
+                      {/* Badges */}
+                      {isCurrent && (
+                        <span className="px-2 py-0.5 rounded-full bg-[var(--md-sys-color-on-primary)] text-[var(--md-sys-color-primary)] text-[8px] font-black tracking-widest uppercase">
+                          {isMalay ? "SEKARANG" : "ACTIVE"}
+                        </span>
+                      )}
+                      {isNext && (
+                        <span className="px-2 py-0.5 rounded-full bg-[var(--md-sys-color-primary)]/20 text-[var(--md-sys-color-primary)] text-[8px] font-black tracking-widest uppercase animate-pulse">
+                          {isMalay ? "SELEPAS INI" : "UP NEXT"}
+                        </span>
+                      )}
+                    </div>
+                    
+                    <span className={cn(
+                      "font-mono text-base sm:text-lg lg:text-xl xl:text-2xl tracking-tighter mt-3 relative z-10 tabular-nums",
+                      isCurrent ? "font-black text-[var(--md-sys-color-on-primary)]" : "font-extrabold text-[var(--md-sys-color-on-surface)]/90"
+                    )}>
+                      {formattedTime}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
-      </div>
+      ) : (
+        /* Vertical columns (Split Layout) */
+        <div className="flex-1 relative z-10 flex flex-row items-stretch p-8 gap-8 min-h-0 w-full">
+          
+          {/* Left Container: Clock & Announcements */}
+          <div className={cn(
+            "flex flex-col justify-between items-stretch gap-6 min-w-0",
+            showCenterWidget ? "flex-[0.8]" : "flex-[1.2]"
+          )}>
+            
+            {/* Main Massive Clock Panel */}
+            <div className="flex-1 flex flex-col justify-center items-center bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/15 rounded-[48px] p-10 shadow-2xl relative overflow-hidden group transition-all duration-500 hover:border-[var(--md-sys-color-primary)]/20">
+              
+              {/* Top Info row (dates) */}
+              <div className="flex flex-col items-center mb-6">
+                <span className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
+                  <Calendar size={22} className="text-[var(--md-sys-color-primary)]" />
+                  {dateString}
+                </span>
+                {hijriString && (
+                  <span className="text-lg sm:text-xl font-bold text-[var(--md-sys-color-tertiary)] mt-1.5 uppercase tracking-wide">
+                    {hijriString}
+                  </span>
+                )}
+              </div>
+
+              {/* Massive Ticking Digital Clock */}
+              <div className="flex items-baseline justify-center select-text w-full max-w-full px-4 overflow-hidden">
+                <span className="text-[5.5rem] sm:text-[6.5rem] lg:text-[7.5rem] font-mono font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)] truncate">
+                  {timeString.split(":")[0]}:{timeString.split(":")[1]}
+                </span>
+                <span className="text-5xl sm:text-6xl lg:text-7xl font-mono font-bold tracking-tighter text-[var(--md-sys-color-on-surface)]/60 ml-2 select-none tabular-nums">
+                  :{timeString.split(":")[2]}
+                </span>
+                {ampm && (
+                  <span className="ml-4 text-3xl lg:text-4xl font-black uppercase text-[var(--md-sys-color-primary)] tracking-widest">
+                    {ampm}
+                  </span>
+                )}
+              </div>
+
+              {/* Next Prayer Countdown Sub-panel */}
+              {nextPrayerName && (
+                <div className="mt-8 flex flex-col items-center bg-[var(--md-sys-color-surface-container-high)]/60 backdrop-blur-md border border-[var(--md-sys-color-outline-variant)]/20 px-8 py-3 rounded-3xl w-full max-w-md shadow-sm">
+                  <span className="text-xs uppercase tracking-[0.25em] font-black text-[var(--md-sys-color-on-surface-variant)]">
+                    {isMalay ? "HITUNG MUNDUR" : "COUNTDOWN"} — {nextPrayerName}
+                  </span>
+                  <span className="text-4xl sm:text-5xl font-mono font-black text-[var(--md-sys-color-primary)] tracking-tight mt-1 tabular-nums">
+                    {countdownString}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Weather Widget */}
+            <div className="shrink-0 rounded-[32px] overflow-hidden">
+              <WeatherWidget selectedZone={selectedZone} userCoords={userCoords} currentLocationName={currentLocationName} />
+            </div>
+
+            {/* Dynamic Iqamah Countdown Banner */}
+            <AnimatePresence>
+              {iqamahCountdownActive && (
+                <motion.div
+                  initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                  onClick={onIqamahTogglePause}
+                  className={cn(
+                    "rounded-[32px] p-6 flex flex-col items-center justify-center border shadow-2xl relative overflow-hidden cursor-pointer select-none transition-all duration-300 active:scale-[0.99]",
+                    iqamahRemainingSeconds <= 60
+                      ? "bg-gradient-to-r from-[var(--md-sys-color-error)] via-orange-600 to-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)] border-[var(--md-sys-color-error)]/25 animate-pulse"
+                      : "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] border-[var(--md-sys-color-primary)]/10"
+                  )}
+                >
+                  {/* Flashing ambient effect */}
+                  <div className="absolute inset-0 bg-white/5" />
+                  
+                  {/* Plus 1 minute button */}
+                  <div className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center z-20">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent toggling pause
+                        onIqamahAddMinute();
+                      }}
+                      className={cn(
+                        "w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-95 shadow-md",
+                        iqamahRemainingSeconds <= 60
+                          ? "bg-white/30 hover:bg-white/45 text-white"
+                          : "bg-[var(--md-sys-color-on-primary)]/20 hover:bg-[var(--md-sys-color-on-primary)]/35 text-[var(--md-sys-color-on-primary)]"
+                      )}
+                      title="+1 Min"
+                    >
+                      <Plus size={20} className="stroke-[3]" />
+                    </button>
+                  </div>
+
+                  {/* Status text with play/pause indicators */}
+                  <div className="flex items-center gap-2 text-sm uppercase tracking-[0.25em] font-black opacity-90 relative z-10">
+                    {iqamahPaused ? (
+                      <Play size={16} className="fill-current animate-pulse shrink-0" />
+                    ) : (
+                      <Pause size={16} className="fill-current shrink-0" />
+                    )}
+                    <span>
+                      {iqamahPaused
+                        ? (isMalay ? "IQAMAH DITANGGUH (KETIK UNTUK SAMBUNG)" : "IQAMAH PAUSED (TAP TO RESUME)")
+                        : iqamahRemainingSeconds <= 60
+                        ? (isMalay ? "SILA RAPATKAN SAF & SENYAPKAN TELEFON" : "PLEASE STRAIGHTEN ROWS & SILENCE PHONES")
+                        : (isMalay ? "BERSEDIA UNTUK SOLAT (IQAMAH)" : "PREPARE FOR PRAYER (IQAMAH)")}
+                    </span>
+                  </div>
+
+                  {/* Large countdown time */}
+                  <div className="text-5xl sm:text-6xl font-mono font-black tracking-tight mt-2 relative z-10 tabular-nums">
+                    {Math.floor(iqamahRemainingSeconds / 60)}:
+                    {String(iqamahRemainingSeconds % 60).padStart(2, "0")}
+                  </div>
+
+                  {/* Progress bar */}
+                  <div className="absolute bottom-0 left-0 right-0 h-2 bg-black/20 overflow-hidden">
+                    <motion.div
+                      className={cn(
+                        "h-full",
+                        iqamahRemainingSeconds <= 60 ? "bg-white" : "bg-[var(--md-sys-color-on-primary)]/80"
+                      )}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.max(0, Math.min(100, ((iqamahTotalSeconds - iqamahRemainingSeconds) / iqamahTotalSeconds) * 100))}%` }}
+                      transition={{ duration: 0.5, ease: "easeOut" }}
+                    />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Running announcement banner */}
+            {!showCenterWidget && (
+              <div className="h-28 bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/10 rounded-[32px] p-6 shadow-md overflow-hidden flex items-center relative transition-all duration-500 hover:border-[var(--md-sys-color-primary)]/15">
+                <div className="absolute left-6 text-[var(--md-sys-color-primary)] shrink-0 bg-[var(--md-sys-color-surface-container-high)]/90 backdrop-blur-xl px-4 py-2 rounded-2xl border border-[var(--md-sys-color-outline-variant)]/20 shadow-sm z-10 flex items-center gap-2">
+                  <BookOpen size={20} className="stroke-[2.5]" />
+                  <span className="text-xs font-black uppercase tracking-widest">{isMalay ? "PERINGATAN" : "REMINDER"}:</span>
+                </div>
+                
+                <div className="flex-1 pl-44 overflow-hidden relative">
+                  <AnimatePresence mode="wait">
+                    <motion.p
+                      key={currentAnnouncementIdx}
+                      initial={{ opacity: 0, x: 50 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -50 }}
+                      transition={{ duration: 0.35, ease: "easeOut" }}
+                      className="text-lg font-bold text-[var(--md-sys-color-on-surface-variant)] leading-snug tracking-tight text-left"
+                    >
+                      {announcements[currentAnnouncementIdx]}
+                    </motion.p>
+                  </AnimatePresence>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Center Container: Active Center Widget (Reminders, Slideshow, Camera) */}
+          {showCenterWidget && (
+            <div className="flex-[1.4] flex flex-col justify-stretch items-stretch min-w-0 bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/15 rounded-[48px] p-8 shadow-2xl relative overflow-hidden transition-all duration-500 hover:border-[var(--md-sys-color-primary)]/20">
+              {settings.tvModeCenterWidget === 'reminders' && (
+                <TvModeRemindersWidget
+                  reminders={settings.tvModeRemindersList || []}
+                  interval={settings.tvModeReminderInterval ?? 15}
+                  language={settings.language}
+                  t={t}
+                />
+              )}
+              {settings.tvModeCenterWidget === 'slideshow' && (
+                <TvModeSlideshowWidget
+                  urls={settings.tvModeSlideshowUrls || ""}
+                  interval={settings.tvModeSlideshowInterval ?? 15}
+                  language={settings.language}
+                />
+              )}
+              {settings.tvModeCenterWidget === 'camera' && (
+                <TvModeCameraWidget
+                  deviceId={settings.tvModeCameraDeviceId || ""}
+                  language={settings.language}
+                  t={t}
+                />
+              )}
+            </div>
+          )}
+
+          {/* Right Container: Massive Prayer Schedule list */}
+          <div className={cn(
+            "flex flex-col justify-between items-stretch bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/15 rounded-[48px] p-8 shadow-2xl min-w-0 transition-all duration-500 hover:border-[var(--md-sys-color-primary)]/20",
+            showCenterWidget ? "flex-[0.8]" : "flex-[0.9]"
+          )}>
+            <div className="flex flex-col h-full justify-between gap-2.5">
+              {activeKeys.map((key) => {
+                const rawTime = todayData ? todayData[key as keyof PrayerData] : "--:--";
+                const formattedTime = formatPrayerTime(rawTime as string);
+                const isCurrent = key === prevPrayerName; // Matches active prayer
+                const isNext = key === nextPrayerName?.toLowerCase() || (key === "dhuhr" && nextPrayerName?.toLowerCase() === "jumaat") || (key === "dhuhr" && nextPrayerName?.toLowerCase() === "jumu'ah");
+
+                return (
+                  <div
+                    key={key}
+                    className={cn(
+                      "flex items-center justify-between px-6 py-4 rounded-[24px] border transition-all duration-300 relative overflow-hidden flex-1",
+                      isCurrent
+                        ? "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] border-[var(--md-sys-color-primary)]/10 shadow-lg scale-[1.02] z-10"
+                        : isNext
+                        ? "bg-[var(--md-sys-color-primary-container)]/35 text-[var(--md-sys-color-on-primary-container)] border-[var(--md-sys-color-primary)]/30 border-l-8 border-l-[var(--md-sys-color-primary)] shadow-sm"
+                        : "bg-[var(--md-sys-color-surface)]/40 border-transparent hover:bg-[var(--md-sys-color-surface-container-high)]/60 hover:border-[var(--md-sys-color-outline-variant)]/30"
+                    )}
+                  >
+                    {/* Backdrop highlight flash */}
+                    {isCurrent && <div className="absolute inset-0 bg-white/5 animate-pulse" />}
+
+                    <div className="flex items-center gap-4 relative z-10">
+                      <span className={cn(
+                        "text-xl sm:text-2xl font-black tracking-tight",
+                        isCurrent ? "text-[var(--md-sys-color-on-primary)]" : "text-[var(--md-sys-color-on-surface)]"
+                      )}>
+                        {getPrayerDisplayLabel(key)}
+                      </span>
+                      
+                      {/* Active highlight label badge */}
+                      {isCurrent && (
+                        <span className="px-3 py-1 rounded-full bg-[var(--md-sys-color-on-primary)] text-[var(--md-sys-color-primary)] text-[9px] font-black tracking-widest uppercase">
+                          {isMalay ? "SEKARANG" : "ACTIVE"}
+                        </span>
+                      )}
+                      
+                      {/* Next prayer highlight badge */}
+                      {isNext && (
+                        <span className="px-2.5 py-1 rounded-full bg-[var(--md-sys-color-primary)]/20 text-[var(--md-sys-color-primary)] text-[9px] font-black tracking-widest uppercase animate-pulse">
+                          {isMalay ? "SELEPAS INI" : "UP NEXT"}
+                        </span>
+                      )}
+                    </div>
+                    
+                    <span className={cn(
+                      "font-mono text-2xl sm:text-3xl lg:text-4xl tracking-tighter relative z-10 tabular-nums",
+                      isCurrent ? "font-black text-[var(--md-sys-color-on-primary)]" : "font-extrabold text-[var(--md-sys-color-on-surface)]/90"
+                    )}>
+                      {formattedTime}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -727,7 +988,8 @@ function TvModeRemindersWidget({ reminders, interval, language, t }: TvModeRemin
   const [currentIdx, setCurrentIdx] = useState(0);
 
   const activeReminders = useMemo(() => {
-    if (reminders && reminders.length > 0) return reminders;
+    const filtered = (reminders || []).filter(r => r.enabled !== false);
+    if (filtered.length > 0) return filtered;
     return [
       {
         id: "d1",
@@ -756,11 +1018,14 @@ function TvModeRemindersWidget({ reminders, interval, language, t }: TvModeRemin
 
   useEffect(() => {
     if (activeReminders.length <= 1) return;
-    const timer = setInterval(() => {
+    const currentReminder = activeReminders[currentIdx] || activeReminders[0];
+    const slideDuration = (currentReminder?.duration ?? interval) * 1000;
+
+    const timer = setTimeout(() => {
       setCurrentIdx((prev) => (prev + 1) % activeReminders.length);
-    }, interval * 1000);
-    return () => clearInterval(timer);
-  }, [activeReminders, interval]);
+    }, slideDuration);
+    return () => clearTimeout(timer);
+  }, [activeReminders, currentIdx, interval]);
 
   if (activeReminders.length === 0) return null;
 

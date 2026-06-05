@@ -44,6 +44,8 @@ export interface TvModeReminder {
   text: string;
   title?: string;
   imageUrl?: string;
+  enabled?: boolean;
+  duration?: number;
 }
 
 export interface GeneralSettings {
@@ -118,6 +120,13 @@ export interface GeneralSettings {
   mosqueLogoUrl?: string;
   mosqueLogoEnabled?: boolean;
   mosqueLogoLastUpdated?: number;
+  tvModeLayout?: 'split' | 'bottom';
+  mosqueLogoShape?: 'original' | 'circle' | 'square' | 'rounded';
+  mosqueLogoSize?: number;
+  mosqueLogoPadding?: number;
+  mosqueLogoBgMode?: 'transparent' | 'white' | 'theme-container' | 'theme-primary';
+  mosqueLogoBlendMode?: 'none' | 'multiply' | 'screen';
+  mosqueLogoAlignment?: 'left' | 'right' | 'top';
 }
 
 // Default preferences
@@ -186,6 +195,13 @@ export const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
   mosqueLogoUrl: "",
   mosqueLogoEnabled: false,
   mosqueLogoLastUpdated: 0,
+  tvModeLayout: 'split',
+  mosqueLogoShape: 'original',
+  mosqueLogoSize: 48,
+  mosqueLogoPadding: 0,
+  mosqueLogoBgMode: 'transparent',
+  mosqueLogoBlendMode: 'none',
+  mosqueLogoAlignment: 'left',
   tvModeRemindersList: [
     {
       id: "1",

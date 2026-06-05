@@ -34,7 +34,11 @@ import {
   MoonStar,
   Search,
   Tv,
-  Upload
+  Upload,
+  ChevronUp,
+  Heart,
+  BookOpen,
+  Sparkles
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { modalVariants } from "../lib/motion";
@@ -206,6 +210,20 @@ export function SettingsModal({
   const handleDeleteReminder = (id: string) => {
     const newList = (settings.tvModeRemindersList || []).filter(r => r.id !== id);
     updateSettings({ tvModeRemindersList: newList });
+  };
+
+  const handleMoveReminder = (index: number, direction: 'up' | 'down') => {
+    const list = [...(settings.tvModeRemindersList || [])];
+    if (direction === 'up' && index > 0) {
+      const temp = list[index];
+      list[index] = list[index - 1];
+      list[index - 1] = temp;
+    } else if (direction === 'down' && index < list.length - 1) {
+      const temp = list[index];
+      list[index] = list[index + 1];
+      list[index + 1] = temp;
+    }
+    updateSettings({ tvModeRemindersList: list });
   };
 
   const [previewLogoUrl, setPreviewLogoUrl] = useState<string | null>(null);
@@ -1953,6 +1971,32 @@ export function SettingsModal({
             </div>
 
             <div className="space-y-6 pt-4 border-t border-[var(--md-sys-color-outline)]/5 mt-4">
+                {/* TV Layout Selection */}
+                <div className="flex flex-col p-4 bg-[var(--md-sys-color-surface)] rounded-[2rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5">
+                  <span className="font-bold text-[var(--md-sys-color-on-surface)] text-sm block">
+                    {t("tvModeLayoutLabel" as any)}
+                  </span>
+                  <span className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] block mt-0.5 leading-relaxed">
+                    {settings.language === "ms"
+                      ? "Pilih gaya susunan waktu solat dan widget utama pada skrin TV."
+                      : "Choose the arrangement style of prayer times and main widgets on the TV screen."}
+                  </span>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {/* @ts-ignore */}
+                    <md-filter-chip
+                      label={t("tvModeLayoutSplit" as any)}
+                      selected={settings.tvModeLayout === "split" || !settings.tvModeLayout}
+                      onClick={() => updateSettings({ tvModeLayout: "split" })}
+                    ></md-filter-chip>
+                    {/* @ts-ignore */}
+                    <md-filter-chip
+                      label={t("tvModeLayoutBottom" as any)}
+                      selected={settings.tvModeLayout === "bottom"}
+                      onClick={() => updateSettings({ tvModeLayout: "bottom" })}
+                    ></md-filter-chip>
+                  </div>
+                </div>
+
                 {/* Mosque custom name/branding input */}
                 <div className="flex flex-col p-4 bg-[var(--md-sys-color-surface)] rounded-[2rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5">
                   <span className="font-bold text-[var(--md-sys-color-on-surface)] text-sm block">
@@ -1999,7 +2043,7 @@ export function SettingsModal({
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
-                      className="space-y-3 pt-2 border-t border-[var(--md-sys-color-outline)]/5"
+                      className="space-y-4 pt-2 border-t border-[var(--md-sys-color-outline)]/5"
                     >
                       {/* Logo URL Input */}
                       <div className="flex flex-col">
@@ -2059,6 +2103,191 @@ export function SettingsModal({
                           accept="image/*"
                           onChange={handleLogoUpload}
                         />
+                      </div>
+
+                      {/* Logo Customization Fields */}
+                      <div className="space-y-4 pt-3 border-t border-[var(--md-sys-color-outline)]/5">
+                        {/* Shape */}
+                        <div className="flex flex-col">
+                          <span className="text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] mb-1.5">
+                            {t("logoShapeLabel" as any)}
+                          </span>
+                          <div className="flex flex-wrap gap-2">
+                            {(['original', 'circle', 'square', 'rounded'] as const).map(shape => (
+                              /* @ts-ignore */
+                              <md-filter-chip
+                                key={shape}
+                                label={
+                                  shape === 'original' ? t("logoShapeOriginal" as any) :
+                                  shape === 'circle' ? t("logoShapeCircle" as any) :
+                                  shape === 'square' ? t("logoShapeSquare" as any) :
+                                  t("logoShapeRounded" as any)
+                                }
+                                selected={(settings.mosqueLogoShape || 'original') === shape}
+                                onClick={() => updateSettings({ mosqueLogoShape: shape })}
+                              ></md-filter-chip>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Background color */}
+                        <div className="flex flex-col">
+                          <span className="text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] mb-1.5">
+                            {t("logoBgModeLabel" as any)}
+                          </span>
+                          <div className="flex flex-wrap gap-2">
+                            {(['transparent', 'white', 'theme-container', 'theme-primary'] as const).map(bg => (
+                              /* @ts-ignore */
+                              <md-filter-chip
+                                key={bg}
+                                label={
+                                  bg === 'transparent' ? t("logoBgTransparent" as any) :
+                                  bg === 'white' ? t("logoBgWhite" as any) :
+                                  bg === 'theme-container' ? t("logoBgThemeContainer" as any) :
+                                  t("logoBgThemePrimary" as any)
+                                }
+                                selected={(settings.mosqueLogoBgMode || 'transparent') === bg}
+                                onClick={() => updateSettings({ mosqueLogoBgMode: bg })}
+                              ></md-filter-chip>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Blend mode */}
+                        <div className="flex flex-col">
+                          <span className="text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] mb-1.5">
+                            {t("logoBlendModeLabel" as any)}
+                          </span>
+                          <div className="flex flex-wrap gap-2">
+                            {(['none', 'multiply', 'screen'] as const).map(blend => (
+                              /* @ts-ignore */
+                              <md-filter-chip
+                                key={blend}
+                                label={
+                                  blend === 'none' ? t("none") :
+                                  blend === 'multiply' ? t("logoBlendMultiply" as any) :
+                                  t("logoBlendScreen" as any)
+                                }
+                                selected={(settings.mosqueLogoBlendMode || 'none') === blend}
+                                onClick={() => updateSettings({ mosqueLogoBlendMode: blend })}
+                              ></md-filter-chip>
+                            ))}
+                          </div>
+                          <p className="text-[10px] text-[var(--md-sys-color-on-surface-variant)] leading-normal mt-1 italic opacity-85">
+                            {settings.language === 'ms'
+                              ? "* Ciri adunan latar belakang menggunakan CSS blend modes untuk membuang warna latar. Sesuai untuk fail JPG tanpa latar lut sinar."
+                              : "* Background removal uses CSS blend modes to discard background colors. Ideal for JPG files that lack transparent channels."}
+                          </p>
+                        </div>
+
+                        {/* Alignment */}
+                        <div className="flex flex-col">
+                          <span className="text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] mb-1.5">
+                            {t("logoAlignmentLabel" as any)}
+                          </span>
+                          <div className="flex flex-wrap gap-2">
+                            {(['left', 'right', 'top'] as const).map(align => (
+                              /* @ts-ignore */
+                              <md-filter-chip
+                                key={align}
+                                label={
+                                  align === 'left' ? t("logoAlignLeft" as any) :
+                                  align === 'right' ? t("logoAlignRight" as any) :
+                                  t("logoAlignTop" as any)
+                                }
+                                selected={(settings.mosqueLogoAlignment || 'left') === align}
+                                onClick={() => updateSettings({ mosqueLogoAlignment: align })}
+                              ></md-filter-chip>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Logo Size and Padding Sliders */}
+                        <div className="flex flex-col gap-4 bg-[var(--md-sys-color-surface-container-low)] p-4 rounded-2xl">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <span className="text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)]">
+                              {t("logoSizeLabel" as any)}
+                            </span>
+                            <div className="flex items-center gap-2 max-w-[200px] w-full justify-end">
+                              {/* @ts-ignore */}
+                              <md-slider
+                                min="32"
+                                max="120"
+                                step="4"
+                                value={settings.mosqueLogoSize ?? 48}
+                                labeled
+                                ticks
+                                onChange={(e: any) => updateSettings({ mosqueLogoSize: parseInt(e.target.value) })}
+                                className="flex-1"
+                              ></md-slider>
+                              <span className="text-xs font-mono font-bold text-[var(--md-sys-color-primary)] w-12 text-right">
+                                {settings.mosqueLogoSize ?? 48}px
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-t border-[var(--md-sys-color-outline)]/5 pt-3">
+                            <span className="text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)]">
+                              {t("logoPaddingLabel" as any)}
+                            </span>
+                            <div className="flex items-center gap-2 max-w-[200px] w-full justify-end">
+                              {/* @ts-ignore */}
+                              <md-slider
+                                min="0"
+                                max="24"
+                                step="2"
+                                value={settings.mosqueLogoPadding ?? 0}
+                                labeled
+                                ticks
+                                onChange={(e: any) => updateSettings({ mosqueLogoPadding: parseInt(e.target.value) })}
+                                className="flex-1"
+                              ></md-slider>
+                              <span className="text-xs font-mono font-bold text-[var(--md-sys-color-primary)] w-12 text-right">
+                                {settings.mosqueLogoPadding ?? 0}px
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Live Styling Preview inside Settings */}
+                        {previewLogoUrl && (
+                          <div className="flex flex-col items-center justify-center p-4 rounded-2xl bg-[var(--md-sys-color-surface-container)] border border-[var(--md-sys-color-outline)]/10 space-y-2">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-[var(--md-sys-color-on-surface-variant)]">
+                              {settings.language === "ms" ? "Pratonton Gaya Logo" : "Logo Style Preview"}
+                            </span>
+                            <div className="p-4 bg-[var(--md-sys-color-surface-container-low)]/50 backdrop-blur-xl border border-[var(--md-sys-color-outline-variant)]/20 rounded-2xl w-full flex items-center justify-center min-h-[120px]">
+                              <div
+                                className={cn(
+                                  "flex items-center justify-center shrink-0 overflow-hidden shadow-sm transition-all duration-300",
+                                  settings.mosqueLogoBgMode === 'white' ? 'bg-white' :
+                                  settings.mosqueLogoBgMode === 'theme-container' ? 'bg-[var(--md-sys-color-surface-container-high)]' :
+                                  settings.mosqueLogoBgMode === 'theme-primary' ? 'bg-[var(--md-sys-color-primary)]' :
+                                  'bg-transparent',
+                                  settings.mosqueLogoShape === 'circle' ? 'rounded-full' :
+                                  settings.mosqueLogoShape === 'square' ? 'rounded-none' :
+                                  settings.mosqueLogoShape === 'rounded' ? 'rounded-2xl' :
+                                  ''
+                                )}
+                                style={{
+                                  width: `${settings.mosqueLogoSize ?? 48}px`,
+                                  height: `${settings.mosqueLogoSize ?? 48}px`,
+                                  padding: `${settings.mosqueLogoPadding ?? 0}px`,
+                                }}
+                              >
+                                <img
+                                  src={previewLogoUrl}
+                                  alt="Mosque Logo Preview"
+                                  className="max-h-full max-w-full object-contain"
+                                  style={{
+                                    mixBlendMode: settings.mosqueLogoBlendMode === 'multiply' ? 'multiply' :
+                                                   settings.mosqueLogoBlendMode === 'screen' ? 'screen' :
+                                                   'normal'
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </motion.div>
                   )}
@@ -2259,17 +2488,60 @@ export function SettingsModal({
                         </button>
                       </div>
 
-                      <div className="space-y-4 mt-4 max-h-[400px] overflow-y-auto pr-1">
+                      <div className="space-y-4 mt-4 max-h-[500px] overflow-y-auto pr-1">
                         {(settings.tvModeRemindersList || []).map((reminder, idx) => (
                           <div
                             key={reminder.id}
-                            className="p-4 rounded-2xl bg-[var(--md-sys-color-surface-container-low)] border border-[var(--md-sys-color-outline)]/10 space-y-3 relative"
+                            className="p-4 rounded-2xl bg-[var(--md-sys-color-surface-container-low)] border border-[var(--md-sys-color-outline)]/10 space-y-4 relative"
                           >
                             <div className="flex items-center justify-between gap-3">
-                              <span className="text-xs font-black text-[var(--md-sys-color-primary)]">
-                                #{idx + 1}
-                              </span>
-                              <div className="flex items-center gap-1.5">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-black text-[var(--md-sys-color-primary)]">
+                                  #{idx + 1}
+                                </span>
+                                {/* Move Up/Down buttons */}
+                                <div className="flex items-center gap-0.5">
+                                  <button
+                                    type="button"
+                                    disabled={idx === 0}
+                                    onClick={() => handleMoveReminder(idx, 'up')}
+                                    className={cn(
+                                      "p-1 text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-high)] rounded-full transition-all",
+                                      idx === 0 && "opacity-30 cursor-not-allowed"
+                                    )}
+                                    title={t("moveUp" as any)}
+                                  >
+                                    <ChevronUp size={14} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={idx === (settings.tvModeRemindersList || []).length - 1}
+                                    onClick={() => handleMoveReminder(idx, 'down')}
+                                    className={cn(
+                                      "p-1 text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-high)] rounded-full transition-all",
+                                      idx === (settings.tvModeRemindersList || []).length - 1 && "opacity-30 cursor-not-allowed"
+                                    )}
+                                    title={t("moveDown" as any)}
+                                  >
+                                    <ChevronDown size={14} />
+                                  </button>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                {/* Enabled Switch */}
+                                <div className="flex items-center gap-1.5 mr-2">
+                                  <span className="text-[10px] font-bold text-[var(--md-sys-color-on-surface-variant)]">
+                                    {t("reminderEnabledLabel" as any)}
+                                  </span>
+                                  {/* @ts-ignore */}
+                                  <md-switch
+                                    selected={reminder.enabled !== false}
+                                    onChange={(e: any) => handleUpdateReminder(reminder.id, { enabled: e.target.selected })}
+                                    icons
+                                  ></md-switch>
+                                </div>
+
                                 <select
                                   value={reminder.type}
                                   onChange={(e) => handleUpdateReminder(reminder.id, { type: e.target.value as any })}
@@ -2315,6 +2587,92 @@ export function SettingsModal({
                                   className="w-full px-3 py-1.5 text-xs rounded-xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 outline-none focus:border-[var(--md-sys-color-primary)] font-sans font-medium"
                                 />
                               )}
+
+                              {/* Slide Duration Slider */}
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pt-1.5 border-t border-[var(--md-sys-color-outline)]/5">
+                                <span className="text-[10px] font-bold text-[var(--md-sys-color-on-surface-variant)]">
+                                  {t("reminderDurationLabel" as any)}
+                                </span>
+                                <div className="flex items-center gap-2 max-w-[200px] w-full justify-end">
+                                  {/* @ts-ignore */}
+                                  <md-slider
+                                    min="5"
+                                    max="120"
+                                    step="5"
+                                    value={reminder.duration ?? settings.tvModeReminderInterval ?? 15}
+                                    labeled
+                                    ticks
+                                    onChange={(e: any) => handleUpdateReminder(reminder.id, { duration: parseInt(e.target.value) })}
+                                    className="flex-1"
+                                  ></md-slider>
+                                  <span className="text-xs font-mono font-bold text-[var(--md-sys-color-primary)] w-8 text-right">
+                                    {reminder.duration ?? settings.tvModeReminderInterval ?? 15}s
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Live Mini Preview */}
+                              <div className="rounded-xl border border-[var(--md-sys-color-outline)]/10 p-3 bg-[var(--md-sys-color-surface-container-high)] text-center space-y-1 mt-2">
+                                <span className="text-[9px] font-black uppercase tracking-widest text-[var(--md-sys-color-on-surface-variant)]/60 block text-left mb-1.5">
+                                  {settings.language === "ms" ? "Pratonton Kad" : "Card Live Preview"}
+                                </span>
+                                <div className={cn(
+                                  "p-4 rounded-2xl flex flex-col justify-center items-center text-center relative overflow-hidden min-h-[100px] border shadow-sm w-full transition-colors",
+                                  reminder.type === 'hadith' ? "bg-[var(--md-sys-color-primary-container)]/10 border-[var(--md-sys-color-primary)]/20" :
+                                  reminder.type === 'quran' ? "bg-amber-500/5 border-amber-500/20" :
+                                  reminder.type === 'warning' ? "bg-[var(--md-sys-color-error-container)]/5 border-[var(--md-sys-color-error)]/25" :
+                                  reminder.type === 'info' ? "bg-blue-500/5 border-blue-500/20" :
+                                  "bg-rose-500/5 border-rose-500/20 flex-row justify-between items-center text-left"
+                                )}>
+                                  {reminder.type === 'donation' ? (
+                                    <>
+                                      <div className="flex-1 flex flex-col justify-center items-start">
+                                        <Heart size={20} className="text-rose-500 mb-1.5 stroke-[2]" />
+                                        <span className="text-[9px] uppercase tracking-wider font-bold text-rose-500 mb-0.5">
+                                          {settings.language === 'ms' ? 'SUMBANGAN' : 'DONATION'}
+                                        </span>
+                                        {reminder.title && <h5 className="text-xs font-black text-[var(--md-sys-color-on-surface)] leading-tight">{reminder.title}</h5>}
+                                        <p className="text-[10px] font-medium text-[var(--md-sys-color-on-surface-variant)] leading-normal mt-0.5">{reminder.text}</p>
+                                      </div>
+                                      {reminder.imageUrl && (
+                                        <div className="w-12 h-12 bg-white p-1 rounded-lg border border-[var(--md-sys-color-outline)]/10 flex items-center justify-center shrink-0">
+                                          <img src={reminder.imageUrl} className="w-full h-full object-contain" alt="QR" />
+                                        </div>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <>
+                                      {reminder.type === 'hadith' && <BookOpen size={20} className="text-[var(--md-sys-color-primary)] mb-1.5 stroke-[2]" />}
+                                      {reminder.type === 'quran' && <Sparkles size={20} className="text-amber-500 mb-1.5 stroke-[2]" />}
+                                      {reminder.type === 'warning' && <VolumeX size={20} className="text-[var(--md-sys-color-error)] mb-1.5 stroke-[2]" />}
+                                      {reminder.type === 'info' && <Tv size={20} className="text-blue-500 mb-1.5 stroke-[2]" />}
+                                      <span className={cn(
+                                        "text-[9px] uppercase tracking-widest font-black mb-1",
+                                        reminder.type === 'hadith' ? "text-[var(--md-sys-color-primary)]" :
+                                        reminder.type === 'quran' ? "text-amber-600 dark:text-amber-400" :
+                                        reminder.type === 'warning' ? "text-[var(--md-sys-color-error)]" :
+                                        "text-blue-600 dark:text-blue-400"
+                                      )}>
+                                        {reminder.type === 'hadith' ? (settings.language === 'ms' ? 'HADITH' : 'AUTHENTIC HADITH') :
+                                         reminder.type === 'quran' ? (settings.language === 'ms' ? 'AL-QURAN' : 'AL-QURAN REVELATION') :
+                                         reminder.type === 'warning' ? (settings.language === 'ms' ? 'PERINGATAN MESRA' : 'KIND REMINDER') :
+                                         (settings.language === 'ms' ? 'MAKLUMAN MASJID' : 'ANNOUNCEMENT')}
+                                      </span>
+                                      <p className={cn(
+                                        "text-xs leading-relaxed max-w-xs font-medium",
+                                        reminder.type === 'warning' ? "font-bold text-[var(--md-sys-color-on-surface)]" : "italic font-serif text-[var(--md-sys-color-on-surface-variant)]"
+                                      )}>
+                                        "{reminder.text}"
+                                      </p>
+                                      {reminder.title && (
+                                        <span className="text-[10px] font-bold text-[var(--md-sys-color-on-surface-variant)] mt-1.5 bg-[var(--md-sys-color-surface)] px-2 py-0.5 rounded-full border border-[var(--md-sys-color-outline)]/10">
+                                          {reminder.title}
+                                        </span>
+                                      )}
+                                    </>
+                                  )}
+                                </div>
+                              </div>
                             </div>
                           </div>
                         ))}
