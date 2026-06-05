@@ -43,6 +43,7 @@ import {
   NotificationSound,
   PreAlertTime,
   DEFAULT_GENERAL_SETTINGS,
+  TvModeReminder,
 } from "../types";
 import { useEffect, useState, useRef } from "react";
 import { useAppContext } from "../AppContext";
@@ -139,6 +140,66 @@ export function SettingsModal({
 
   const [previewingPrayer, setPreviewingPrayer] = useState<string | null>(null);
   const previewTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
+  const [cameraPermissionStatus, setCameraPermissionStatus] = useState<'prompt' | 'granted' | 'denied'>('prompt');
+
+  const checkCameraPermissionsAndLoad = async (requestAccess = false) => {
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+        return;
+      }
+      
+      if (requestAccess) {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        stream.getTracks().forEach(track => track.stop());
+      }
+      
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoInputs = devices.filter(d => d.kind === 'videoinput');
+      setVideoDevices(videoInputs);
+      
+      if (videoInputs.length > 0 && videoInputs[0].label) {
+        setCameraPermissionStatus('granted');
+      } else {
+        setCameraPermissionStatus(requestAccess ? 'denied' : 'prompt');
+      }
+    } catch (err) {
+      console.error("Camera permission error:", err);
+      setCameraPermissionStatus('denied');
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && settings.tvModeCenterWidget === 'camera') {
+      checkCameraPermissionsAndLoad();
+    }
+  }, [isOpen, settings.tvModeCenterWidget]);
+
+  const handleAddReminder = () => {
+    const newList = [
+      ...(settings.tvModeRemindersList || []),
+      {
+        id: Math.random().toString(36).substring(2, 9),
+        type: 'hadith' as const,
+        text: settings.language === 'ms' ? 'Peringatan baru...' : 'New reminder...',
+        title: ''
+      }
+    ];
+    updateSettings({ tvModeRemindersList: newList });
+  };
+
+  const handleUpdateReminder = (id: string, updates: Partial<TvModeReminder>) => {
+    const newList = (settings.tvModeRemindersList || []).map(r => 
+      r.id === id ? { ...r, ...updates } : r
+    );
+    updateSettings({ tvModeRemindersList: newList });
+  };
+
+  const handleDeleteReminder = (id: string) => {
+    const newList = (settings.tvModeRemindersList || []).filter(r => r.id !== id);
+    updateSettings({ tvModeRemindersList: newList });
+  };
 
   const triggerTestSound = (sound: NotificationSound, message: string, prayerKey: string) => {
     if (previewTimeoutRef.current) {
@@ -1880,24 +1941,237 @@ export function SettingsModal({
                   </div>
                 </div>
 
+                {/* Center Widget Selection */}
                 <div className="flex flex-col p-4 bg-[var(--md-sys-color-surface)] rounded-[2rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5">
                   <span className="font-bold text-[var(--md-sys-color-on-surface)] text-sm block">
-                    {t("tvModeCustomReminders" as any)}
+                    {t("tvModeCenterWidgetLabel" as any)}
                   </span>
                   <span className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] block mt-0.5 leading-relaxed">
-                    {t("tvModeCustomRemindersDesc" as any)}
+                    {settings.language === "ms"
+                      ? "Pilih kandungan untuk dipaparkan di lajur tengah. Lajur ketiga akan dibuka dan reka letak TV diselaraskan secara automatik."
+                      : "Choose what content to display in the center column. The third column will open and the TV layout adapts automatically."}
                   </span>
-                  
-                  <textarea
-                    rows={4}
-                    value={settings.tvModeCustomReminders ?? ""}
-                    onChange={(e) => updateSettings({ tvModeCustomReminders: e.target.value })}
-                    placeholder={settings.language === "ms" 
-                      ? "Contoh:\nSila luruskan saff dan rapatkan barisan sebelum memulakan solat berjemaah.\nMatikan atau senyapkan telefon bimbit anda untuk menjaga kekhusyukan masjid."
-                      : "Example:\nPlease straighten the rows and close the gaps before beginning prayer.\nKindly silence or turn off your mobile devices to maintain tranquility."}
-                    className="w-full mt-3 p-4 text-sm rounded-2xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 focus:border-[var(--md-sys-color-primary)] focus:ring-1 focus:ring-[var(--md-sys-color-primary)] outline-none transition-all placeholder-[var(--md-sys-color-on-surface-variant)]/30 resize-y font-sans font-medium"
-                  />
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {/* @ts-ignore */}
+                    <md-filter-chip
+                      label={t("widgetNone" as any)}
+                      selected={settings.tvModeCenterWidget === "none" || !settings.tvModeCenterWidget}
+                      onClick={() => updateSettings({ tvModeCenterWidget: "none" })}
+                    ></md-filter-chip>
+                    {/* @ts-ignore */}
+                    <md-filter-chip
+                      label={t("widgetReminders" as any)}
+                      selected={settings.tvModeCenterWidget === "reminders"}
+                      onClick={() => updateSettings({ tvModeCenterWidget: "reminders" })}
+                    ></md-filter-chip>
+                    {/* @ts-ignore */}
+                    <md-filter-chip
+                      label={t("widgetSlideshow" as any)}
+                      selected={settings.tvModeCenterWidget === "slideshow"}
+                      onClick={() => updateSettings({ tvModeCenterWidget: "slideshow" })}
+                    ></md-filter-chip>
+                    {/* @ts-ignore */}
+                    <md-filter-chip
+                      label={t("widgetCamera" as any)}
+                      selected={settings.tvModeCenterWidget === "camera"}
+                      onClick={() => updateSettings({ tvModeCenterWidget: "camera" })}
+                    ></md-filter-chip>
+                  </div>
                 </div>
+
+                {/* Conditional Settings based on Center Widget */}
+                {settings.tvModeCenterWidget === "slideshow" && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="space-y-4"
+                  >
+                    <div className="flex flex-col p-4 bg-[var(--md-sys-color-surface)] rounded-[2rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5">
+                      <span className="font-bold text-[var(--md-sys-color-on-surface)] text-sm block">
+                        {t("tvModeSlideshowUrlsLabel" as any)}
+                      </span>
+                      <span className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] block mt-0.5 leading-relaxed">
+                        {settings.language === "ms"
+                          ? "Masukkan URL imej poster atau banner untuk paparan slaid (Satu per baris)."
+                          : "Enter image URLs for posters or banners to display (One per line)."}
+                      </span>
+                      <textarea
+                        rows={4}
+                        value={settings.tvModeSlideshowUrls ?? ""}
+                        onChange={(e) => updateSettings({ tvModeSlideshowUrls: e.target.value })}
+                        placeholder="https://example.com/poster1.jpg&#10;https://example.com/poster2.jpg"
+                        className="w-full mt-3 p-4 text-sm rounded-2xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 focus:border-[var(--md-sys-color-primary)] focus:ring-1 focus:ring-[var(--md-sys-color-primary)] outline-none transition-all placeholder-[var(--md-sys-color-on-surface-variant)]/30 resize-y font-sans font-medium"
+                      />
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-[var(--md-sys-color-surface)] rounded-[2rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5 gap-3">
+                      <div>
+                        <span className="font-bold text-[var(--md-sys-color-on-surface)] text-sm block">
+                          {t("tvModeSlideshowIntervalLabel" as any)}
+                        </span>
+                        <span className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] block mt-0.5">
+                          {settings.language === "ms" ? "Sela masa antara gambar slaid." : "Duration between slide transitions."}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 flex-1 max-w-[250px] w-full self-end sm:self-auto justify-end">
+                        {/* @ts-ignore */}
+                        <md-slider
+                          min="5"
+                          max="60"
+                          step="5"
+                          value={settings.tvModeSlideshowInterval ?? 15}
+                          labeled
+                          ticks
+                          onChange={(e: any) => updateSettings({ tvModeSlideshowInterval: e.target.value })}
+                          className="flex-1"
+                        ></md-slider>
+                        <span className="w-12 text-right font-mono font-bold text-[var(--md-sys-color-primary)] tabular-nums text-sm">
+                          {settings.tvModeSlideshowInterval ?? 15}s
+                        </span>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {settings.tvModeCenterWidget === "camera" && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex flex-col p-4 bg-[var(--md-sys-color-surface)] rounded-[2rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5 space-y-4"
+                  >
+                    <div>
+                      <span className="font-bold text-[var(--md-sys-color-on-surface)] text-sm block">
+                        {t("cameraSelectLabel" as any)}
+                      </span>
+                      <span className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] block mt-0.5 leading-relaxed">
+                        {settings.language === "ms"
+                          ? "Pilih peranti kamera/webcam daripada PC/Laptop anda untuk memaparkan suapan langsung penceramah."
+                          : "Select a camera/webcam device from your PC/Laptop to display live speaker stream."}
+                      </span>
+                    </div>
+
+                    {cameraPermissionStatus !== 'granted' ? (
+                      <div className="flex flex-col items-center justify-center p-6 bg-[var(--md-sys-color-surface-container)] rounded-2xl text-center space-y-3">
+                        <AlertCircle size={24} className="text-[var(--md-sys-color-warning)]" />
+                        <p className="text-xs text-[var(--md-sys-color-on-surface-variant)]">
+                          {t("cameraNoPermission" as any)}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => checkCameraPermissionsAndLoad(true)}
+                          className="px-4 py-2 bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] rounded-full text-xs font-bold shadow-sm hover:opacity-90 transition-all"
+                        >
+                          {t("cameraAccessBtn" as any)}
+                        </button>
+                      </div>
+                    ) : (
+                      <select
+                        value={settings.tvModeCameraDeviceId ?? ""}
+                        onChange={(e) => updateSettings({ tvModeCameraDeviceId: e.target.value })}
+                        className="w-full px-4 py-3 text-sm rounded-2xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 focus:border-[var(--md-sys-color-primary)] focus:ring-1 focus:ring-[var(--md-sys-color-primary)] outline-none transition-all font-sans font-medium"
+                      >
+                        <option value="">-- {t("cameraNotSelected" as any)} --</option>
+                        {videoDevices.map((device) => (
+                          <option key={device.deviceId} value={device.deviceId}>
+                            {device.label || `Camera ${device.deviceId.slice(0, 5)}...`}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </motion.div>
+                )}
+
+                {settings.tvModeCenterWidget === "reminders" && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="space-y-4"
+                  >
+                    <div className="flex flex-col p-4 bg-[var(--md-sys-color-surface)] rounded-[2rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="font-bold text-[var(--md-sys-color-on-surface)] text-sm block">
+                            {t("reminderEditorTitle" as any)}
+                          </span>
+                          <span className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] block mt-0.5 leading-relaxed">
+                            {settings.language === "ms"
+                              ? "Urus peringatan tersuai anda. Setiap peringatan boleh dihias mengikut kategori masing-masing."
+                              : "Manage your custom reminders. Each reminder can be styled differently based on its category."}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleAddReminder}
+                          className="flex items-center gap-1 px-3 py-1.5 bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] rounded-full text-xs font-bold transition-all hover:opacity-90"
+                        >
+                          <Plus size={14} />
+                          {t("addReminderBtn" as any)}
+                        </button>
+                      </div>
+
+                      <div className="space-y-4 mt-4 max-h-[400px] overflow-y-auto pr-1">
+                        {(settings.tvModeRemindersList || []).map((reminder, idx) => (
+                          <div
+                            key={reminder.id}
+                            className="p-4 rounded-2xl bg-[var(--md-sys-color-surface-container-low)] border border-[var(--md-sys-color-outline)]/10 space-y-3 relative"
+                          >
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="text-xs font-black text-[var(--md-sys-color-primary)]">
+                                #{idx + 1}
+                              </span>
+                              <div className="flex items-center gap-1.5">
+                                <select
+                                  value={reminder.type}
+                                  onChange={(e) => handleUpdateReminder(reminder.id, { type: e.target.value as any })}
+                                  className="px-2 py-1 text-xs rounded-xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 outline-none font-bold"
+                                >
+                                  <option value="hadith">{t("reminderTypeHadith" as any)}</option>
+                                  <option value="quran">{t("reminderTypeQuran" as any)}</option>
+                                  <option value="warning">{t("reminderTypeWarning" as any)}</option>
+                                  <option value="info">{t("reminderTypeInfo" as any)}</option>
+                                  <option value="donation">{t("reminderTypeDonation" as any)}</option>
+                                </select>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteReminder(reminder.id)}
+                                  className="p-1.5 text-[var(--md-sys-color-error)] hover:bg-[var(--md-sys-color-error-container)] rounded-full transition-all"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="space-y-2">
+                              <input
+                                type="text"
+                                placeholder={t("reminderTitleLabel" as any)}
+                                value={reminder.title ?? ""}
+                                onChange={(e) => handleUpdateReminder(reminder.id, { title: e.target.value })}
+                                className="w-full px-3 py-1.5 text-xs rounded-xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 outline-none focus:border-[var(--md-sys-color-primary)] font-sans font-medium"
+                              />
+                              <textarea
+                                rows={2}
+                                placeholder={t("reminderTextLabel" as any)}
+                                value={reminder.text}
+                                onChange={(e) => handleUpdateReminder(reminder.id, { text: e.target.value })}
+                                className="w-full px-3 py-1.5 text-xs rounded-xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 outline-none focus:border-[var(--md-sys-color-primary)] resize-none font-sans font-medium"
+                              />
+                              {reminder.type === 'donation' && (
+                                <input
+                                  type="text"
+                                  placeholder={t("reminderImageUrlLabel" as any)}
+                                  value={reminder.imageUrl ?? ""}
+                                  onChange={(e) => handleUpdateReminder(reminder.id, { imageUrl: e.target.value })}
+                                  className="w-full px-3 py-1.5 text-xs rounded-xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 outline-none focus:border-[var(--md-sys-color-primary)] font-sans font-medium"
+                                />
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
               </motion.div>
             )}
           </div>

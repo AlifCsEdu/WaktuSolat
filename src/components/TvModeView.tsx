@@ -14,9 +14,10 @@ import {
   Volume1,
   BookOpen,
   Heart,
-  X
+  X,
+  AlertCircle
 } from "lucide-react";
-import { PrayerData, GeneralSettings } from "../types";
+import { PrayerData, GeneralSettings, TvModeReminder } from "../types";
 import { cn } from "../lib/utils";
 import { getHijriFormatted } from "../lib/holidays";
 
@@ -62,6 +63,18 @@ export function TvModeView({
   const [isWakeLockActive, setIsWakeLockActive] = useState(false);
   const [showEscToast, setShowEscToast] = useState(true);
   const isMalay = settings.language === "ms";
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkSize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkSize();
+    window.addEventListener("resize", checkSize);
+    return () => window.removeEventListener("resize", checkSize);
+  }, []);
+
+  const showCenterWidget = settings.tvModeCenterWidget && settings.tvModeCenterWidget !== 'none';
 
   // Hide the ESC toast after 5 seconds
   useEffect(() => {
@@ -144,6 +157,33 @@ export function TvModeView({
       document.exitFullscreen();
     }
   };
+
+  if (isMobile) {
+    return (
+      <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-8 bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] select-none overflow-hidden font-sans">
+        <div className="max-w-md w-full bg-[var(--md-sys-color-surface)] border border-[var(--md-sys-color-outline)]/15 rounded-[32px] p-8 shadow-2xl text-center space-y-6 flex flex-col items-center">
+          <div className="w-16 h-16 rounded-full bg-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)] flex items-center justify-center">
+            <Tv size={32} className="animate-pulse" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black text-[var(--md-sys-color-on-surface)]">
+              {t("mobileWarningTitle" as any)}
+            </h2>
+            <p className="text-sm text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
+              {t("mobileWarningDesc" as any)}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-6 py-3 w-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] rounded-full font-bold shadow-lg transition-all hover:opacity-90 active:scale-95 cursor-pointer"
+          >
+            {t("backToDashboard" as any)}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Clock calculations
   const timeString = format(currentTime, settings.timeFormat === "12h" ? "h:mm:ss" : "HH:mm:ss");
@@ -360,7 +400,10 @@ export function TvModeView({
       <div className="flex-1 relative z-10 flex flex-row items-stretch p-8 gap-8 min-h-0 w-full">
         
         {/* Left Container: Clock & Announcements */}
-        <div className="flex-[1.2] flex flex-col justify-between items-stretch gap-6 min-w-0">
+        <div className={cn(
+          "flex flex-col justify-between items-stretch gap-6 min-w-0",
+          showCenterWidget ? "flex-[0.8]" : "flex-[1.2]"
+        )}>
           
           {/* Main Massive Clock Panel */}
           <div className="flex-1 flex flex-col justify-center items-center bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/15 rounded-[48px] p-10 shadow-2xl relative overflow-hidden group transition-all duration-500 hover:border-[var(--md-sys-color-primary)]/20">
@@ -429,31 +472,64 @@ export function TvModeView({
           </AnimatePresence>
 
           {/* Running announcement banner */}
-          <div className="h-28 bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/10 rounded-[32px] p-6 shadow-md overflow-hidden flex items-center relative transition-all duration-500 hover:border-[var(--md-sys-color-primary)]/15">
-            <div className="absolute left-6 text-[var(--md-sys-color-primary)] shrink-0 bg-[var(--md-sys-color-surface-container-high)]/90 backdrop-blur-xl px-4 py-2 rounded-2xl border border-[var(--md-sys-color-outline-variant)]/20 shadow-sm z-10 flex items-center gap-2">
-              <BookOpen size={20} className="stroke-[2.5]" />
-              <span className="text-xs font-black uppercase tracking-widest">{isMalay ? "PERINGATAN" : "REMINDER"}:</span>
+          {!showCenterWidget && (
+            <div className="h-28 bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/10 rounded-[32px] p-6 shadow-md overflow-hidden flex items-center relative transition-all duration-500 hover:border-[var(--md-sys-color-primary)]/15">
+              <div className="absolute left-6 text-[var(--md-sys-color-primary)] shrink-0 bg-[var(--md-sys-color-surface-container-high)]/90 backdrop-blur-xl px-4 py-2 rounded-2xl border border-[var(--md-sys-color-outline-variant)]/20 shadow-sm z-10 flex items-center gap-2">
+                <BookOpen size={20} className="stroke-[2.5]" />
+                <span className="text-xs font-black uppercase tracking-widest">{isMalay ? "PERINGATAN" : "REMINDER"}:</span>
+              </div>
+              
+              <div className="flex-1 pl-44 overflow-hidden relative">
+                <AnimatePresence mode="wait">
+                  <motion.p
+                    key={currentAnnouncementIdx}
+                    initial={{ opacity: 0, x: 50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -50 }}
+                    transition={{ duration: 0.35, ease: "easeOut" }}
+                    className="text-lg font-bold text-[var(--md-sys-color-on-surface-variant)] leading-snug tracking-tight text-left"
+                  >
+                    {announcements[currentAnnouncementIdx]}
+                  </motion.p>
+                </AnimatePresence>
+              </div>
             </div>
-            
-            <div className="flex-1 pl-44 overflow-hidden relative">
-              <AnimatePresence mode="wait">
-                <motion.p
-                  key={currentAnnouncementIdx}
-                  initial={{ opacity: 0, x: 50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -50 }}
-                  transition={{ duration: 0.35, ease: "easeOut" }}
-                  className="text-lg font-bold text-[var(--md-sys-color-on-surface-variant)] leading-snug tracking-tight text-left"
-                >
-                  {announcements[currentAnnouncementIdx]}
-                </motion.p>
-              </AnimatePresence>
-            </div>
-          </div>
+          )}
         </div>
 
+        {/* Center Container: Active Center Widget (Reminders, Slideshow, Camera) */}
+        {showCenterWidget && (
+          <div className="flex-[1.4] flex flex-col justify-stretch items-stretch min-w-0 bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/15 rounded-[48px] p-8 shadow-2xl relative overflow-hidden transition-all duration-500 hover:border-[var(--md-sys-color-primary)]/20">
+            {settings.tvModeCenterWidget === 'reminders' && (
+              <TvModeRemindersWidget
+                reminders={settings.tvModeRemindersList || []}
+                interval={settings.tvModeReminderInterval ?? 15}
+                language={settings.language}
+                t={t}
+              />
+            )}
+            {settings.tvModeCenterWidget === 'slideshow' && (
+              <TvModeSlideshowWidget
+                urls={settings.tvModeSlideshowUrls || ""}
+                interval={settings.tvModeSlideshowInterval ?? 15}
+                language={settings.language}
+              />
+            )}
+            {settings.tvModeCenterWidget === 'camera' && (
+              <TvModeCameraWidget
+                deviceId={settings.tvModeCameraDeviceId || ""}
+                language={settings.language}
+                t={t}
+              />
+            )}
+          </div>
+        )}
+
         {/* Right Container: Massive Prayer Schedule list */}
-        <div className="flex-[0.9] flex flex-col justify-between items-stretch bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/15 rounded-[48px] p-8 shadow-2xl min-w-0 transition-all duration-500 hover:border-[var(--md-sys-color-primary)]/20">
+        <div className={cn(
+          "flex flex-col justify-between items-stretch bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/15 rounded-[48px] p-8 shadow-2xl min-w-0 transition-all duration-500 hover:border-[var(--md-sys-color-primary)]/20",
+          showCenterWidget ? "flex-[0.8]" : "flex-[0.9]"
+        )}>
           <div className="flex flex-col h-full justify-between gap-2.5">
             {activeKeys.map((key) => {
               const rawTime = todayData ? todayData[key as keyof PrayerData] : "--:--";
@@ -514,4 +590,356 @@ export function TvModeView({
     </div>
   );
 }
+
+// ==========================================
+// SUB-COMPONENTS FOR TV MODE CENTER WIDGETS
+// ==========================================
+
+interface TvModeRemindersWidgetProps {
+  reminders: TvModeReminder[];
+  interval: number;
+  language: 'ms' | 'en';
+  t: (key: any) => string;
+}
+
+function TvModeRemindersWidget({ reminders, interval, language, t }: TvModeRemindersWidgetProps) {
+  const [currentIdx, setCurrentIdx] = useState(0);
+
+  const activeReminders = useMemo(() => {
+    if (reminders && reminders.length > 0) return reminders;
+    return [
+      {
+        id: "d1",
+        type: "hadith" as const,
+        text: language === 'ms' 
+          ? "Pahala solat berjemaah melebihi solat bersendirian sebanyak dua puluh tujuh darjah."
+          : "Congregational prayer is 27 times better than praying alone.",
+        title: "HR. Bukhari & Muslim"
+      },
+      {
+        id: "d2",
+        type: "quran" as const,
+        text: language === 'ms'
+          ? "Dan dirikanlah solat, tunaikanlah zakat dan rukuklah beserta orang-orang yang rukuk."
+          : "And establish prayer and give zakah and bow with those who bow [in worship and obedience].",
+        title: "Surah Al-Baqarah: 43"
+      }
+    ];
+  }, [reminders, language]);
+
+  useEffect(() => {
+    if (currentIdx >= activeReminders.length) {
+      setCurrentIdx(0);
+    }
+  }, [activeReminders, currentIdx]);
+
+  useEffect(() => {
+    if (activeReminders.length <= 1) return;
+    const timer = setInterval(() => {
+      setCurrentIdx((prev) => (prev + 1) % activeReminders.length);
+    }, interval * 1000);
+    return () => clearInterval(timer);
+  }, [activeReminders, interval]);
+
+  if (activeReminders.length === 0) return null;
+
+  const currentReminder = activeReminders[currentIdx] || activeReminders[0];
+
+  const renderCard = () => {
+    switch (currentReminder.type) {
+      case 'hadith':
+        return (
+          <motion.div
+            key={currentReminder.id}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.5 }}
+            className="flex-1 flex flex-col justify-center items-center text-center p-8 bg-[var(--md-sys-color-primary-container)]/20 border border-[var(--md-sys-color-primary)]/30 rounded-[36px] relative overflow-hidden h-full"
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--md-sys-color-primary)]/5 rounded-full blur-2xl pointer-events-none" />
+            <BookOpen size={48} className="text-[var(--md-sys-color-primary)] mb-6 stroke-[1.5]" />
+            <span className="text-xs uppercase tracking-[0.25em] font-black text-[var(--md-sys-color-primary)] mb-3">
+              {language === 'ms' ? 'HADITH RIWAYAT' : 'AUTHENTIC HADITH'}
+            </span>
+            <p className="text-2xl font-serif italic text-[var(--md-sys-color-on-surface)] leading-relaxed max-w-xl font-medium">
+              "{currentReminder.text}"
+            </p>
+            {currentReminder.title && (
+              <span className="text-sm font-bold text-[var(--md-sys-color-on-surface-variant)] mt-6 bg-[var(--md-sys-color-surface)] px-4 py-1.5 rounded-full ring-1 ring-[var(--md-sys-color-outline)]/10 shadow-sm">
+                {currentReminder.title}
+              </span>
+            )}
+          </motion.div>
+        );
+
+      case 'quran':
+        return (
+          <motion.div
+            key={currentReminder.id}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.5 }}
+            className="flex-1 flex flex-col justify-center items-center text-center p-8 bg-amber-500/5 border border-amber-500/35 rounded-[36px] relative overflow-hidden h-full"
+          >
+            <div className="absolute top-0 left-0 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+            <Sparkles size={48} className="text-amber-500 mb-6 stroke-[1.5]" />
+            <span className="text-xs uppercase tracking-[0.25em] font-black text-amber-600 dark:text-amber-400 mb-3">
+              {language === 'ms' ? 'FIRMAN ALLAH (AL-QURAN)' : 'REVELATION (AL-QURAN)'}
+            </span>
+            <p className="text-2xl font-serif italic text-[var(--md-sys-color-on-surface)] leading-relaxed max-w-xl font-medium">
+              "{currentReminder.text}"
+            </p>
+            {currentReminder.title && (
+              <span className="text-sm font-bold text-amber-700 dark:text-amber-300 mt-6 bg-amber-500/10 px-4 py-1.5 rounded-full shadow-sm">
+                {currentReminder.title}
+              </span>
+            )}
+          </motion.div>
+        );
+
+      case 'warning':
+        return (
+          <motion.div
+            key={currentReminder.id}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.5 }}
+            className="flex-1 flex flex-col justify-center items-center text-center p-8 bg-[var(--md-sys-color-error-container)]/10 border border-[var(--md-sys-color-error)]/35 rounded-[36px] relative overflow-hidden h-full"
+          >
+            <div className="absolute inset-x-0 top-0 h-2 bg-gradient-to-r from-red-500 via-transparent to-red-500 opacity-20 pointer-events-none" />
+            <VolumeX size={48} className="text-[var(--md-sys-color-error)] mb-6 stroke-[1.5]" />
+            <span className="text-xs uppercase tracking-[0.25em] font-black text-[var(--md-sys-color-error)] mb-3">
+              {language === 'ms' ? 'PERINGATAN MESRA' : 'KIND REMINDER'}
+            </span>
+            <p className="text-2xl font-sans font-black text-[var(--md-sys-color-on-surface)] leading-relaxed max-w-xl">
+              {currentReminder.text}
+            </p>
+            {currentReminder.title && (
+              <span className="text-sm font-bold text-[var(--md-sys-color-error)] mt-6 bg-[var(--md-sys-color-error-container)]/30 px-4 py-1.5 rounded-full shadow-sm">
+                {currentReminder.title}
+              </span>
+            )}
+          </motion.div>
+        );
+
+      case 'info':
+        return (
+          <motion.div
+            key={currentReminder.id}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.5 }}
+            className="flex-1 flex flex-col justify-center items-center text-center p-8 bg-blue-500/5 border border-blue-500/35 rounded-[36px] relative overflow-hidden h-full"
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
+            <Tv size={48} className="text-blue-500 mb-6 stroke-[1.5]" />
+            <span className="text-xs uppercase tracking-[0.25em] font-black text-blue-600 dark:text-blue-400 mb-3">
+              {language === 'ms' ? 'MAKLUMAN MASJID' : 'MOSQUE ANNOUNCEMENT'}
+            </span>
+            {currentReminder.title && (
+              <h4 className="text-xl font-black text-[var(--md-sys-color-on-surface)] mb-2">
+                {currentReminder.title}
+              </h4>
+            )}
+            <p className="text-xl font-sans font-semibold text-[var(--md-sys-color-on-surface-variant)] leading-relaxed max-w-xl">
+              {currentReminder.text}
+            </p>
+          </motion.div>
+        );
+
+      case 'donation':
+        return (
+          <motion.div
+            key={currentReminder.id}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.5 }}
+            className="flex-1 flex flex-col sm:flex-row items-center justify-between p-8 bg-rose-500/5 border border-rose-500/35 rounded-[36px] relative overflow-hidden h-full gap-6"
+          >
+            <div className="flex-1 flex flex-col justify-center items-start text-left">
+              <Heart size={40} className="text-rose-500 mb-4 stroke-[1.5] animate-pulse" />
+              <span className="text-xs uppercase tracking-[0.25em] font-black text-rose-600 dark:text-rose-400 mb-2">
+                {language === 'ms' ? 'SUMBANGAN IMARAH' : 'MOSQUE DONATION'}
+              </span>
+              {currentReminder.title && (
+                <h4 className="text-xl font-black text-[var(--md-sys-color-on-surface)] mb-2">
+                  {currentReminder.title}
+                </h4>
+              )}
+              <p className="text-lg font-sans font-semibold text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
+                {currentReminder.text}
+              </p>
+            </div>
+            {currentReminder.imageUrl && (
+              <div className="w-40 h-40 shrink-0 rounded-2xl bg-white p-2 flex items-center justify-center shadow-lg ring-4 ring-rose-500/10 pointer-events-none">
+                <img
+                  src={currentReminder.imageUrl}
+                  alt="Donation QR Code"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            )}
+          </motion.div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="flex-1 flex flex-col h-full min-h-0">
+      <AnimatePresence mode="wait">
+        {renderCard()}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+interface TvModeSlideshowWidgetProps {
+  urls: string;
+  interval: number;
+  language: 'ms' | 'en';
+}
+
+function TvModeSlideshowWidget({ urls, interval, language }: TvModeSlideshowWidgetProps) {
+  const [currentIdx, setCurrentIdx] = useState(0);
+
+  const parsedUrls = useMemo(() => {
+    if (!urls || !urls.trim()) return [];
+    return urls
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line.startsWith("http"));
+  }, [urls]);
+
+  useEffect(() => {
+    if (currentIdx >= parsedUrls.length) {
+      setCurrentIdx(0);
+    }
+  }, [parsedUrls, currentIdx]);
+
+  useEffect(() => {
+    if (parsedUrls.length <= 1) return;
+    const timer = setInterval(() => {
+      setCurrentIdx((prev) => (prev + 1) % parsedUrls.length);
+    }, interval * 1000);
+    return () => clearInterval(timer);
+  }, [parsedUrls, interval]);
+
+  if (parsedUrls.length === 0) {
+    return (
+      <div className="flex-1 flex flex-col justify-center items-center text-center p-8 bg-[var(--md-sys-color-surface-container)] rounded-[36px] border border-[var(--md-sys-color-outline)]/10 h-full space-y-3">
+        <Tv size={48} className="text-[var(--md-sys-color-primary)] stroke-[1.5]" />
+        <h4 className="text-lg font-black text-[var(--md-sys-color-on-surface)]">
+          {language === 'ms' ? 'Tiada Imej Slaid' : 'No Slideshow Images'}
+        </h4>
+        <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] max-w-xs leading-relaxed">
+          {language === 'ms'
+            ? 'Masukkan pautan URL imej poster atau banner di bahagian Tetapan untuk memaparkan slaid.'
+            : 'Enter image URLs for posters or banners in the Settings to start the slideshow.'}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex-1 relative rounded-[36px] overflow-hidden bg-black/40 h-full w-full">
+      <AnimatePresence mode="wait">
+        <motion.img
+          key={parsedUrls[currentIdx]}
+          src={parsedUrls[currentIdx]}
+          alt={`Slide ${currentIdx + 1}`}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.6 }}
+          className="w-full h-full object-cover"
+        />
+      </AnimatePresence>
+    </div>
+  );
+}
+
+interface TvModeCameraWidgetProps {
+  deviceId: string;
+  language: 'ms' | 'en';
+  t: (key: any) => string;
+}
+
+function TvModeCameraWidget({ deviceId, language, t }: TvModeCameraWidgetProps) {
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const videoRef = React.useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    let activeStream: MediaStream | null = null;
+    const startCamera = async () => {
+      setError(null);
+      try {
+        const constraints = {
+          video: deviceId ? { deviceId: { exact: deviceId } } : true,
+          audio: false, // Avoid feedback
+        };
+        const active = await navigator.mediaDevices.getUserMedia(constraints);
+        activeStream = active;
+        setStream(active);
+        if (videoRef.current) {
+          videoRef.current.srcObject = active;
+        }
+      } catch (err: any) {
+        console.error("Failed to start camera:", err);
+        setError(err.message || String(err));
+      }
+    };
+
+    startCamera();
+
+    return () => {
+      if (activeStream) {
+        activeStream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, [deviceId]);
+
+  if (error) {
+    return (
+      <div className="flex-1 flex flex-col justify-center items-center text-center p-8 bg-[var(--md-sys-color-error-container)]/10 rounded-[36px] border border-[var(--md-sys-color-error)]/30 h-full space-y-3">
+        <AlertCircle size={48} className="text-[var(--md-sys-color-error)] stroke-[1.5]" />
+        <h4 className="text-lg font-black text-[var(--md-sys-color-on-surface)]">
+          {language === 'ms' ? 'Ralat Kamera' : 'Camera Error'}
+        </h4>
+        <p className="text-xs text-[var(--md-sys-color-on-surface-variant)] max-w-xs leading-relaxed">
+          {language === 'ms'
+            ? 'Gagal memulakan suapan peranti kamera. Sila pastikan kebenaran diberikan dan peranti disambungkan.'
+            : 'Failed to start camera stream. Please ensure permissions are granted and the device is connected.'}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex-1 relative rounded-[36px] overflow-hidden bg-black/80 h-full w-full flex items-center justify-center">
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        muted
+        className="w-full h-full object-cover transform -scale-x-100"
+      />
+      <div className="absolute top-4 left-4 z-10 px-3 py-1 rounded-full bg-red-600/90 text-white font-black text-[10px] tracking-widest uppercase flex items-center gap-1.5 animate-pulse shadow-md pointer-events-none">
+        <span className="w-2.5 h-2.5 rounded-full bg-white relative flex shrink-0">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+        </span>
+        <span>LIVE FEED</span>
+      </div>
+    </div>
+  );
+}
+
 export default TvModeView;

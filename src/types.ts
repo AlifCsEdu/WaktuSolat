@@ -38,6 +38,14 @@ export type Preferences = Record<PrayerKey, PrayerPreference>;
 
 export type SunnahTimeKey = "suhoor" | "morningForbidden" | "duha" | "middayForbidden" | "eveningForbidden" | "firstThird" | "midnight" | "tahajjud";
 
+export interface TvModeReminder {
+  id: string;
+  type: 'hadith' | 'quran' | 'warning' | 'info' | 'donation';
+  text: string;
+  title?: string;
+  imageUrl?: string;
+}
+
 export interface GeneralSettings {
   language: 'ms' | 'en';
   timeFormat: '12h' | '24h';
@@ -102,6 +110,11 @@ export interface GeneralSettings {
   tvModeCustomReminders?: string;
   showTvShortcut?: boolean;
   mosqueName?: string;
+  tvModeCenterWidget?: 'none' | 'reminders' | 'slideshow' | 'camera';
+  tvModeSlideshowUrls?: string;
+  tvModeSlideshowInterval?: number;
+  tvModeCameraDeviceId?: string;
+  tvModeRemindersList?: TvModeReminder[];
 }
 
 // Default preferences
@@ -162,5 +175,42 @@ export const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
   tvModeReminderInterval: 15,
   tvModeCustomReminders: "",
   showTvShortcut: false,
-  mosqueName: ""
+  mosqueName: "",
+  tvModeCenterWidget: 'none',
+  tvModeSlideshowUrls: "",
+  tvModeSlideshowInterval: 15,
+  tvModeCameraDeviceId: "",
+  tvModeRemindersList: [
+    {
+      id: "1",
+      type: "hadith",
+      text: "Pahala solat berjemaah melebihi solat bersendirian sebanyak dua puluh tujuh darjah.",
+      title: "HR. Bukhari & Muslim"
+    },
+    {
+      id: "2",
+      type: "quran",
+      text: "Dan dirikanlah solat, tunaikanlah zakat dan rukuklah beserta orang-orang yang rukuk.",
+      title: "Surah Al-Baqarah: 43"
+    },
+    {
+      id: "3",
+      type: "warning",
+      text: "Matikan atau senyapkan telefon bimbit anda untuk menjaga kekhusyukan solat.",
+      title: "Peringatan Mesra"
+    },
+    {
+      id: "4",
+      type: "info",
+      text: "Kajian tafsir Al-Quran mingguan diadakan setiap hari Sabtu selepas solat Maghrib.",
+      title: "Makluman Kuliah"
+    },
+    {
+      id: "5",
+      type: "donation",
+      text: "Sumbangan Tabung Imarah Masjid. Imbas kod QR untuk menyumbang secara atas talian.",
+      title: "Sumbangan Lestari",
+      imageUrl: "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://alurwaktu.app/donate"
+    }
+  ]
 };
