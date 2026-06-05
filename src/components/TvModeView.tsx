@@ -83,6 +83,7 @@ export function TvModeView({
   const [showEscToast, setShowEscToast] = useState(true);
   const isMalay = settings.language === "ms";
   const [isMobile, setIsMobile] = useState(false);
+  const [isPortrait, setIsPortrait] = useState(false);
 
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
 
@@ -139,7 +140,8 @@ export function TvModeView({
 
   useEffect(() => {
     const checkSize = () => {
-      setIsMobile(window.innerWidth < 1024 || window.innerHeight > window.innerWidth);
+      setIsMobile(window.innerWidth < 768);
+      setIsPortrait(window.innerHeight > window.innerWidth);
     };
     checkSize();
     window.addEventListener("resize", checkSize);
@@ -561,7 +563,222 @@ export function TvModeView({
         </div>
       </div>
 
-      {settings.tvModeLayout === 'bottom' ? (
+      {isPortrait ? (
+        /* Portrait TV Layout */
+        <div className="flex-1 relative z-10 flex flex-col p-6 gap-6 min-h-0 w-full overflow-hidden">
+          
+          {/* Top: Clock Panel */}
+          <div className="flex flex-col justify-center items-center bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/15 rounded-[48px] py-6 px-6 shadow-2xl relative overflow-hidden group hover:border-[var(--md-sys-color-primary)]/20 transition-all" style={{ transform: `scale(${clockScale})`, transformOrigin: 'center center' }}>
+            <div className="absolute inset-0 tv-shimmer-overlay pointer-events-none" />
+            
+            {/* Dates */}
+            {showDateBar && (
+              <div className="flex flex-col items-center mb-2">
+                <span className="text-lg sm:text-xl font-bold tracking-tight text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
+                  <Calendar size={20} className="text-[var(--md-sys-color-primary)]" />
+                  {dateString}
+                </span>
+                {hijriString && (
+                  <span className="text-sm sm:text-base font-bold text-[var(--md-sys-color-tertiary)] mt-1 uppercase tracking-wide">
+                    {hijriString}
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Digital Clock */}
+            <div className="flex items-baseline justify-center select-text w-full max-w-full px-4 overflow-hidden">
+              <span className={cn("font-sans font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)] truncate", settings.tvModeHideSeconds ? "text-[clamp(4.5rem,10vh,7rem)]" : "text-[clamp(3.5rem,8vh,6rem)]")}>
+                {timeString.split(":")[0]}
+              </span>
+              <span className={cn("font-sans font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)]", settings.tvModeHideSeconds ? "text-[clamp(4.5rem,10vh,7rem)]" : "text-[clamp(3.5rem,8vh,6rem)]", colonBlink && "tv-colon-blink")}>:</span>
+              <span className={cn("font-sans font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)] truncate", settings.tvModeHideSeconds ? "text-[clamp(4.5rem,10vh,7rem)]" : "text-[clamp(3.5rem,8vh,6rem)]")}>
+                {timeString.split(":")[1]}
+              </span>
+              {!settings.tvModeHideSeconds && (
+                <span className="text-[clamp(2rem,5vh,3.5rem)] font-sans font-bold tracking-tighter text-[var(--md-sys-color-on-surface)]/60 ml-2 select-none tabular-nums">
+                  :{timeString.split(":")[2]}
+                </span>
+              )}
+              {ampm && (
+                <span className="ml-3 text-[clamp(1.2rem,3vh,2rem)] font-black uppercase text-[var(--md-sys-color-primary)] tracking-widest">
+                  {ampm}
+                </span>
+              )}
+            </div>
+
+            {/* Next Prayer Countdown Sub-panel */}
+            {showCountdown && nextPrayerName && (
+              <div className="mt-2 flex flex-col items-center bg-[var(--md-sys-color-surface-container-high)]/60 backdrop-blur-md border border-[var(--md-sys-color-outline-variant)]/20 px-6 py-1.5 rounded-2xl w-full max-w-xs shadow-sm">
+                <span className="text-[9px] uppercase tracking-[0.2em] font-black text-[var(--md-sys-color-on-surface-variant)]">
+                  {isMalay ? "HITUNG MUNDUR" : "COUNTDOWN"} — {nextPrayerName}
+                </span>
+                <span className="text-xl sm:text-2xl font-sans font-black text-[var(--md-sys-color-primary)] tracking-tight mt-0.5 tabular-nums">
+                  {countdownString}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Middle: Weather Widget / Iqamah Countdown / Center Widget */}
+          <div className="flex flex-col gap-4 shrink-0">
+            {/* Iqamah Countdown Banner */}
+            <AnimatePresence>
+              {iqamahCountdownActive && (
+                <motion.div
+                  initial={{ opacity: 0, y: 15, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.98 }}
+                  onClick={onIqamahTogglePause}
+                  className={cn(
+                    "rounded-[28px] p-4 flex flex-col items-center justify-center border shadow-xl relative overflow-hidden cursor-pointer select-none transition-all duration-300 active:scale-[0.99]",
+                    iqamahRemainingSeconds <= 60
+                      ? "bg-gradient-to-r from-[var(--md-sys-color-error)] via-orange-600 to-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)] border-[var(--md-sys-color-error)]/25 animate-pulse"
+                      : "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] border-[var(--md-sys-color-primary)]/10"
+                  )}
+                >
+                  <div className="absolute inset-0 bg-white/5" />
+                  <div className="flex items-center gap-2 text-[9px] uppercase tracking-[0.2em] font-black opacity-90 relative z-10">
+                    {iqamahPaused ? (
+                      <Play size={10} className="fill-current animate-pulse shrink-0" />
+                    ) : (
+                      <Pause size={10} className="fill-current shrink-0" />
+                    )}
+                    <span>
+                      {iqamahPaused
+                        ? (isMalay ? "IQAMAH DITANGGUH (KETIK UNTUK SAMBUNG)" : "IQAMAH PAUSED (TAP TO RESUME)")
+                        : iqamahRemainingSeconds <= 60
+                        ? (isMalay ? "SILA RAPATKAN SAF & SENYAPKAN TELEFON" : "PLEASE STRAIGHTEN ROWS & SILENCE PHONES")
+                        : (isMalay ? "BERSEDIA UNTUK SOLAT (IQAMAH)" : "PREPARE FOR PRAYER (IQAMAH)")}
+                    </span>
+                  </div>
+                  <div className="text-2xl font-sans font-black tracking-tight mt-1 relative z-10 tabular-nums">
+                    {Math.floor(iqamahRemainingSeconds / 60)}:
+                    {String(iqamahRemainingSeconds % 60).padStart(2, "0")}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Weather Widget */}
+            {showWeather && (
+              <div className="rounded-[28px] overflow-hidden shadow-md">
+                <WeatherWidget selectedZone={selectedZone} userCoords={userCoords} currentLocationName={currentLocationName} />
+              </div>
+            )}
+
+            {/* Announcement banner or Center Widget */}
+            {showCenterWidget ? (
+              <div className="h-44 flex flex-col justify-stretch items-stretch min-w-0 bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/15 rounded-[36px] p-4 shadow-xl relative overflow-hidden transition-all duration-500 hover:border-[var(--md-sys-color-primary)]/20">
+                {settings.tvModeCenterWidget === 'reminders' && (
+                  <TvModeRemindersWidget
+                    reminders={settings.tvModeRemindersList || []}
+                    interval={settings.tvModeReminderInterval ?? 15}
+                    language={settings.language}
+                    t={t}
+                  />
+                )}
+                {settings.tvModeCenterWidget === 'slideshow' && (
+                  <TvModeSlideshowWidget
+                    urls={settings.tvModeSlideshowUrls || ""}
+                    interval={settings.tvModeSlideshowInterval ?? 15}
+                    language={settings.language}
+                  />
+                )}
+                {settings.tvModeCenterWidget === 'camera' && (
+                  <TvModeCameraWidget
+                    deviceId={settings.tvModeCameraDeviceId || ""}
+                    language={settings.language}
+                    t={t}
+                  />
+                )}
+              </div>
+            ) : (
+              <div className="h-20 bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/10 rounded-[28px] px-5 py-3 shadow-md overflow-hidden flex items-center relative transition-all duration-500 hover:border-[var(--md-sys-color-primary)]/15">
+                <div className="absolute left-4 text-[var(--md-sys-color-primary)] shrink-0 bg-[var(--md-sys-color-surface-container-high)]/90 backdrop-blur-xl px-3 py-1.5 rounded-xl border border-[var(--md-sys-color-outline-variant)]/20 shadow-sm z-10 flex items-center gap-1.5">
+                  <BookOpen size={16} className="stroke-[2.5]" />
+                  <span className="text-[9px] font-black uppercase tracking-widest">{isMalay ? "PERINGATAN" : "REMINDER"}:</span>
+                </div>
+                
+                <div className="flex-1 pl-36 overflow-hidden relative flex items-center">
+                  <motion.p
+                    key={currentAnnouncementIdx}
+                    initial={{ x: "100%" }}
+                    animate={{ x: "-100%" }}
+                    onAnimationComplete={() => {
+                      setCurrentAnnouncementIdx((prev) => (prev + 1) % announcements.length);
+                    }}
+                    transition={{
+                      duration: settings.tvModeTickerSpeed === 'slow' ? 24 : settings.tvModeTickerSpeed === 'fast' ? 12 : 18,
+                      ease: "linear"
+                    }}
+                    className="whitespace-nowrap font-bold text-[var(--md-sys-color-on-surface-variant)] tracking-wide shrink-0"
+                    style={{ fontSize: `${settings.tvModeTickerSize ?? 100}%` }}
+                  >
+                    {announcements[currentAnnouncementIdx]}
+                  </motion.p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Bottom: Prayer Schedule (vertical timeline-style list) */}
+          <div className="flex-1 bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/15 rounded-[36px] p-5 shadow-2xl min-h-0 flex flex-col justify-between" style={{ transform: `scale(${scheduleScale})`, transformOrigin: 'center bottom' }}>
+            <div className="flex flex-col h-full justify-between gap-2">
+              {activeKeys.map((key) => {
+                const rawTime = todayData ? todayData[key as keyof PrayerData] : "--:--";
+                const formattedTime = formatPrayerTime(rawTime as string);
+                const isCurrent = key === prevPrayerName; // Matches active prayer
+                const isNext = key === nextPrayerName?.toLowerCase() || (key === "dhuhr" && nextPrayerName?.toLowerCase() === "jumaat") || (key === "dhuhr" && nextPrayerName?.toLowerCase() === "jumu'ah");
+
+                return (
+                  <div
+                    key={key}
+                    className={cn(
+                      "flex items-center justify-between px-5 py-3 rounded-2xl border transition-all duration-300 relative overflow-hidden flex-1",
+                      isCurrent
+                        ? "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] border-[var(--md-sys-color-primary)]/10 shadow-md scale-[1.01] z-10 tv-active-glow"
+                        : isNext
+                        ? "bg-[var(--md-sys-color-primary-container)]/35 text-[var(--md-sys-color-on-primary-container)] border-[var(--md-sys-color-primary)]/30 border-l-8 border-l-[var(--md-sys-color-primary)] shadow-sm"
+                        : "bg-[var(--md-sys-color-surface)]/40 border-transparent hover:bg-[var(--md-sys-color-surface-container-high)]/60 hover:border-[var(--md-sys-color-outline-variant)]/30"
+                    )}
+                  >
+                    {isCurrent && <div className="absolute inset-0 bg-white/5 animate-pulse" />}
+
+                    <div className="flex items-center gap-3 relative z-10">
+                      <span className={cn(
+                        "text-lg font-black tracking-tight",
+                        isCurrent ? "text-[var(--md-sys-color-on-primary)]" : "text-[var(--md-sys-color-on-surface)]"
+                      )}>
+                        {getPrayerDisplayLabel(key)}
+                      </span>
+                      
+                      {isCurrent && (
+                        <span className="px-2 py-0.5 rounded-full bg-[var(--md-sys-color-on-primary)] text-[var(--md-sys-color-primary)] text-[8px] font-black tracking-widest uppercase tv-badge-enter">
+                          {isMalay ? "SEKARANG" : "ACTIVE"}
+                        </span>
+                      )}
+                      
+                      {isNext && (
+                        <span className="px-2 py-0.5 rounded-full bg-[var(--md-sys-color-primary)]/20 text-[var(--md-sys-color-primary)] text-[8px] font-black tracking-widest uppercase animate-pulse tv-badge-enter">
+                          {isMalay ? "SELEPAS INI" : "UP NEXT"}
+                        </span>
+                      )}
+                    </div>
+                    
+                    <span className={cn(
+                      "font-sans text-xl tracking-tighter relative z-10 tabular-nums",
+                      isCurrent ? "font-black text-[var(--md-sys-color-on-primary)]" : "font-extrabold text-[var(--md-sys-color-on-surface)]/90"
+                    )}>
+                      {formattedTime}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      ) : settings.tvModeLayout === 'bottom' ? (
         /* Horizontal Bottom Schedule Layout */
         <div className="flex-1 relative z-10 flex flex-col justify-between p-8 gap-8 min-h-0 w-full">
           {/* Top grid (Clock + Widgets) */}
