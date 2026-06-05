@@ -1063,3 +1063,82 @@ html[data-style="retro"] md-list-item {
     border: 2px solid var(--md-sys-color-on-surface) !important;
     --md-list-item-container-shape: 0px !important;
 }
+
+/* ============================================================
+   TV MODE ANIMATIONS
+   Premium micro-animations for the mosque TV display
+   ============================================================ */
+
+@keyframes tv-colon-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.2; }
+}
+
+@keyframes tv-active-glow {
+    0%, 100% {
+        box-shadow:
+            0 0 8px 0 var(--md-sys-color-primary),
+            0 4px 16px -4px var(--md-sys-color-primary);
+    }
+    50% {
+        box-shadow:
+            0 0 20px 2px var(--md-sys-color-primary),
+            0 4px 24px -2px var(--md-sys-color-primary);
+    }
+}
+
+@keyframes tv-badge-enter {
+    from {
+        opacity: 0;
+        transform: translateY(-4px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes tv-shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.tv-colon-blink {
+    animation: tv-colon-blink 1s ease-in-out infinite;
+}
+
+.tv-active-glow {
+    animation: tv-active-glow 2.5s ease-in-out infinite;
+}
+
+.tv-badge-enter {
+    animation: tv-badge-enter 0.35s var(--ease-m3-emphasized-decelerate) both;
+}
+
+.tv-shimmer-overlay {
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.04) 50%,
+        transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: tv-shimmer 4s ease-in-out infinite;
+}
+
+/* Settings Accordion styles */
+.settings-accordion-content {
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.2, 0, 0, 1), opacity 0.3s ease;
+}
+
+.settings-accordion-content[data-open="false"] {
+    max-height: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.settings-accordion-content[data-open="true"] {
+    max-height: 5000px;
+    opacity: 1;
+}

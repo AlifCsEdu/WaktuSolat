@@ -127,6 +127,13 @@ export interface GeneralSettings {
   mosqueLogoBgMode?: 'transparent' | 'white' | 'theme-container' | 'theme-primary';
   mosqueLogoBlendMode?: 'none' | 'multiply' | 'screen';
   mosqueLogoAlignment?: 'left' | 'right' | 'top';
+  // TV Mode display customization
+  tvModeClockScale?: number; // 0.7 to 1.3
+  tvModeScheduleScale?: number; // 0.7 to 1.3
+  tvModeShowWeather?: boolean;
+  tvModeShowCountdown?: boolean;
+  tvModeShowDateBar?: boolean;
+  tvModeClockColonBlink?: boolean;
 }
 
 // Default preferences
@@ -202,6 +209,12 @@ export const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
   mosqueLogoBgMode: 'transparent',
   mosqueLogoBlendMode: 'none',
   mosqueLogoAlignment: 'left',
+  tvModeClockScale: 1,
+  tvModeScheduleScale: 1,
+  tvModeShowWeather: true,
+  tvModeShowCountdown: true,
+  tvModeShowDateBar: true,
+  tvModeClockColonBlink: true,
   tvModeRemindersList: [
     {
       id: "1",

@@ -114,6 +114,12 @@ export function TvModeView({
   }, []);
 
   const showCenterWidget = settings.tvModeCenterWidget && settings.tvModeCenterWidget !== 'none';
+  const clockScale = settings.tvModeClockScale ?? 1;
+  const scheduleScale = settings.tvModeScheduleScale ?? 1;
+  const showWeather = settings.tvModeShowWeather !== false;
+  const showCountdown = settings.tvModeShowCountdown !== false;
+  const showDateBar = settings.tvModeShowDateBar !== false;
+  const colonBlink = settings.tvModeClockColonBlink !== false;
 
   // Hide the ESC toast after 5 seconds
   useEffect(() => {
@@ -499,25 +505,33 @@ export function TvModeView({
               showCenterWidget ? "flex-[1.1]" : "flex-[2]"
             )}>
               {/* Clock Panel */}
-              <div className="flex-1 flex flex-col justify-center items-center bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/15 rounded-[48px] p-8 shadow-2xl relative overflow-hidden group hover:border-[var(--md-sys-color-primary)]/20 transition-all">
+              <div className="flex-1 flex flex-col justify-center items-center bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/15 rounded-[48px] p-8 shadow-2xl relative overflow-hidden group hover:border-[var(--md-sys-color-primary)]/20 transition-all" style={{ transform: `scale(${clockScale})`, transformOrigin: 'center center' }}>
+                {/* Shimmer overlay */}
+                <div className="absolute inset-0 tv-shimmer-overlay pointer-events-none" />
                 
                 {/* Dates */}
-                <div className="flex flex-col items-center mb-4">
-                  <span className="text-lg sm:text-xl font-bold tracking-tight text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
-                    <Calendar size={20} className="text-[var(--md-sys-color-primary)]" />
-                    {dateString}
-                  </span>
-                  {hijriString && (
-                    <span className="text-sm sm:text-base font-bold text-[var(--md-sys-color-tertiary)] mt-1 uppercase tracking-wide">
-                      {hijriString}
+                {showDateBar && (
+                  <div className="flex flex-col items-center mb-4">
+                    <span className="text-lg sm:text-xl font-bold tracking-tight text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
+                      <Calendar size={20} className="text-[var(--md-sys-color-primary)]" />
+                      {dateString}
                     </span>
-                  )}
-                </div>
+                    {hijriString && (
+                      <span className="text-sm sm:text-base font-bold text-[var(--md-sys-color-tertiary)] mt-1 uppercase tracking-wide">
+                        {hijriString}
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 {/* Digital Clock */}
                 <div className="flex items-baseline justify-center select-text w-full max-w-full px-4 overflow-hidden">
                   <span className="text-[4.5rem] sm:text-[5.5rem] lg:text-[6.5rem] font-mono font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)] truncate">
-                    {timeString.split(":")[0]}:{timeString.split(":")[1]}
+                    {timeString.split(":")[0]}
+                  </span>
+                  <span className={cn("text-[4.5rem] sm:text-[5.5rem] lg:text-[6.5rem] font-mono font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)]", colonBlink && "tv-colon-blink")}>:</span>
+                  <span className="text-[4.5rem] sm:text-[5.5rem] lg:text-[6.5rem] font-mono font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)] truncate">
+                    {timeString.split(":")[1]}
                   </span>
                   <span className="text-3xl sm:text-4xl lg:text-5xl font-mono font-bold tracking-tighter text-[var(--md-sys-color-on-surface)]/60 ml-2 select-none tabular-nums">
                     :{timeString.split(":")[2]}
@@ -530,7 +544,7 @@ export function TvModeView({
                 </div>
 
                 {/* Next Prayer Countdown Sub-panel */}
-                {nextPrayerName && (
+                {showCountdown && nextPrayerName && (
                   <div className="mt-4 flex flex-col items-center bg-[var(--md-sys-color-surface-container-high)]/60 backdrop-blur-md border border-[var(--md-sys-color-outline-variant)]/20 px-6 py-2 rounded-2xl w-full max-w-sm shadow-sm">
                     <span className="text-[10px] uppercase tracking-[0.2em] font-black text-[var(--md-sys-color-on-surface-variant)]">
                       {isMalay ? "HITUNG MUNDUR" : "COUNTDOWN"} — {nextPrayerName}
@@ -543,9 +557,11 @@ export function TvModeView({
               </div>
 
               {/* Weather Widget */}
-              <div className="shrink-0 rounded-[32px] overflow-hidden">
-                <WeatherWidget selectedZone={selectedZone} userCoords={userCoords} currentLocationName={currentLocationName} />
-              </div>
+              {showWeather && (
+                <div className="shrink-0 rounded-[32px] overflow-hidden">
+                  <WeatherWidget selectedZone={selectedZone} userCoords={userCoords} currentLocationName={currentLocationName} />
+                </div>
+              )}
 
               {/* Dynamic Iqamah Countdown Banner */}
               <AnimatePresence>
@@ -662,7 +678,7 @@ export function TvModeView({
           </div>
 
           {/* Bottom horizontal schedule strip */}
-          <div className="shrink-0 bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/15 rounded-[36px] p-4 shadow-xl">
+          <div className="shrink-0 bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/15 rounded-[36px] p-4 shadow-xl" style={{ transform: `scale(${scheduleScale})`, transformOrigin: 'bottom center' }}>
             <div className="grid grid-cols-7 gap-3 w-full">
               {activeKeys.map((key) => {
                 const rawTime = todayData ? todayData[key as keyof PrayerData] : "--:--";
@@ -676,7 +692,7 @@ export function TvModeView({
                     className={cn(
                       "flex flex-col justify-between items-center p-3 rounded-2xl border transition-all duration-300 relative overflow-hidden text-center min-h-[120px]",
                       isCurrent
-                        ? "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] border-[var(--md-sys-color-primary)]/10 shadow-lg scale-[1.03] z-10"
+                        ? "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] border-[var(--md-sys-color-primary)]/10 shadow-lg scale-[1.03] z-10 tv-active-glow"
                         : isNext
                         ? "bg-[var(--md-sys-color-primary-container)]/35 text-[var(--md-sys-color-on-primary-container)] border-[var(--md-sys-color-primary)]/30 border-t-4 border-t-[var(--md-sys-color-primary)] shadow-sm"
                         : "bg-[var(--md-sys-color-surface)]/40 border-transparent hover:bg-[var(--md-sys-color-surface-container-high)]/60 hover:border-[var(--md-sys-color-outline-variant)]/30"
@@ -694,12 +710,12 @@ export function TvModeView({
                       
                       {/* Badges */}
                       {isCurrent && (
-                        <span className="px-2 py-0.5 rounded-full bg-[var(--md-sys-color-on-primary)] text-[var(--md-sys-color-primary)] text-[8px] font-black tracking-widest uppercase">
+                        <span className="px-2 py-0.5 rounded-full bg-[var(--md-sys-color-on-primary)] text-[var(--md-sys-color-primary)] text-[8px] font-black tracking-widest uppercase tv-badge-enter">
                           {isMalay ? "SEKARANG" : "ACTIVE"}
                         </span>
                       )}
                       {isNext && (
-                        <span className="px-2 py-0.5 rounded-full bg-[var(--md-sys-color-primary)]/20 text-[var(--md-sys-color-primary)] text-[8px] font-black tracking-widest uppercase animate-pulse">
+                        <span className="px-2 py-0.5 rounded-full bg-[var(--md-sys-color-primary)]/20 text-[var(--md-sys-color-primary)] text-[8px] font-black tracking-widest uppercase animate-pulse tv-badge-enter">
                           {isMalay ? "SELEPAS INI" : "UP NEXT"}
                         </span>
                       )}
@@ -728,25 +744,33 @@ export function TvModeView({
           )}>
             
             {/* Main Massive Clock Panel */}
-            <div className="flex-1 flex flex-col justify-center items-center bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/15 rounded-[48px] p-10 shadow-2xl relative overflow-hidden group transition-all duration-500 hover:border-[var(--md-sys-color-primary)]/20">
+            <div className="flex-1 flex flex-col justify-center items-center bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/15 rounded-[48px] p-10 shadow-2xl relative overflow-hidden group transition-all duration-500 hover:border-[var(--md-sys-color-primary)]/20" style={{ transform: `scale(${clockScale})`, transformOrigin: 'center center' }}>
+              {/* Shimmer overlay */}
+              <div className="absolute inset-0 tv-shimmer-overlay pointer-events-none" />
               
               {/* Top Info row (dates) */}
-              <div className="flex flex-col items-center mb-6">
-                <span className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
-                  <Calendar size={22} className="text-[var(--md-sys-color-primary)]" />
-                  {dateString}
-                </span>
-                {hijriString && (
-                  <span className="text-lg sm:text-xl font-bold text-[var(--md-sys-color-tertiary)] mt-1.5 uppercase tracking-wide">
-                    {hijriString}
+              {showDateBar && (
+                <div className="flex flex-col items-center mb-6">
+                  <span className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--md-sys-color-on-surface)] flex items-center gap-2">
+                    <Calendar size={22} className="text-[var(--md-sys-color-primary)]" />
+                    {dateString}
                   </span>
-                )}
-              </div>
+                  {hijriString && (
+                    <span className="text-lg sm:text-xl font-bold text-[var(--md-sys-color-tertiary)] mt-1.5 uppercase tracking-wide">
+                      {hijriString}
+                    </span>
+                  )}
+                </div>
+              )}
 
               {/* Massive Ticking Digital Clock */}
               <div className="flex items-baseline justify-center select-text w-full max-w-full px-4 overflow-hidden">
                 <span className="text-[5.5rem] sm:text-[6.5rem] lg:text-[7.5rem] font-mono font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)] truncate">
-                  {timeString.split(":")[0]}:{timeString.split(":")[1]}
+                  {timeString.split(":")[0]}
+                </span>
+                <span className={cn("text-[5.5rem] sm:text-[6.5rem] lg:text-[7.5rem] font-mono font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)]", colonBlink && "tv-colon-blink")}>:</span>
+                <span className="text-[5.5rem] sm:text-[6.5rem] lg:text-[7.5rem] font-mono font-black tracking-tighter leading-none tabular-nums text-[var(--md-sys-color-on-surface)] truncate">
+                  {timeString.split(":")[1]}
                 </span>
                 <span className="text-5xl sm:text-6xl lg:text-7xl font-mono font-bold tracking-tighter text-[var(--md-sys-color-on-surface)]/60 ml-2 select-none tabular-nums">
                   :{timeString.split(":")[2]}
@@ -759,7 +783,7 @@ export function TvModeView({
               </div>
 
               {/* Next Prayer Countdown Sub-panel */}
-              {nextPrayerName && (
+              {showCountdown && nextPrayerName && (
                 <div className="mt-8 flex flex-col items-center bg-[var(--md-sys-color-surface-container-high)]/60 backdrop-blur-md border border-[var(--md-sys-color-outline-variant)]/20 px-8 py-3 rounded-3xl w-full max-w-md shadow-sm">
                   <span className="text-xs uppercase tracking-[0.25em] font-black text-[var(--md-sys-color-on-surface-variant)]">
                     {isMalay ? "HITUNG MUNDUR" : "COUNTDOWN"} — {nextPrayerName}
@@ -772,9 +796,11 @@ export function TvModeView({
             </div>
 
             {/* Weather Widget */}
-            <div className="shrink-0 rounded-[32px] overflow-hidden">
-              <WeatherWidget selectedZone={selectedZone} userCoords={userCoords} currentLocationName={currentLocationName} />
-            </div>
+            {showWeather && (
+              <div className="shrink-0 rounded-[32px] overflow-hidden">
+                <WeatherWidget selectedZone={selectedZone} userCoords={userCoords} currentLocationName={currentLocationName} />
+              </div>
+            )}
 
             {/* Dynamic Iqamah Countdown Banner */}
             <AnimatePresence>
@@ -910,7 +936,7 @@ export function TvModeView({
           <div className={cn(
             "flex flex-col justify-between items-stretch bg-[var(--md-sys-color-surface-container-low)]/30 backdrop-blur-2xl border border-[var(--md-sys-color-outline-variant)]/15 rounded-[48px] p-8 shadow-2xl min-w-0 transition-all duration-500 hover:border-[var(--md-sys-color-primary)]/20",
             showCenterWidget ? "flex-[0.8]" : "flex-[0.9]"
-          )}>
+          )} style={{ transform: `scale(${scheduleScale})`, transformOrigin: 'center right' }}>
             <div className="flex flex-col h-full justify-between gap-2.5">
               {activeKeys.map((key) => {
                 const rawTime = todayData ? todayData[key as keyof PrayerData] : "--:--";
@@ -924,7 +950,7 @@ export function TvModeView({
                     className={cn(
                       "flex items-center justify-between px-6 py-4 rounded-[24px] border transition-all duration-300 relative overflow-hidden flex-1",
                       isCurrent
-                        ? "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] border-[var(--md-sys-color-primary)]/10 shadow-lg scale-[1.02] z-10"
+                        ? "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] border-[var(--md-sys-color-primary)]/10 shadow-lg scale-[1.02] z-10 tv-active-glow"
                         : isNext
                         ? "bg-[var(--md-sys-color-primary-container)]/35 text-[var(--md-sys-color-on-primary-container)] border-[var(--md-sys-color-primary)]/30 border-l-8 border-l-[var(--md-sys-color-primary)] shadow-sm"
                         : "bg-[var(--md-sys-color-surface)]/40 border-transparent hover:bg-[var(--md-sys-color-surface-container-high)]/60 hover:border-[var(--md-sys-color-outline-variant)]/30"
@@ -943,14 +969,14 @@ export function TvModeView({
                       
                       {/* Active highlight label badge */}
                       {isCurrent && (
-                        <span className="px-3 py-1 rounded-full bg-[var(--md-sys-color-on-primary)] text-[var(--md-sys-color-primary)] text-[9px] font-black tracking-widest uppercase">
+                        <span className="px-3 py-1 rounded-full bg-[var(--md-sys-color-on-primary)] text-[var(--md-sys-color-primary)] text-[9px] font-black tracking-widest uppercase tv-badge-enter">
                           {isMalay ? "SEKARANG" : "ACTIVE"}
                         </span>
                       )}
                       
                       {/* Next prayer highlight badge */}
                       {isNext && (
-                        <span className="px-2.5 py-1 rounded-full bg-[var(--md-sys-color-primary)]/20 text-[var(--md-sys-color-primary)] text-[9px] font-black tracking-widest uppercase animate-pulse">
+                        <span className="px-2.5 py-1 rounded-full bg-[var(--md-sys-color-primary)]/20 text-[var(--md-sys-color-primary)] text-[9px] font-black tracking-widest uppercase animate-pulse tv-badge-enter">
                           {isMalay ? "SELEPAS INI" : "UP NEXT"}
                         </span>
                       )}
