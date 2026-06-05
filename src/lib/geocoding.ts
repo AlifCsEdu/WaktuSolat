@@ -42,6 +42,8 @@ export const ALIASES: Record<string, string> = {
   morib: "SGR03",
   jugra: "SGR03",
   "kuala selangor": "SGR02",
+  "puncak alam": "SGR02",
+  "saujana utama": "SGR02",
   "tanjong karang": "SGR02",
   "sabak bernam": "SGR02",
   sekinchan: "SGR02",
@@ -512,28 +514,147 @@ export function traverseStrings(obj: any): string[] {
   return strings;
 }
 
+const DISTRICT_ALIASES: Record<string, string> = {
+  // Perak districts with no explicit string match in JAKIM label
+  kinta: "PRK02",
+  "hilir perak": "PRK05",
+  "perak tengah": "PRK05",
+  manjung: "PRK05",
+  "batang padang": "PRK01",
+  muallim: "PRK01",
+  "larut matang dan selama": "PRK06",
+  "larut matang": "PRK06",
+  "larut dan matang": "PRK06",
+  kerian: "PRK06",
+  "hulu perak": "PRK03",
+
+  // Penang districts
+  "seberang perai": "PNG01",
+  "seberang perai utara": "PNG01",
+  "seberang perai tengah": "PNG01",
+  "seberang perai selatan": "PNG01",
+  "timur laut": "PNG01",
+  "barat daya": "PNG01",
+
+  // Sarawak districts
+  subis: "SWK02",
+  beluru: "SWK02",
+  "telang usan": "SWK02",
+
+  // Sabah districts
+  tongod: "SBH02",
+  sandakan: "SBH01",
+  tawau: "SBH04"
+};
+
+// Build a lookup map from clean district names to JAKIM zone codes
+let DISTRICT_TO_ZONE: Record<string, string> | null = null;
+
+function getDistrictToZoneMap(): Record<string, string> {
+  if (DISTRICT_TO_ZONE) return DISTRICT_TO_ZONE;
+  const map: Record<string, string> = { ...DISTRICT_ALIASES };
+  for (const state of JAKIM_ZONES) {
+    for (const z of state.zones) {
+      const parts = z.l
+        .toLowerCase()
+        .split(/[,()\/]/)
+        .map((p) => p.replace(/\b(daerah|bahagian|jajahan|kecil|puncak|gunung|seluruh|negeri)\b/g, "").trim())
+        .filter((p) => p.length > 2);
+      for (const d of parts) {
+        const cleaned = d.replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+        if (cleaned) {
+          map[cleaned] = z.v;
+        }
+      }
+    }
+  }
+  DISTRICT_TO_ZONE = map;
+  return DISTRICT_TO_ZONE;
+}
+
 /**
  * Perform a prioritized match of zone and reason based on raw API data.
  */
 export function matchZoneFromGeocode(data: any): { zone: string; reasonKey: "locality" | "alias" | "state" | "default"; detailVal: string } {
-  // Combine prioritized locality extractions
-  const prioritizedStrings: string[] = [];
+  const districtToZone = getDistrictToZoneMap();
+
+  // 1. Extract district fields from geocode address
+  const districtFields: string[] = [];
   if (data.osm?.address) {
     const a = data.osm.address;
-    if (a.village) prioritizedStrings.push(a.village);
-    if (a.suburb) prioritizedStrings.push(a.suburb);
-    if (a.city_district) prioritizedStrings.push(a.city_district);
-    if (a.town) prioritizedStrings.push(a.town);
-    if (a.city) prioritizedStrings.push(a.city);
-    if (a.county) prioritizedStrings.push(a.county);
-    if (a.state_district) prioritizedStrings.push(a.state_district);
-  }
-  if (data.bdc) {
-    if (data.bdc.locality) prioritizedStrings.push(data.bdc.locality);
-    if (data.bdc.city) prioritizedStrings.push(data.bdc.city);
+    if (a.county) districtFields.push(a.county);
+    if (a.district) districtFields.push(a.district);
+    if (a.city_district) districtFields.push(a.city_district);
+    if (a.state_district) districtFields.push(a.state_district);
+    if (a.municipality) districtFields.push(a.municipality);
   }
 
-  const cleanedPriorities = prioritizedStrings.map(cleanText).filter((s) => s.length > 2);
+  // Check official administrative district fields first (highest priority)
+  for (const field of districtFields) {
+    const cleanedField = cleanText(field);
+    if (districtToZone[cleanedField]) {
+      const displayName = cleanedField
+        .split(" ")
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" ");
+      return {
+        zone: districtToZone[cleanedField],
+        reasonKey: "locality",
+        detailVal: displayName,
+      };
+    }
+  }
+
+  // 2. Extract locality/town fields (finer grain)
+  const localityFields: string[] = [];
+  if (data.osm?.address) {
+    const a = data.osm.address;
+    if (a.village) localityFields.push(a.village);
+    if (a.suburb) localityFields.push(a.suburb);
+    if (a.city_district) localityFields.push(a.city_district);
+    if (a.town) localityFields.push(a.town);
+    if (a.city) localityFields.push(a.city);
+  }
+  if (data.bdc) {
+    if (data.bdc.locality) localityFields.push(data.bdc.locality);
+    if (data.bdc.city) localityFields.push(data.bdc.city);
+  }
+
+  // 3. Try ALIASES match on locality fields first, then on district fields
+  const allPrioritizedStrings = [...localityFields, ...districtFields];
+  for (const str of allPrioritizedStrings) {
+    const cleaned = cleanText(str);
+    if (ALIASES[cleaned]) {
+      const displayName = cleaned
+        .split(" ")
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" ");
+      return {
+        zone: ALIASES[cleaned],
+        reasonKey: "alias",
+        detailVal: displayName,
+      };
+    }
+  }
+
+  // 4. Try matching locality names against DISTRICT_TO_ZONE map
+  for (const str of localityFields) {
+    const cleaned = cleanText(str);
+    if (districtToZone[cleaned]) {
+      const displayName = cleaned
+        .split(" ")
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" ");
+      return {
+        zone: districtToZone[cleaned],
+        reasonKey: "locality",
+        detailVal: displayName,
+      };
+    }
+  }
+
+  // 5. Fallback to standard substring matching on all extracted strings
+  const cleanedPriorities = allPrioritizedStrings.map(cleanText).filter((s) => s.length > 2);
   const allStringsRaw = traverseStrings(data);
   const combinedStrings = [
     ...new Set([
@@ -542,22 +663,6 @@ export function matchZoneFromGeocode(data: any): { zone: string; reasonKey: "loc
     ]),
   ];
 
-  // 1. Alias match
-  for (const str of combinedStrings) {
-    if (ALIASES[str]) {
-      const displayName = str
-        .split(" ")
-        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(" ");
-      return {
-        zone: ALIASES[str],
-        reasonKey: "alias",
-        detailVal: displayName,
-      };
-    }
-  }
-
-  // 2. Exact Zone Name Match & Substring Match
   const matches: {
     zone: string;
     priority: number;
@@ -612,7 +717,7 @@ export function matchZoneFromGeocode(data: any): { zone: string; reasonKey: "loc
     };
   }
 
-  // 3. Fallback to state
+  // 6. Fallback to state
   const stateName = extractStateName(data);
   if (stateName) {
     const foundZone = mapStateToZone(stateName);
