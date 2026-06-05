@@ -115,6 +115,9 @@ export interface GeneralSettings {
   tvModeSlideshowInterval?: number;
   tvModeCameraDeviceId?: string;
   tvModeRemindersList?: TvModeReminder[];
+  mosqueLogoUrl?: string;
+  mosqueLogoEnabled?: boolean;
+  mosqueLogoLastUpdated?: number;
 }
 
 // Default preferences
@@ -180,6 +183,9 @@ export const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
   tvModeSlideshowUrls: "",
   tvModeSlideshowInterval: 15,
   tvModeCameraDeviceId: "",
+  mosqueLogoUrl: "",
+  mosqueLogoEnabled: false,
+  mosqueLogoLastUpdated: 0,
   tvModeRemindersList: [
     {
       id: "1",

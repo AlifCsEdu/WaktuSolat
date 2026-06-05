@@ -441,6 +441,9 @@ export const translations = {
     mobileWarningDesc: "Mod TV Masjid direka khas untuk paparan TV landskap yang besar. Paparan pada peranti mudah alih boleh menyukarkan navigasi keluar.",
     exitTvMode: "Keluar Mod TV",
     backToDashboard: "Kembali ke Papan Pemuka",
+    mosqueLogoLabel: "Logo Masjid / Surau",
+    enableMosqueLogo: "Papar Logo Masjid",
+    deleteLogo: "Padam Logo",
   },
   en: {
     appTitle: "Waktu Solat",
@@ -904,6 +907,9 @@ export const translations = {
     mobileWarningDesc: "Mosque TV Mode is designed for large landscape TV displays. Displaying it on mobile devices makes exiting difficult.",
     exitTvMode: "Exit TV Mode",
     backToDashboard: "Back to Dashboard",
+    mosqueLogoLabel: "Mosque / Surau Logo",
+    enableMosqueLogo: "Display Mosque Logo",
+    deleteLogo: "Delete Logo",
   }
 };
 

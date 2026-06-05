@@ -15,11 +15,17 @@ import {
   BookOpen,
   Heart,
   X,
-  AlertCircle
+  AlertCircle,
+  Play,
+  Pause,
+  Plus,
+  Settings
 } from "lucide-react";
 import { PrayerData, GeneralSettings, TvModeReminder } from "../types";
 import { cn } from "../lib/utils";
 import { getHijriFormatted } from "../lib/holidays";
+import { getMosqueLogoBlob } from "../lib/db";
+import { WeatherWidget } from "./WeatherWidget";
 
 interface TvModeViewProps {
   currentTime: Date;
@@ -38,6 +44,11 @@ interface TvModeViewProps {
   iqamahTotalSeconds: number;
   activeWallpaperUrl?: string | null;
   computedWallpaperDim?: number;
+  userCoords?: { lat: number; lng: number } | null;
+  iqamahPaused: boolean;
+  onIqamahTogglePause: () => void;
+  onIqamahAddMinute: () => void;
+  onSettingsClick?: () => void;
 }
 
 export function TvModeView({
@@ -57,6 +68,11 @@ export function TvModeView({
   iqamahTotalSeconds,
   activeWallpaperUrl,
   computedWallpaperDim,
+  userCoords,
+  iqamahPaused,
+  onIqamahTogglePause,
+  onIqamahAddMinute,
+  onSettingsClick,
 }: TvModeViewProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isWakeLockSupported, setIsWakeLockSupported] = useState(false);
@@ -64,6 +80,29 @@ export function TvModeView({
   const [showEscToast, setShowEscToast] = useState(true);
   const isMalay = settings.language === "ms";
   const [isMobile, setIsMobile] = useState(false);
+
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    if (settings.mosqueLogoEnabled) {
+      if (settings.mosqueLogoUrl) {
+        setLogoUrl(settings.mosqueLogoUrl);
+      } else {
+        getMosqueLogoBlob().then((blob) => {
+          if (blob && active) {
+            const url = URL.createObjectURL(blob);
+            setLogoUrl(url);
+          }
+        });
+      }
+    } else {
+      setLogoUrl(null);
+    }
+    return () => {
+      active = false;
+    };
+  }, [settings.mosqueLogoEnabled, settings.mosqueLogoUrl, settings.mosqueLogoLastUpdated]);
 
   useEffect(() => {
     const checkSize = () => {
@@ -339,8 +378,19 @@ export function TvModeView({
       {/* Header bar */}
       <div className="relative z-10 flex items-center justify-between px-10 py-5 bg-[var(--md-sys-color-surface-container-low)]/40 backdrop-blur-xl border-b border-[var(--md-sys-color-outline-variant)]/20 shrink-0">
         <div className="flex items-center gap-6">
-          <h1 className="text-3xl font-black tracking-tighter text-[var(--md-sys-color-primary)] flex items-center gap-3">
-            <Tv className="w-8 h-8 text-[var(--md-sys-color-primary)]" />
+          <h1 className="text-3xl font-black tracking-tighter text-[var(--md-sys-color-primary)] flex items-center gap-4">
+            {settings.mosqueLogoEnabled && logoUrl ? (
+              <div className="h-12 w-12 flex items-center justify-center bg-transparent shrink-0">
+                <img
+                  src={logoUrl}
+                  alt="Mosque Logo"
+                  className="max-h-full max-w-full object-contain"
+                  onError={() => setLogoUrl(null)}
+                />
+              </div>
+            ) : (
+              <Tv className="w-8 h-8 text-[var(--md-sys-color-primary)]" />
+            )}
             <span>{settings.mosqueName || "AlurWaktu TV"}</span>
           </h1>
           <div className="flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[var(--md-sys-color-surface-container-high)] text-sm font-bold border border-[var(--md-sys-color-outline-variant)]/40">
@@ -374,6 +424,18 @@ export function TvModeView({
 
         <div className="flex items-center gap-3">
           {/* Quick controls */}
+          {onSettingsClick && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={onSettingsClick}
+              className="w-12 h-12 rounded-2xl flex items-center justify-center bg-[var(--md-sys-color-surface-container-high)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] border border-[var(--md-sys-color-outline-variant)]/50 transition-colors cursor-pointer"
+              title="Settings"
+            >
+              <Settings size={20} />
+            </motion.button>
+          )}
+
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -449,6 +511,11 @@ export function TvModeView({
             )}
           </div>
 
+          {/* Weather Widget */}
+          <div className="shrink-0 rounded-[32px] overflow-hidden">
+            <WeatherWidget selectedZone={selectedZone} userCoords={userCoords} currentLocationName={currentLocationName} />
+          </div>
+
           {/* Dynamic Iqamah Countdown Banner */}
           <AnimatePresence>
             {iqamahCountdownActive && (
@@ -456,16 +523,70 @@ export function TvModeView({
                 initial={{ opacity: 0, y: 30, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                className="bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] rounded-[32px] p-6 flex flex-col items-center justify-center border border-[var(--md-sys-color-primary)]/10 shadow-2xl relative overflow-hidden"
+                onClick={onIqamahTogglePause}
+                className={cn(
+                  "rounded-[32px] p-6 flex flex-col items-center justify-center border shadow-2xl relative overflow-hidden cursor-pointer select-none transition-all duration-300 active:scale-[0.99]",
+                  iqamahRemainingSeconds <= 60
+                    ? "bg-gradient-to-r from-[var(--md-sys-color-error)] via-orange-600 to-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)] border-[var(--md-sys-color-error)]/25 animate-pulse"
+                    : "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] border-[var(--md-sys-color-primary)]/10"
+                )}
               >
                 {/* Flashing ambient effect */}
-                <div className="absolute inset-0 bg-white/5 animate-pulse" />
-                <span className="text-sm uppercase tracking-[0.3em] font-black opacity-85 relative z-10">
-                  {isMalay ? "BERSEDIA UNTUK SOLAT (IQAMAH)" : "PREPARE FOR PRAYER (IQAMAH)"}
-                </span>
-                <div className="text-5xl sm:text-6xl font-mono font-black tracking-tight mt-1 relative z-10 tabular-nums">
+                <div className="absolute inset-0 bg-white/5" />
+                
+                {/* Plus 1 minute button */}
+                <div className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center z-20">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent toggling pause
+                      onIqamahAddMinute();
+                    }}
+                    className={cn(
+                      "w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-95 shadow-md",
+                      iqamahRemainingSeconds <= 60
+                        ? "bg-white/30 hover:bg-white/45 text-white"
+                        : "bg-[var(--md-sys-color-on-primary)]/20 hover:bg-[var(--md-sys-color-on-primary)]/35 text-[var(--md-sys-color-on-primary)]"
+                    )}
+                    title="+1 Min"
+                  >
+                    <Plus size={20} className="stroke-[3]" />
+                  </button>
+                </div>
+
+                {/* Status text with play/pause indicators */}
+                <div className="flex items-center gap-2 text-sm uppercase tracking-[0.25em] font-black opacity-90 relative z-10">
+                  {iqamahPaused ? (
+                    <Play size={16} className="fill-current animate-pulse shrink-0" />
+                  ) : (
+                    <Pause size={16} className="fill-current shrink-0" />
+                  )}
+                  <span>
+                    {iqamahPaused
+                      ? (isMalay ? "IQAMAH DITANGGUH (KETIK UNTUK SAMBUNG)" : "IQAMAH PAUSED (TAP TO RESUME)")
+                      : iqamahRemainingSeconds <= 60
+                      ? (isMalay ? "SILA RAPATKAN SAF & SENYAPKAN TELEFON" : "PLEASE STRAIGHTEN ROWS & SILENCE PHONES")
+                      : (isMalay ? "BERSEDIA UNTUK SOLAT (IQAMAH)" : "PREPARE FOR PRAYER (IQAMAH)")}
+                  </span>
+                </div>
+
+                {/* Large countdown time */}
+                <div className="text-5xl sm:text-6xl font-mono font-black tracking-tight mt-2 relative z-10 tabular-nums">
                   {Math.floor(iqamahRemainingSeconds / 60)}:
                   {String(iqamahRemainingSeconds % 60).padStart(2, "0")}
+                </div>
+
+                {/* Progress bar */}
+                <div className="absolute bottom-0 left-0 right-0 h-2 bg-black/20 overflow-hidden">
+                  <motion.div
+                    className={cn(
+                      "h-full",
+                      iqamahRemainingSeconds <= 60 ? "bg-white" : "bg-[var(--md-sys-color-on-primary)]/80"
+                    )}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.max(0, Math.min(100, ((iqamahTotalSeconds - iqamahRemainingSeconds) / iqamahTotalSeconds) * 100))}%` }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                  />
                 </div>
               </motion.div>
             )}

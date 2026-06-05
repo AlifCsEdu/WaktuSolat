@@ -723,6 +723,11 @@ export default function App() {
           iqamahTotalSeconds={iqamahTotalSeconds}
           activeWallpaperUrl={activeWallpaperUrl}
           computedWallpaperDim={computedWallpaperDim}
+          userCoords={userCoords}
+          iqamahPaused={prevPrayerKey ? !!iqamahPausedState[prevPrayerKey]?.paused : false}
+          onIqamahTogglePause={handleIqamahTogglePause}
+          onIqamahAddMinute={handleIqamahAddMinute}
+          onSettingsClick={() => setShowNotificationSettings(true)}
         />
       )}
     </div>

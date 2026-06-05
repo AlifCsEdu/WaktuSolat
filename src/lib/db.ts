@@ -76,6 +76,63 @@ export async function clearWallpaper(): Promise<void> {
   }
 }
 
+/**
+ * Saves a mosque logo image blob to IndexedDB and returns a revocable object URL.
+ */
+export async function saveMosqueLogo(blob: Blob): Promise<string> {
+  const db = await initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORE_NAME, 'readwrite');
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.put(blob, 'mosque-logo');
+    
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const url = URL.createObjectURL(blob);
+      resolve(url);
+    };
+  });
+}
+
+/**
+ * Retrieves the stored mosque logo image Blob from IndexedDB.
+ */
+export async function getMosqueLogoBlob(): Promise<Blob | null> {
+  try {
+    const db = await initDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readonly');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.get('mosque-logo');
+      
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result || null);
+    });
+  } catch (e) {
+    console.error("Failed to access IndexedDB mosque logo:", e);
+    return null;
+  }
+}
+
+/**
+ * Clears the stored mosque logo image from IndexedDB.
+ */
+export async function clearMosqueLogo(): Promise<void> {
+  try {
+    const db = await initDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readwrite');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.delete('mosque-logo');
+      
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve();
+    });
+  } catch (e) {
+    console.error("Failed to clear IndexedDB mosque logo:", e);
+  }
+}
+
 export interface CachedPrayerData {
   zone: string;
   prayerTime: any[];

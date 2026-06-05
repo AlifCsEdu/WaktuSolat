@@ -33,7 +33,8 @@ import {
   Sliders,
   MoonStar,
   Search,
-  Tv
+  Tv,
+  Upload
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { modalVariants } from "../lib/motion";
@@ -47,7 +48,13 @@ import {
 } from "../types";
 import { useEffect, useState, useRef } from "react";
 import { useAppContext } from "../AppContext";
-import { saveOfflinePrayers, clearAllOfflinePrayers } from "../lib/db";
+import { 
+  saveOfflinePrayers, 
+  clearAllOfflinePrayers,
+  saveMosqueLogo,
+  getMosqueLogoBlob,
+  clearMosqueLogo
+} from "../lib/db";
 import { StorageManager } from "../lib/StorageManager";
 import { useVisualStyle, getStyleClasses } from "../hooks/useVisualStyle";
 
@@ -199,6 +206,60 @@ export function SettingsModal({
   const handleDeleteReminder = (id: string) => {
     const newList = (settings.tvModeRemindersList || []).filter(r => r.id !== id);
     updateSettings({ tvModeRemindersList: newList });
+  };
+
+  const [previewLogoUrl, setPreviewLogoUrl] = useState<string | null>(null);
+  const logoFileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    let active = true;
+    if (settings.mosqueLogoEnabled) {
+      if (settings.mosqueLogoUrl) {
+        setPreviewLogoUrl(settings.mosqueLogoUrl);
+      } else {
+        getMosqueLogoBlob().then((blob) => {
+          if (blob && active) {
+            const url = URL.createObjectURL(blob);
+            setPreviewLogoUrl(url);
+          }
+        });
+      }
+    } else {
+      setPreviewLogoUrl(null);
+    }
+    return () => {
+      active = false;
+    };
+  }, [settings.mosqueLogoEnabled, settings.mosqueLogoUrl, settings.mosqueLogoLastUpdated]);
+
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      try {
+        const url = await saveMosqueLogo(file);
+        updateSettings({
+          mosqueLogoEnabled: true,
+          mosqueLogoUrl: "", // Reset URL if uploaded
+          mosqueLogoLastUpdated: Date.now()
+        });
+        setPreviewLogoUrl(url);
+      } catch (e) {
+        console.error("Failed to save custom logo to IndexedDB:", e);
+      }
+    }
+  };
+
+  const handleClearLogo = async () => {
+    try {
+      await clearMosqueLogo();
+      updateSettings({
+        mosqueLogoEnabled: false,
+        mosqueLogoUrl: ""
+      });
+      setPreviewLogoUrl(null);
+    } catch (e) {
+      console.error("Failed to clear mosque logo:", e);
+    }
   };
 
   const triggerTestSound = (sound: NotificationSound, message: string, prayerKey: string) => {
@@ -631,7 +692,10 @@ export function SettingsModal({
                   {/* @ts-ignore */}
                   <md-switch
                     selected={settings.showExternalDigitalClock}
-                    onClick={() => updateSettings({ showExternalDigitalClock: !settings.showExternalDigitalClock })}
+                    onChange={(e: any) =>
+                      updateSettings({ showExternalDigitalClock: e.target.selected })
+                    }
+                    icons
                   ></md-switch>
                 </div>
               )}
@@ -1888,13 +1952,7 @@ export function SettingsModal({
               ></md-switch>
             </div>
 
-            {settings.tvModeEnabled && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="space-y-6 pt-4 border-t border-[var(--md-sys-color-outline)]/5 mt-4"
-              >
+            <div className="space-y-6 pt-4 border-t border-[var(--md-sys-color-outline)]/5 mt-4">
                 {/* Mosque custom name/branding input */}
                 <div className="flex flex-col p-4 bg-[var(--md-sys-color-surface)] rounded-[2rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5">
                   <span className="font-bold text-[var(--md-sys-color-on-surface)] text-sm block">
@@ -1912,6 +1970,98 @@ export function SettingsModal({
                     placeholder={t("mosqueNamePlaceholder" as any)}
                     className="w-full mt-3 px-4 py-3 text-sm rounded-2xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 focus:border-[var(--md-sys-color-primary)] focus:ring-1 focus:ring-[var(--md-sys-color-primary)] outline-none transition-all placeholder-[var(--md-sys-color-on-surface-variant)]/30 font-sans font-medium"
                   />
+                </div>
+
+                {/* Mosque Logo Customization */}
+                <div className="flex flex-col p-4 bg-[var(--md-sys-color-surface)] rounded-[2rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="font-bold text-[var(--md-sys-color-on-surface)] text-sm block">
+                        {t("mosqueLogoLabel" as any)}
+                      </span>
+                      <span className="text-[11px] text-[var(--md-sys-color-on-surface-variant)] block mt-0.5 leading-relaxed">
+                        {settings.language === "ms"
+                          ? "Muat naik logo masjid anda (Format PNG/JPG) untuk dipaparkan pada kepala Mod TV."
+                          : "Upload your mosque logo (PNG/JPG format) to show in the TV Mode header."}
+                      </span>
+                    </div>
+                    {/* @ts-ignore */}
+                    <md-switch
+                      selected={!!settings.mosqueLogoEnabled}
+                      onChange={(e: any) =>
+                        updateSettings({ mosqueLogoEnabled: e.target.selected })
+                      }
+                      icons
+                    ></md-switch>
+                  </div>
+
+                  {settings.mosqueLogoEnabled && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      className="space-y-3 pt-2 border-t border-[var(--md-sys-color-outline)]/5"
+                    >
+                      {/* Logo URL Input */}
+                      <div className="flex flex-col">
+                        <span className="text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] mb-1.5">
+                          {settings.language === "ms" ? "Pautan URL Logo (Pilihan)" : "Logo URL Link (Optional)"}
+                        </span>
+                        <input
+                          type="text"
+                          value={settings.mosqueLogoUrl ?? ""}
+                          onChange={(e) => updateSettings({ mosqueLogoUrl: e.target.value })}
+                          placeholder="https://example.com/logo.png"
+                          className="w-full px-4 py-2.5 text-xs rounded-xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 focus:border-[var(--md-sys-color-primary)] outline-none transition-all placeholder-[var(--md-sys-color-on-surface-variant)]/30 font-sans font-medium"
+                        />
+                      </div>
+
+                      {/* File Uploader */}
+                      <div className="flex flex-col space-y-2">
+                        <span className="text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)]">
+                          {settings.language === "ms" ? "Atau Muat Naik Fail Imej" : "Or Upload Image File"}
+                        </span>
+                        <div
+                          onClick={() => logoFileInputRef.current?.click()}
+                          className="flex flex-col items-center justify-center w-full aspect-[21/6] bg-[var(--md-sys-color-surface-container-high)] border-2 border-dashed border-[var(--md-sys-color-outline)]/20 hover:border-[var(--md-sys-color-primary)] rounded-xl cursor-pointer relative overflow-hidden group transition-all p-3"
+                        >
+                          {previewLogoUrl ? (
+                            <div className="flex items-center gap-3 w-full h-full justify-center">
+                              <img src={previewLogoUrl} alt="Mosque logo preview" className="h-10 object-contain" />
+                              <span className="text-[10px] font-black uppercase tracking-wider text-[var(--md-sys-color-primary)]">
+                                {settings.language === "ms" ? "Tukar Gambar" : "Change Image"}
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center">
+                              <Upload size={16} className="mb-1 text-[var(--md-sys-color-on-surface-variant)] group-hover:scale-110 transition-transform" />
+                              <span className="text-[10px] font-black uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)]">
+                                {settings.language === "ms" ? "Pilih Fail Logo" : "Choose Logo File"}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        {previewLogoUrl && !settings.mosqueLogoUrl && (
+                          <button
+                            type="button"
+                            onClick={handleClearLogo}
+                            className="px-4 py-2 bg-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)] rounded-xl text-xs font-bold shadow-sm hover:opacity-90 transition-all w-full flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            <Trash2 size={12} />
+                            {t("deleteLogo" as any)}
+                          </button>
+                        )}
+
+                        <input
+                          type="file"
+                          ref={logoFileInputRef}
+                          className="hidden"
+                          accept="image/*"
+                          onChange={handleLogoUpload}
+                        />
+                      </div>
+                    </motion.div>
+                  )}
                 </div>
 
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-[var(--md-sys-color-surface)] rounded-[2rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5 gap-3">
@@ -2172,8 +2322,7 @@ export function SettingsModal({
                     </div>
                   </motion.div>
                 )}
-              </motion.div>
-            )}
+              </div>
           </div>
         </div>
       )
@@ -2447,7 +2596,7 @@ export function SettingsModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-6"
+          className="fixed inset-0 z-[10005] flex items-end sm:items-center justify-center p-0 sm:p-6"
           style={{ isolation: "isolate" }}
         >
           <style dangerouslySetInnerHTML={{ __html: `
@@ -2568,7 +2717,7 @@ export function SettingsModal({
                     { id: "notifications", label: t("notifications"), icon: Bell },
                     { id: "adjustments", label: t("offset"), icon: Clock },
                     { id: "advanced", label: t("sunnahAndOptional" as any) || "Lanjutan", icon: Sliders },
-                    { id: "mosque", label: t("mosqueMode" as any), icon: Music }
+                    { id: "mosque", label: t("mosqueMode" as any), icon: Tv }
                   ].map((tab) => {
                     const Icon = tab.icon;
                     const isActive = activeTab === tab.id;
@@ -2657,7 +2806,7 @@ export function SettingsModal({
                     {/* @ts-ignore */}
                     <md-primary-tab onClick={() => setActiveTab("mosque")}>
                       {t("mosqueMode" as any)}
-                      <span slot="icon"><Music size={18} /></span>
+                      <span slot="icon"><Tv size={18} /></span>
                     </md-primary-tab>
                   </md-tabs>
                 </div>
