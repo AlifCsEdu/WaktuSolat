@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Masjid Al-Raudhah - TV Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom Progress Ring Animation */
+        @keyframes dash {
+            to { stroke-dashoffset: 0; }
+        }
+        .progress-ring-circle {
+            stroke-dasharray: 283; /* 2 * pi * r (45) */
+            stroke-dashoffset: 70; /* Example value */
+            transition: stroke-dashoffset 1s ease-in-out;
+        }
+        
+        /* Pulse animation for active item */
+        @keyframes soft-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(113, 215, 205, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(113, 215, 205, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(113, 215, 205, 0); }
+        }
+        .active-pulse {
+            animation: soft-pulse 2s infinite;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-error": "#690005",
+                      "inverse-surface": "#e5e1e7",
+                      "tertiary-fixed": "#ffddb4",
+                      "error-container": "#93000a",
+                      "on-surface": "#e5e1e7",
+                      "surface-container-lowest": "#0e0e11",
+                      "surface": "#141317",
+                      "secondary-fixed-dim": "#71d7cd",
+                      "on-tertiary-fixed-variant": "#633f00",
+                      "inverse-primary": "#665590",
+                      "surface-container-low": "#1c1b1f",
+                      "tertiary": "#ffddb4",
+                      "inverse-on-surface": "#313034",
+                      "background": "#141317",
+                      "surface-container": "#201f23",
+                      "primary": "#e9ddff",
+                      "secondary-container": "#32a097",
+                      "on-secondary": "#003733",
+                      "primary-fixed-dim": "#d0bcff",
+                      "primary-fixed": "#e9ddff",
+                      "on-tertiary-container": "#734a00",
+                      "surface-tint": "#d0bcff",
+                      "tertiary-container": "#ffb954",
+                      "on-primary-container": "#594983",
+                      "surface-container-high": "#2b292d",
+                      "on-tertiary-fixed": "#291800",
+                      "on-secondary-fixed-variant": "#00504a",
+                      "secondary": "#71d7cd",
+                      "surface-variant": "#353438",
+                      "secondary-fixed": "#8ef4e9",
+                      "on-primary": "#37265e",
+                      "surface-dim": "#141317",
+                      "on-secondary-container": "#00302c",
+                      "tertiary-fixed-dim": "#ffb954",
+                      "surface-container-highest": "#353438",
+                      "on-surface-variant": "#cac4d0",
+                      "error": "#ffb4ab",
+                      "primary-container": "#d0bcff",
+                      "outline": "#948f9a",
+                      "on-error-container": "#ffdad6",
+                      "outline-variant": "#49454f",
+                      "on-tertiary": "#452b00",
+                      "on-secondary-fixed": "#00201d",
+                      "on-primary-fixed": "#210f48",
+                      "on-background": "#e5e1e7",
+                      "surface-bright": "#3a383d",
+                      "on-primary-fixed-variant": "#4d3d76"
+              },
+              "borderRadius": {
+                      "DEFAULT": "1rem",
+                      "lg": "2rem",
+                      "xl": "3rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "stack-sm": "8px",
+                      "stack-lg": "32px",
+                      "section-gap": "48px",
+                      "margin-mobile": "20px",
+                      "stack-md": "16px",
+                      "margin-desktop": "64px",
+                      "gutter": "16px"
+              },
+              "fontFamily": {
+                      "headline-md": [
+                              "Be Vietnam Pro"
+                      ],
+                      "display-lg": [
+                              "Be Vietnam Pro"
+                      ],
+                      "headline-lg": [
+                              "Be Vietnam Pro"
+                      ],
+                      "display-lg-mobile": [
+                              "Be Vietnam Pro"
+                      ],
+                      "label-md": [
+                              "JetBrains Mono"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "headline-md": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg": [
+                              "57px",
+                              {
+                                      "lineHeight": "64px",
+                                      "letterSpacing": "-0.25px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg-mobile": [
+                              "40px",
+                              {
+                                      "lineHeight": "48px",
+                                      "letterSpacing": "0px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-md": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.5px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "letterSpacing": "0.5px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col overflow-hidden selection:bg-primary-container selection:text-on-primary-container relative">
+<!-- Abstract Background Pattern -->
+<div class="absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/20 via-background to-background z-0"></div>
+<div class="absolute inset-0 pointer-events-none opacity-10 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-secondary/20 via-background to-background z-0"></div>
+<!-- Main Content Canvas -->
+<div class="relative z-10 flex flex-col h-screen w-full max-w-[1920px] mx-auto p-margin-desktop gap-section-gap">
+<!-- Header -->
+<header class="flex items-center justify-between w-full shrink-0">
+<div class="flex items-center gap-stack-md">
+<div class="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center border border-outline-variant/30 text-primary-fixed shadow-lg">
+<span class="material-symbols-outlined text-[32px]">mosque</span>
+</div>
+<h1 class="font-display-lg text-display-lg text-primary tracking-tight">Masjid Al-Raudhah</h1>
+</div>
+<div class="flex flex-col items-end text-right">
+<div class="font-headline-lg text-headline-lg text-secondary-fixed">19 Zulhijjah 1447H</div>
+<div class="font-headline-md text-headline-md text-on-surface-variant">Friday, 15 June 2025</div>
+</div>
+</header>
+<!-- 3-Column Grid Layout -->
+<main class="grid grid-cols-12 gap-gutter flex-grow overflow-hidden">
+<!-- Left Column: Clock & Weather -->
+<section class="col-span-4 flex flex-col gap-stack-lg h-full">
+<!-- Huge Digital Clock -->
+<div class="bg-surface-container rounded-xl p-stack-lg flex flex-col items-center justify-center relative overflow-hidden flex-grow border border-outline-variant/20 shadow-2xl">
+<div class="absolute -top-10 -right-10 w-40 h-40 bg-primary-container/10 rounded-full blur-3xl"></div>
+<div class="absolute -bottom-10 -left-10 w-40 h-40 bg-secondary-container/10 rounded-full blur-3xl"></div>
+<div class="font-display-lg text-[120px] leading-none text-on-surface font-bold tracking-tighter tabular-nums drop-shadow-lg z-10">
+                        12:34<span class="text-primary-fixed/60 text-[60px] align-baseline ml-2">56</span>
+</div>
+<div class="font-headline-lg text-headline-lg text-secondary mt-2 z-10">PM</div>
+</div>
+<!-- Weather Widget -->
+<div class="bg-surface-container/60 backdrop-blur-xl rounded-xl p-stack-lg border border-outline-variant/30 shadow-lg relative overflow-hidden shrink-0 h-1/3 flex flex-col justify-center">
+<div class="flex items-center justify-between z-10">
+<div>
+<div class="font-headline-md text-headline-md text-on-surface">Kuala Lumpur</div>
+<div class="font-body-lg text-body-lg text-on-surface-variant flex items-center gap-2 mt-1">
+<span class="material-symbols-outlined text-secondary">water_drop</span>
+                                Hujan Lebat
+                            </div>
+</div>
+<div class="text-right flex items-center gap-4">
+<span class="material-symbols-outlined text-[64px] text-tertiary-fixed drop-shadow-md">rainy</span>
+<div class="font-display-lg text-display-lg text-on-surface">31°C</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Center Column: Countdown & Content -->
+<section class="col-span-4 flex flex-col gap-stack-lg h-full">
+<!-- Iqamah Countdown -->
+<div class="bg-surface-container rounded-xl p-stack-lg flex flex-col items-center justify-center relative overflow-hidden flex-grow shadow-2xl border border-secondary-container/30 active-pulse">
+<!-- Ambient glow -->
+<div class="absolute inset-0 bg-secondary-container/5 blur-[100px] rounded-full pointer-events-none"></div>
+<div class="relative w-64 h-64 flex items-center justify-center mb-stack-md z-10">
+<!-- Progress Ring SVG -->
+<svg class="absolute inset-0 w-full h-full transform -rotate-90" viewbox="0 0 100 100">
+<!-- Background track -->
+<circle class="text-surface-variant stroke-current" cx="50" cy="50" fill="transparent" r="45" stroke-width="6"></circle>
+<!-- Foreground progress -->
+<circle class="text-secondary-fixed progress-ring-circle stroke-current" cx="50" cy="50" fill="transparent" r="45" stroke-linecap="round" stroke-width="6" style="filter: drop-shadow(0 0 8px rgba(142,244,233,0.6));"></circle>
+</svg>
+<div class="flex flex-col items-center text-center z-20">
+<span class="font-headline-md text-headline-md text-on-surface-variant mb-1">Subuh Iqamah</span>
+<span class="font-display-lg text-[64px] leading-none text-secondary-fixed font-bold tabular-nums drop-shadow-md">08:45</span>
+</div>
+</div>
+<div class="bg-surface-variant/50 backdrop-blur-sm rounded-full px-6 py-2 border border-outline-variant/30 flex items-center gap-2 z-10">
+<span class="material-symbols-outlined text-secondary text-[20px]">notifications_active</span>
+<span class="font-label-md text-label-md text-on-surface uppercase tracking-wider">Up Next</span>
+</div>
+</div>
+<!-- Calligraphic Blockquote -->
+<div class="bg-surface-container-high rounded-xl p-stack-lg relative overflow-hidden flex-col justify-center h-1/3 border-l-4 border-l-primary flex shadow-md shrink-0">
+<span class="material-symbols-outlined text-[120px] text-surface-variant absolute -right-4 -top-4 opacity-50 z-0 rotate-180">format_quote</span>
+<div class="relative z-10">
+<h3 class="font-label-md text-label-md text-primary-fixed uppercase tracking-widest mb-stack-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">menu_book</span> Daily Hadith
+                        </h3>
+<blockquote class="font-headline-lg text-headline-lg text-on-surface italic leading-snug">
+                            "Sesungguhnya solat itu mencegah daripada perbuatan keji dan mungkar."
+                        </blockquote>
+<div class="font-body-md text-body-md text-on-surface-variant mt-stack-md">— Al-Ankabut: 45</div>
+</div>
+</div>
+</section>
+<!-- Right Column: Vertical Prayer Schedule -->
+<section class="col-span-4 h-full flex flex-col">
+<div class="bg-surface-container rounded-xl p-stack-md flex flex-col gap-3 h-full shadow-2xl border border-outline-variant/20">
+<div class="px-4 py-2 border-b border-surface-variant flex justify-between items-center shrink-0">
+<span class="font-headline-md text-headline-md text-on-surface">Prayer Schedule</span>
+<span class="material-symbols-outlined text-on-surface-variant">list_alt</span>
+</div>
+<div class="flex flex-col gap-3 flex-grow justify-around py-2">
+<!-- Imsak -->
+<div class="flex items-center justify-between p-4 rounded-lg bg-surface hover:bg-surface-bright transition-colors border border-transparent">
+<div class="font-headline-md text-headline-md text-on-surface-variant">Imsak</div>
+<div class="font-headline-md text-headline-md text-on-surface tabular-nums">05:45</div>
+</div>
+<!-- Subuh -->
+<div class="flex items-center justify-between p-4 rounded-lg bg-surface hover:bg-surface-bright transition-colors border border-transparent">
+<div class="font-headline-md text-headline-md text-on-surface-variant">Subuh</div>
+<div class="font-headline-md text-headline-md text-on-surface tabular-nums">05:55</div>
+</div>
+<!-- Syuruk -->
+<div class="flex items-center justify-between p-4 rounded-lg bg-surface hover:bg-surface-bright transition-colors border border-transparent">
+<div class="font-headline-md text-headline-md text-on-surface-variant">Syuruk</div>
+<div class="font-headline-md text-headline-md text-on-surface tabular-nums">07:12</div>
+</div>
+<!-- Zohor (ACTIVE HIGHLIGHT) -->
+<div class="flex items-center justify-between p-4 rounded-lg bg-surface-container-highest border-2 border-secondary-fixed shadow-[0_0_20px_rgba(142,244,233,0.15)] relative overflow-hidden transform scale-[1.02] transition-transform">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-secondary-fixed"></div>
+<div class="flex items-center gap-4 z-10">
+<div class="font-headline-lg text-headline-lg text-secondary-fixed font-bold">Zohor</div>
+<div class="bg-secondary-fixed text-on-secondary-fixed font-label-md text-[10px] uppercase px-2 py-1 rounded-full animate-pulse tracking-wide">Up Next</div>
+</div>
+<div class="font-headline-lg text-headline-lg text-on-surface font-bold tabular-nums z-10">13:15</div>
+</div>
+<!-- Asar -->
+<div class="flex items-center justify-between p-4 rounded-lg bg-surface hover:bg-surface-bright transition-colors border border-transparent">
+<div class="font-headline-md text-headline-md text-on-surface-variant">Asar</div>
+<div class="font-headline-md text-headline-md text-on-surface tabular-nums">16:30</div>
+</div>
+<!-- Maghrib -->
+<div class="flex items-center justify-between p-4 rounded-lg bg-surface hover:bg-surface-bright transition-colors border border-transparent">
+<div class="font-headline-md text-headline-md text-on-surface-variant">Maghrib</div>
+<div class="font-headline-md text-headline-md text-on-surface tabular-nums">19:25</div>
+</div>
+<!-- Isyak -->
+<div class="flex items-center justify-between p-4 rounded-lg bg-surface hover:bg-surface-bright transition-colors border border-transparent">
+<div class="font-headline-md text-headline-md text-on-surface-variant">Isyak</div>
+<div class="font-headline-md text-headline-md text-on-surface tabular-nums">20:40</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+</div>
+<!-- Simple JS to keep clock ticking for demo purposes -->
+<script>
+        function updateClock() {
+            const now = new Date();
+            let h = now.getHours();
+            let m = now.getMinutes();
+            let s = now.getSeconds();
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            
+            h = h % 12;
+            h = h ? h : 12; // the hour '0' should be '12'
+            
+            const mStr = m < 10 ? '0'+m : m;
+            const sStr = s < 10 ? '0'+s : s;
+            
+            // In a real app, this would update the DOM elements
+            // console.log(`${h}:${mStr}:${sStr} ${ampm}`);
+        }
+        setInterval(updateClock, 1000);
+    </script>
+</body></html>
