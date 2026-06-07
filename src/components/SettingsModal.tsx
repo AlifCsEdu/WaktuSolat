@@ -2077,7 +2077,11 @@ export function SettingsModal({
             animate="visible"
             exit="exit"
             onClick={(e) => e.stopPropagation()}
-            className="relative bg-[var(--md-sys-color-surface-container)] w-full max-w-4xl max-h-[90dvh] flex flex-col rounded-[var(--md-sys-shape-corner-extra-large)] overflow-hidden shadow-2xl border border-[var(--md-sys-color-outline)]/20 shadow-black/50"
+            className={cn(
+              "relative w-full max-w-4xl max-h-[90dvh] flex flex-col rounded-[var(--md-sys-shape-corner-extra-large)] overflow-hidden shadow-2xl border border-[var(--md-sys-color-outline)]/20 shadow-black/50 transition-colors duration-300",
+              getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface-container)]"),
+              visualStyle === "glass" && "settings-glass-modal"
+            )}
           >
             {/* Header + Search bar */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between p-6 sm:px-8 sm:pt-8 sm:pb-4 border-b border-[var(--md-sys-color-outline)]/10 gap-4 shrink-0 bg-[var(--md-sys-color-surface)]">
@@ -2097,23 +2101,36 @@ export function SettingsModal({
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className={cn(
-                      "w-full pl-12 pr-12 h-14 text-sm rounded-full bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 outline-none transition-all focus:bg-[var(--md-sys-color-surface-container-highest)] focus:border-[var(--md-sys-color-primary)] focus:ring-1 focus:ring-[var(--md-sys-color-primary)] placeholder-[var(--md-sys-color-on-surface-variant)]/50",
+                      "w-full pl-12 pr-12 h-14 text-sm rounded-full bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 outline-none placeholder-[var(--md-sys-color-on-surface-variant)]/50 search-focus-ring",
                       getStyleClasses(visualStyle)
                     )}
                   />
-                  <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--md-sys-color-on-surface-variant)]/60 transition-colors group-focus-within:text-[var(--md-sys-color-primary)]" />
-                  {searchQuery ? (
-                    <button
-                      onClick={() => setSearchQuery("")}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--md-sys-color-on-surface-variant)]/60 hover:text-[var(--md-sys-color-on-surface)] flex items-center justify-center w-6 h-6 rounded-full hover:bg-[var(--md-sys-color-surface-container-highest)] transition-colors focus:outline-none"
-                    >
-                      <X size={16} />
-                    </button>
-                  ) : (
-                    <kbd className="absolute right-4 top-1/2 -translate-y-1/2 px-2 py-0.5 text-[10px] font-black font-mono rounded bg-[var(--md-sys-color-surface-container-highest)] border border-[var(--md-sys-color-outline)]/10 text-[var(--md-sys-color-on-surface-variant)]/40 pointer-events-none select-none">
-                      /
-                    </kbd>
-                  )}
+                  <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--md-sys-color-on-surface-variant)]/60 transition-colors duration-300 group-focus-within:text-[var(--md-sys-color-primary)] group-focus-within:scale-105" />
+                  <AnimatePresence>
+                    {searchQuery ? (
+                      <motion.button
+                        key="clear-search"
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        transition={{ duration: 0.2 }}
+                        onClick={() => setSearchQuery("")}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--md-sys-color-on-surface-variant)]/60 hover:text-[var(--md-sys-color-on-surface)] flex items-center justify-center w-6 h-6 rounded-full hover:bg-[var(--md-sys-color-surface-container-highest)] transition-colors focus:outline-none z-10"
+                      >
+                        <X size={16} />
+                      </motion.button>
+                    ) : (
+                      <motion.kbd
+                        key="shortcut-kbd"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 px-2 py-0.5 text-[10px] font-black font-mono rounded bg-[var(--md-sys-color-surface-container-highest)] border border-[var(--md-sys-color-outline)]/10 text-[var(--md-sys-color-on-surface-variant)]/40 pointer-events-none select-none transition-all duration-300 group-focus-within:opacity-0 group-focus-within:scale-75"
+                      >
+                        /
+                      </motion.kbd>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 <motion.button
@@ -2206,10 +2223,10 @@ export function SettingsModal({
                         <div className="w-6 h-6 flex items-center justify-center relative z-10 shrink-0">
                           <Icon
                             className={cn(
-                              "transition-colors duration-200 shrink-0",
+                              "transition-all duration-300 shrink-0",
                               isActive
-                                ? "text-[var(--md-sys-color-on-secondary-container)]"
-                                : "text-[var(--md-sys-color-on-surface-variant)]"
+                                ? "text-[var(--md-sys-color-on-secondary-container)] scale-110"
+                                : "text-[var(--md-sys-color-on-surface-variant)] group-hover:scale-110 group-hover:text-[var(--md-sys-color-primary)]"
                             )}
                             size={20}
                           />
@@ -2274,7 +2291,10 @@ export function SettingsModal({
               )}
 
               {/* Settings Content Container */}
-              <div className="flex-1 overflow-y-auto px-4 sm:px-8 pb-8 pt-6 space-y-6 custom-scrollbar bg-[var(--md-sys-color-surface-container-lowest)]">
+              <div className={cn(
+                "flex-1 overflow-y-auto px-4 sm:px-8 pb-8 pt-6 space-y-6 custom-scrollbar transition-colors duration-300",
+                visualStyle === "glass" ? "bg-transparent" : "bg-[var(--md-sys-color-surface-container-lowest)]"
+              )}>
                 
                 {/* Search query header banner */}
                 {searchQuery && (
@@ -2290,17 +2310,32 @@ export function SettingsModal({
 
                 {/* Main dynamic card list mapping */}
                 <div className="space-y-6 max-w-2xl mx-auto">
-                  {matchingCards.map((card) => (
-                    <div key={card.id} className="space-y-2 animate-in fade-in duration-200">
-                      {/* Search category breadcrumbs */}
-                      {searchQuery && (
-                        <div className="text-[10px] uppercase font-black tracking-widest text-[var(--md-sys-color-on-surface-variant)]/60 px-1">
-                          {card.categoryLabel}
-                        </div>
-                      )}
-                      {card.render()}
-                    </div>
-                  ))}
+                  <AnimatePresence mode="popLayout">
+                    {matchingCards.map((card, idx) => (
+                      <motion.div
+                        layout
+                        key={card.id}
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 400,
+                          damping: 30,
+                          delay: searchQuery ? idx * 0.035 : 0
+                        }}
+                        className="settings-interactive-card space-y-2"
+                      >
+                        {/* Search category breadcrumbs */}
+                        {searchQuery && (
+                          <div className="text-[10px] uppercase font-black tracking-widest text-[var(--md-sys-color-on-surface-variant)]/60 px-1">
+                            {card.categoryLabel}
+                          </div>
+                        )}
+                        {card.render()}
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
 
                   {/* Empty state search view */}
                   {searchQuery && matchingCards.length === 0 && (

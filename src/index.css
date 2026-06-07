@@ -1152,3 +1152,37 @@ html[data-style="retro"] md-list-item {
     transition: stroke-dashoffset 0.35s ease-in-out;
 }
 
+/* Premium Settings Section Refinements */
+.search-focus-ring {
+    transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.search-focus-ring:focus {
+    border-color: var(--md-sys-color-primary) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-sys-color-primary) 30%, transparent) !important;
+    background-color: var(--md-sys-color-surface-container-highest) !important;
+}
+
+/* Glassmorphism overrides for settings elements */
+html[data-style="glass"] .settings-glass-card {
+    background: color-mix(in srgb, var(--md-sys-color-surface-container) 45%, transparent) !important;
+    backdrop-filter: blur(16px) saturate(120%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+html[data-style="glass"] .settings-glass-modal {
+    background: color-mix(in srgb, var(--md-sys-color-surface-container) 70%, transparent) !important;
+    backdrop-filter: blur(24px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+/* Smooth micro-animations for interactive cards */
+.settings-interactive-card {
+    transition: all 0.25s cubic-bezier(0.2, 0, 0, 1);
+}
+.settings-interactive-card:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--md-sys-color-primary) 20%, transparent);
+}
+
+
