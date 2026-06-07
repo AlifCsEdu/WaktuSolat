@@ -666,6 +666,7 @@ export function TvModeView({
                     interval={settings.tvModeReminderInterval ?? 15}
                     language={settings.language}
                     t={t}
+                    currentTime={currentTime}
                   />
                 )}
                 {settings.tvModeCenterWidget === 'slideshow' && (
@@ -904,6 +905,7 @@ export function TvModeView({
                     interval={settings.tvModeReminderInterval ?? 15}
                     language={settings.language}
                     t={t}
+                    currentTime={currentTime}
                   />
                 )}
                 {settings.tvModeCenterWidget === 'slideshow' && (
@@ -1140,6 +1142,7 @@ export function TvModeView({
                     interval={settings.tvModeReminderInterval ?? 15}
                     language={settings.language}
                     t={t}
+                    currentTime={currentTime}
                   />
                 )}
                 {settings.tvModeCenterWidget === 'slideshow' && (
@@ -1406,14 +1409,38 @@ interface TvModeRemindersWidgetProps {
   interval: number;
   language: 'ms' | 'en';
   t: (key: any) => string;
+  currentTime?: Date;
 }
 
-function TvModeRemindersWidget({ reminders, interval, language, t }: TvModeRemindersWidgetProps) {
+function TvModeRemindersWidget({ reminders, interval, language, t, currentTime }: TvModeRemindersWidgetProps) {
   const [currentIdx, setCurrentIdx] = useState(0);
 
+  const currentHour = currentTime ? currentTime.getHours() : new Date().getHours();
+  const currentDay = currentTime ? currentTime.getDay() : new Date().getDay();
+
   const activeReminders = useMemo(() => {
-    const filtered = (reminders || []).filter(r => r.enabled !== false);
+    const filtered = (reminders || []).filter(r => {
+      if (r.enabled === false) return false;
+      
+      // Day of week check
+      if (r.daysOfWeek && r.daysOfWeek.length > 0) {
+        if (!r.daysOfWeek.includes(currentDay)) return false;
+      }
+      
+      // Hour range check
+      if (r.startHour !== undefined && r.endHour !== undefined) {
+        if (r.startHour <= r.endHour) {
+          if (currentHour < r.startHour || currentHour > r.endHour) return false;
+        } else {
+          // Overnight range e.g., 22:00 to 04:00
+          if (currentHour < r.startHour && currentHour > r.endHour) return false;
+        }
+      }
+      return true;
+    });
+
     if (filtered.length > 0) return filtered;
+
     return [
       {
         id: "d1",
@@ -1432,7 +1459,7 @@ function TvModeRemindersWidget({ reminders, interval, language, t }: TvModeRemin
         title: "Surah Al-Baqarah: 43"
       }
     ];
-  }, [reminders, language]);
+  }, [reminders, language, currentHour, currentDay]);
 
   // Loaded object URLs for IndexedDB binary images
   const [loadedAssetUrls, setLoadedAssetUrls] = useState<Record<string, string>>({});

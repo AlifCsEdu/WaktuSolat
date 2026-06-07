@@ -90,9 +90,121 @@ const getCategoryStyles = (type: TvModeReminder['type'], enabled: boolean) => {
   }
 };
 
+const getLocalFutureDate = () => {
+  const targetYear = new Date().getFullYear() + (new Date().getMonth() >= 2 ? 1 : 0);
+  const d = new Date(targetYear, 2, 1, 0, 0, 0); 
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}T00:00:00`;
+};
+
+const PRESETS = [
+  {
+    name: "Tutup Telefon / Silence Phone",
+    data: {
+      type: "warning" as const,
+      layout: "flex-col" as const,
+      gap: 4,
+      borderHighlight: "left" as const,
+      bgColor: "",
+      bgGradient: "",
+      texts: [
+        { id: "p1-1", content: "Sila Senyapkan Telefon Bimbit", type: "title" as const, size: "lg" as const, font: "sans" as const, align: "center" as const, weight: "bold" as const, glow: true },
+        { id: "p1-2", content: "Matikan atau tetapkan peranti anda kepada mod senyap sebelum solat bermula demi menjaga kekhusyukan jemaah lain.", type: "body" as const, size: "md" as const, font: "sans" as const, align: "center" as const, weight: "normal" as const }
+      ],
+      images: []
+    }
+  },
+  {
+    name: "Kuliah Mingguan / Weekly Lecture",
+    data: {
+      type: "info" as const,
+      layout: "flex-col" as const,
+      gap: 6,
+      borderHighlight: "all" as const,
+      bgGradient: "linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)",
+      bgColor: "",
+      texts: [
+        { id: "p2-1", content: "Kuliah Tafsir Mingguan", type: "title" as const, size: "xl" as const, font: "sans" as const, align: "center" as const, weight: "black" as const, color: "#facc15" },
+        { id: "p2-2", content: "Siri Kuliah Kitab Tafsir Jalalain bersama Ustaz Dr. Ali bin Ahmad. Setiap Sabtu selepas Solat Maghrib. Semua dijemput hadir.", type: "body" as const, size: "lg" as const, font: "serif" as const, align: "center" as const, weight: "medium" as const, color: "#ffffff" }
+      ],
+      images: []
+    }
+  },
+  {
+    name: "Infaq / Tabung QR",
+    data: {
+      type: "donation" as const,
+      layout: "flex-row" as const,
+      gap: 8,
+      borderHighlight: "right" as const,
+      bgColor: "",
+      bgGradient: "linear-gradient(135deg, #134e5e 0%, #71b280 100%)",
+      texts: [
+        { id: "p3-1", content: "SUMBANGAN IMARAH MASJID", type: "title" as const, size: "xl" as const, font: "sans" as const, align: "left" as const, weight: "black" as const, color: "#ffffff" },
+        { id: "p3-2", content: "Imbas kod QR di sebelah untuk menyalurkan sumbangan ikhlas anda terus ke akaun Tabung Kebajikan & Pengurusan Masjid.", type: "body" as const, size: "md" as const, font: "sans" as const, align: "left" as const, weight: "normal" as const, color: "#f3f4f6" }
+      ],
+      images: [
+        {
+          id: "p3-img",
+          url: "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://alurwaktu.app/donate",
+          position: "right" as const,
+          width: 30,
+          shape: "rounded" as const,
+          blendMode: "none" as const,
+          padding: 4
+        }
+      ]
+    }
+  },
+  {
+    name: "Ramadhan Countdown",
+    data: {
+      type: "custom" as const,
+      layout: "flex-col" as const,
+      gap: 6,
+      borderHighlight: "top" as const,
+      bgColor: "",
+      bgGradient: "linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)",
+      texts: [
+        { id: "p4-1", content: "MENANTI RAMADHAN AL-MUBARAK", type: "title" as const, size: "xl" as const, font: "sans" as const, align: "center" as const, weight: "black" as const, color: "#fcd34d", glow: true },
+      ],
+      images: [],
+      countdownTarget: getLocalFutureDate(),
+      countdownLabel: "Menghitung Hari Menuju Bulan Ramadhan Al-Mubarak:"
+    }
+  }
+];
+
 export function MosqueTvSettings() {
   const { settings, updateSettings, t } = useAppContext();
   const visualStyle = useVisualStyle();
+
+  const handleLoadPreset = (reminderId: string, presetIndex: number) => {
+    const confirmText = settings.language === 'ms' 
+      ? "Adakah anda pasti mahu memuatkan preset ini? Ini akan memadamkan teks dan imej sedia ada pada kad ini."
+      : "Are you sure you want to load this preset? This will overwrite existing texts and images on this slide.";
+    if (window.confirm(confirmText)) {
+      const preset = PRESETS[presetIndex];
+      const duplicatedTexts = preset.data.texts.map(tBlock => ({
+        ...tBlock,
+        id: Math.random().toString(36).substring(2, 9)
+      }));
+      const duplicatedImages = preset.data.images.map(img => ({
+        ...img,
+        id: Math.random().toString(36).substring(2, 9)
+      }));
+
+      handleUpdateReminder(reminderId, {
+        ...preset.data,
+        id: reminderId,
+        texts: duplicatedTexts,
+        images: duplicatedImages,
+        duration: (settings.tvModeRemindersList || []).find(r => r.id === reminderId)?.duration || 15
+      });
+    }
+  };
 
   // Accordion Section Open/Close States
   const [openAccordions, setOpenAccordions] = useState<Record<string, boolean>>({
@@ -1713,23 +1825,46 @@ export function MosqueTvSettings() {
                                 {/* TAB 1: CONTENT (TEXTS) */}
                                 {(activeCardTabs[reminder.id] || 'content') === 'content' && (
                                   <div className="space-y-4 pt-1">
-                                    {/* Category Type selector */}
-                                    <div className="flex flex-col">
-                                      <span className="text-[10px] font-black uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)]/60 mb-1">
-                                        {settings.language === "ms" ? "Kategori Asas" : "Base Category"}
-                                      </span>
-                                      <select
-                                        value={reminder.type}
-                                        onChange={(e) => handleUpdateReminder(reminder.id, { type: e.target.value as any })}
-                                        className="w-full px-3 py-2 text-xs rounded-xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 outline-none font-bold search-focus-ring"
-                                      >
-                                        <option value="custom">{settings.language === "ms" ? "Kustom" : "Custom Slide"}</option>
-                                        <option value="hadith">{t("reminderTypeHadith" as any)}</option>
-                                        <option value="quran">{t("reminderTypeQuran" as any)}</option>
-                                        <option value="warning">{t("reminderTypeWarning" as any)}</option>
-                                        <option value="info">{t("reminderTypeInfo" as any)}</option>
-                                        <option value="donation">{t("reminderTypeDonation" as any)}</option>
-                                      </select>
+                                    {/* Category Type selector & Preset loader */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                      <div className="flex flex-col">
+                                        <span className="text-[10px] font-black uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)]/60 mb-1">
+                                          {settings.language === "ms" ? "Kategori Asas" : "Base Category"}
+                                        </span>
+                                        <select
+                                          value={reminder.type}
+                                          onChange={(e) => handleUpdateReminder(reminder.id, { type: e.target.value as any })}
+                                          className="w-full px-3 py-2 text-xs rounded-xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 outline-none font-bold search-focus-ring"
+                                        >
+                                          <option value="custom">{settings.language === "ms" ? "Kustom" : "Custom Slide"}</option>
+                                          <option value="hadith">{t("reminderTypeHadith" as any)}</option>
+                                          <option value="quran">{t("reminderTypeQuran" as any)}</option>
+                                          <option value="warning">{t("reminderTypeWarning" as any)}</option>
+                                          <option value="info">{t("reminderTypeInfo" as any)}</option>
+                                          <option value="donation">{t("reminderTypeDonation" as any)}</option>
+                                        </select>
+                                      </div>
+
+                                      <div className="flex flex-col">
+                                        <span className="text-[10px] font-black uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)]/60 mb-1">
+                                          {settings.language === "ms" ? "Muat Template Preset" : "Load Preset Template"}
+                                        </span>
+                                        <select
+                                          value=""
+                                          onChange={(e) => {
+                                            if (e.target.value !== '') {
+                                              handleLoadPreset(reminder.id, parseInt(e.target.value));
+                                              e.target.value = '';
+                                            }
+                                          }}
+                                          className="w-full px-3 py-2 text-xs rounded-xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-primary)] border border-[var(--md-sys-color-outline)]/10 outline-none font-bold focus:ring-1 focus:ring-[var(--md-sys-color-primary)] cursor-pointer"
+                                        >
+                                          <option value="">-- {settings.language === 'ms' ? 'Pilih Preset...' : 'Select Preset...'} --</option>
+                                          {PRESETS.map((preset, pIdx) => (
+                                            <option key={pIdx} value={pIdx}>{preset.name}</option>
+                                          ))}
+                                        </select>
+                                      </div>
                                     </div>
 
                                     {/* Text blocks manager */}
@@ -1884,6 +2019,37 @@ export function MosqueTvSettings() {
                                                 })}
                                               </div>
 
+                                              <div className="flex items-center gap-3 bg-[var(--md-sys-color-surface-container-high)]/60 px-2 py-1 rounded-lg border border-[var(--md-sys-color-outline)]/5">
+                                                <label className="flex items-center gap-1 cursor-pointer select-none text-[9px] font-black uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)]">
+                                                  <input
+                                                    type="checkbox"
+                                                    checked={!!tBlock.glow}
+                                                    onChange={(e) => {
+                                                      const updatedTexts = (reminder.texts || []).map(txt =>
+                                                        txt.id === tBlock.id ? { ...txt, glow: e.target.checked } : txt
+                                                      );
+                                                      handleUpdateReminder(reminder.id, { texts: updatedTexts });
+                                                    }}
+                                                    className="rounded border-[var(--md-sys-color-outline)]/20 accent-[var(--md-sys-color-primary)] cursor-pointer scale-90"
+                                                  />
+                                                  Glow
+                                                </label>
+                                                <label className="flex items-center gap-1 cursor-pointer select-none text-[9px] font-black uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)] border-l border-[var(--md-sys-color-outline)]/10 pl-2">
+                                                  <input
+                                                    type="checkbox"
+                                                    checked={!!tBlock.marquee}
+                                                    onChange={(e) => {
+                                                      const updatedTexts = (reminder.texts || []).map(txt =>
+                                                        txt.id === tBlock.id ? { ...txt, marquee: e.target.checked } : txt
+                                                      );
+                                                      handleUpdateReminder(reminder.id, { texts: updatedTexts });
+                                                    }}
+                                                    className="rounded border-[var(--md-sys-color-outline)]/20 accent-[var(--md-sys-color-primary)] cursor-pointer scale-90"
+                                                  />
+                                                  Marquee
+                                                </label>
+                                              </div>
+
                                               <div className="flex items-center gap-1.5">
                                                 <input
                                                   type="color"
@@ -1913,6 +2079,45 @@ export function MosqueTvSettings() {
                                             </div>
                                           </div>
                                         ))}
+                                      </div>
+
+                                      {/* Event Countdown target inputs */}
+                                      <div className="p-3 rounded-xl border border-[var(--md-sys-color-outline)]/10 bg-[var(--md-sys-color-surface)] space-y-3 mt-4">
+                                        <span className="text-[10px] font-black uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)]/60 block">
+                                          {settings.language === 'ms' ? 'Pemasa Undur Acara (Countdown)' : 'Event Countdown Timer'}
+                                        </span>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                          <div className="flex flex-col">
+                                            <span className="text-[9px] text-[var(--md-sys-color-on-surface-variant)]/80 mb-1">Label Countdown</span>
+                                            <input
+                                              type="text"
+                                              placeholder="e.g. Masa ke Ramadhan:"
+                                              value={reminder.countdownLabel ?? ''}
+                                              onChange={(e) => handleUpdateReminder(reminder.id, { countdownLabel: e.target.value })}
+                                              className="px-3 py-1.5 text-xs rounded-xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 outline-none"
+                                            />
+                                          </div>
+                                          <div className="flex flex-col">
+                                            <span className="text-[9px] text-[var(--md-sys-color-on-surface-variant)]/80 mb-1">Tarikh & Masa Target</span>
+                                            <div className="flex items-center gap-1.5">
+                                              <input
+                                                type="datetime-local"
+                                                value={reminder.countdownTarget ? reminder.countdownTarget.substring(0, 16) : ''}
+                                                onChange={(e) => handleUpdateReminder(reminder.id, { countdownTarget: e.target.value ? e.target.value + ':00' : undefined })}
+                                                className="px-3 py-1.5 text-xs rounded-xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 outline-none flex-1 font-mono"
+                                              />
+                                              {reminder.countdownTarget && (
+                                                <button
+                                                  type="button"
+                                                  onClick={() => handleUpdateReminder(reminder.id, { countdownTarget: undefined, countdownLabel: undefined })}
+                                                  className="text-red-500 hover:bg-red-50 px-2 py-1.5 rounded-xl text-[10px] font-bold border border-red-200/50 cursor-pointer"
+                                                >
+                                                  {settings.language === 'ms' ? 'Padam' : 'Clear'}
+                                                </button>
+                                              )}
+                                            </div>
+                                          </div>
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
@@ -2326,6 +2531,113 @@ export function MosqueTvSettings() {
                                         <span className="text-xs font-mono font-bold text-[var(--md-sys-color-primary)] w-8 text-right">
                                           {reminder.duration ?? settings.tvModeReminderInterval ?? 15}s
                                         </span>
+                                      </div>
+                                    </div>
+
+                                    {/* Targeting & Scheduling subpanel */}
+                                    <div className="space-y-3 border-t border-[var(--md-sys-color-outline)]/5 pt-3">
+                                      <span className="text-[10px] font-black uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)]/60 block">
+                                        {settings.language === 'ms' ? 'Sasaran & Penjadualan' : 'Targeting & Scheduling'}
+                                      </span>
+                                      
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {/* Transition */}
+                                        <div className="flex flex-col">
+                                          <span className="text-[9px] text-[var(--md-sys-color-on-surface-variant)]/80 mb-1">
+                                            {settings.language === 'ms' ? 'Transisi Masuk' : 'Entrance Transition'}
+                                          </span>
+                                          <select
+                                            value={reminder.transition || 'fade'}
+                                            onChange={(e) => handleUpdateReminder(reminder.id, { transition: e.target.value as any })}
+                                            className="px-3 py-2 text-xs rounded-xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 outline-none"
+                                          >
+                                            <option value="fade">Fade In</option>
+                                            <option value="slide-left">Slide Left</option>
+                                            <option value="slide-right">Slide Right</option>
+                                            <option value="zoom">Zoom In</option>
+                                          </select>
+                                        </div>
+
+                                        {/* Hour range targeting */}
+                                        <div className="flex flex-col">
+                                          <span className="text-[9px] text-[var(--md-sys-color-on-surface-variant)]/80 mb-1">
+                                            {settings.language === 'ms' ? 'Sasaran Jam (Julat)' : 'Target Hour Range'}
+                                          </span>
+                                          <div className="flex items-center gap-1.5">
+                                            <select
+                                              value={reminder.startHour !== undefined ? reminder.startHour : ''}
+                                              onChange={(e) => handleUpdateReminder(reminder.id, { 
+                                                startHour: e.target.value !== '' ? parseInt(e.target.value) : undefined,
+                                                endHour: e.target.value !== '' ? (reminder.endHour !== undefined ? reminder.endHour : 23) : undefined
+                                              })}
+                                              className="px-2 py-1.5 text-xs rounded-xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 outline-none flex-1 font-mono"
+                                            >
+                                              <option value="">{settings.language === 'ms' ? 'Setiap Jam' : 'All Day'}</option>
+                                              {Array.from({ length: 24 }).map((_, h) => (
+                                                <option key={h} value={h}>{String(h).padStart(2, '0')}:00</option>
+                                              ))}
+                                            </select>
+                                            <span className="text-xs text-[var(--md-sys-color-on-surface-variant)] font-bold">to</span>
+                                            <select
+                                              value={reminder.endHour !== undefined ? reminder.endHour : ''}
+                                              disabled={reminder.startHour === undefined}
+                                              onChange={(e) => handleUpdateReminder(reminder.id, { 
+                                                endHour: e.target.value !== '' ? parseInt(e.target.value) : undefined 
+                                              })}
+                                              className="px-2 py-1.5 text-xs rounded-xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 outline-none flex-1 font-mono disabled:opacity-40 disabled:cursor-not-allowed"
+                                            >
+                                              <option value="">-</option>
+                                              {Array.from({ length: 24 }).map((_, h) => (
+                                                <option key={h} value={h}>{String(h).padStart(2, '0')}:59</option>
+                                              ))}
+                                            </select>
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      {/* Day of Week targeting checkboxes */}
+                                      <div className="flex flex-col bg-[var(--md-sys-color-surface-container)] p-3 rounded-xl border border-[var(--md-sys-color-outline)]/10 space-y-1.5">
+                                        <span className="text-[9px] text-[var(--md-sys-color-on-surface-variant)]/80 font-bold">
+                                          {settings.language === 'ms' ? 'Sasaran Hari (Isnin-Ahad)' : 'Target Days of Week'}
+                                        </span>
+                                        <div className="flex flex-wrap gap-x-3 gap-y-1.5 pt-0.5">
+                                          {[
+                                            { label: settings.language === 'ms' ? 'Ahad' : 'Sun', val: 0 },
+                                            { label: settings.language === 'ms' ? 'Isnin' : 'Mon', val: 1 },
+                                            { label: settings.language === 'ms' ? 'Selasa' : 'Tue', val: 2 },
+                                            { label: settings.language === 'ms' ? 'Rabu' : 'Wed', val: 3 },
+                                            { label: settings.language === 'ms' ? 'Khamis' : 'Thu', val: 4 },
+                                            { label: settings.language === 'ms' ? 'Jumaat' : 'Fri', val: 5 },
+                                            { label: settings.language === 'ms' ? 'Sabtu' : 'Sat', val: 6 }
+                                          ].map(day => {
+                                            const targetDays = reminder.daysOfWeek || [];
+                                            const isChecked = targetDays.includes(day.val);
+                                            return (
+                                              <label key={day.val} className="flex items-center gap-1.5 text-xs font-medium cursor-pointer select-none text-[var(--md-sys-color-on-surface)]">
+                                                <input
+                                                  type="checkbox"
+                                                  checked={isChecked}
+                                                  onChange={(e) => {
+                                                    let updatedDays: number[];
+                                                    if (e.target.checked) {
+                                                      updatedDays = [...targetDays, day.val].sort();
+                                                    } else {
+                                                      updatedDays = targetDays.filter(d => d !== day.val);
+                                                    }
+                                                    handleUpdateReminder(reminder.id, { daysOfWeek: updatedDays.length > 0 ? updatedDays : undefined });
+                                                  }}
+                                                  className="rounded border-[var(--md-sys-color-outline)]/20 accent-[var(--md-sys-color-primary)] cursor-pointer"
+                                                />
+                                                {day.label}
+                                              </label>
+                                            );
+                                          })}
+                                        </div>
+                                        <p className="text-[8px] text-[var(--md-sys-color-on-surface-variant)] opacity-70 italic">
+                                          {settings.language === 'ms' 
+                                            ? "* Biarkan kosong untuk paparkan setiap hari." 
+                                            : "* Leave blank to display every day."}
+                                        </p>
                                       </div>
                                     </div>
                                   </div>

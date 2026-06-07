@@ -126,6 +126,44 @@ const getPresetStyles = (type: string, isTvMode: boolean) => {
 };
 
 export function TvModeReminderCard({ reminder, assetUrls = {}, language = 'ms', isTvMode = false }: TvModeReminderCardProps) {
+  const [timeLeft, setTimeLeft] = React.useState<{ days: number; hours: number; minutes: number; seconds: number } | null>(null);
+
+  React.useEffect(() => {
+    if (!reminder.countdownTarget) {
+      setTimeLeft(null);
+      return;
+    }
+    
+    const calculateTimeLeft = () => {
+      const targetTime = new Date(reminder.countdownTarget!).getTime();
+      if (isNaN(targetTime)) return null;
+      
+      const difference = targetTime - Date.now();
+      if (difference <= 0) {
+        return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+      }
+      return {
+        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((difference / 1000 / 60) % 60),
+        seconds: Math.floor((difference / 1000) % 60),
+      };
+    };
+
+    const initial = calculateTimeLeft();
+    setTimeLeft(initial);
+    if (!initial) return;
+
+    const timer = setInterval(() => {
+      const updated = calculateTimeLeft();
+      if (updated) {
+        setTimeLeft(updated);
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [reminder.countdownTarget]);
+
   // Normalize layout properties
   const isLegacy = !reminder.texts;
   
@@ -327,138 +365,262 @@ export function TvModeReminderCard({ reminder, assetUrls = {}, language = 'ms', 
     );
   };
 
+  const transitionType = reminder.transition || 'fade';
+  
+  const getTransitionVariants = (type: string) => {
+    switch (type) {
+      case 'slide-left':
+        return {
+          initial: { opacity: 0, x: 100, scale: 1 },
+          animate: { opacity: 1, x: 0, scale: 1 },
+          exit: { opacity: 0, x: -100, scale: 1 }
+        };
+      case 'slide-right':
+        return {
+          initial: { opacity: 0, x: -100, scale: 1 },
+          animate: { opacity: 1, x: 0, scale: 1 },
+          exit: { opacity: 0, x: 100, scale: 1 }
+        };
+      case 'zoom':
+        return {
+          initial: { opacity: 0, scale: 0.8, x: 0 },
+          animate: { opacity: 1, scale: 1, x: 0 },
+          exit: { opacity: 0, scale: 0.8, x: 0 }
+        };
+      case 'fade':
+      default:
+        return {
+          initial: { opacity: 0, scale: 0.96, x: 0 },
+          animate: { opacity: 1, scale: 1, x: 0 },
+          exit: { opacity: 0, scale: 0.96, x: 0 }
+        };
+    }
+  };
+
+  const variants = getTransitionVariants(transitionType);
+
   return (
-    <motion.div
-      key={reminder.id}
-      initial={{ opacity: 0, scale: 0.96 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.96 }}
-      transition={{ duration: 0.45, ease: "easeOut" }}
-      className={cn(
-        "flex-grow flex p-6 sm:p-10 rounded-[36px] relative overflow-hidden transition-all duration-500 select-none min-h-[140px] items-center justify-center",
-        reminder.bgColor || reminder.bgGradient ? "" : presets.bg,
-        borderClasses
-      )}
-      style={cardStyle}
-    >
-      {/* 1. Background Pattern Overlay */}
-      {bgPattern !== 'none' && (
+    <>
+      <style>{`
+        @keyframes card-marquee-scroll {
+          0% { transform: translateX(0%); }
+          100% { transform: translateX(-50%); }
+        }
+        .card-marquee-container {
+          overflow: hidden;
+          white-space: nowrap;
+          width: 100%;
+          display: block;
+        }
+        .card-marquee-content {
+          display: inline-block;
+          animation: card-marquee-scroll 20s linear infinite;
+          will-change: transform;
+        }
+      `}</style>
+      <motion.div
+        key={reminder.id}
+        initial={variants.initial}
+        animate={variants.animate}
+        exit={variants.exit}
+        transition={{ duration: 0.45, ease: "easeOut" }}
+        className={cn(
+          "flex-grow flex p-6 sm:p-10 rounded-[36px] relative overflow-hidden transition-all duration-500 select-none min-h-[140px] items-center justify-center",
+          reminder.bgColor || reminder.bgGradient ? "" : presets.bg,
+          borderClasses
+        )}
+        style={cardStyle}
+      >
+        {/* 1. Background Pattern Overlay */}
+        {bgPattern !== 'none' && (
+          <div 
+            className={cn(
+              "absolute inset-0 pointer-events-none z-0 transition-opacity",
+              bgPattern === 'islamic' ? "islamic-pattern-overlay" :
+              bgPattern === 'dots' ? "bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-500/10 via-transparent to-transparent bg-[size:10px_10px]" :
+              "bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:20px_20px]"
+            )}
+            style={{ opacity: bgPatternOpacity }}
+          />
+        )}
+
+        {/* 2. Background Uploaded/URL Images */}
+        {bgImages.map(img => {
+          const src = resolveImgSrc(img);
+          if (!src) return null;
+          return (
+            <img
+              key={img.id}
+              src={src}
+              alt="Background pattern"
+              className={cn(
+                "absolute inset-0 w-full h-full object-cover pointer-events-none z-0 transition-all",
+                img.blendMode && img.blendMode !== 'none' ? `mix-blend-${img.blendMode}` : "opacity-15",
+                img.shape === 'circle' ? "rounded-full" : ""
+              )}
+              style={{ 
+                opacity: (img.width ? img.width / 100 : 0.15),
+                padding: img.padding ? `${img.padding}px` : undefined
+              }}
+            />
+          );
+        })}
+
+        {/* 3. Watermark */}
+        {renderWatermark()}
+
+        {/* 5. Main Content Layout (Texts and Flow Images) */}
         <div 
           className={cn(
-            "absolute inset-0 pointer-events-none z-0 transition-opacity",
-            bgPattern === 'islamic' ? "islamic-pattern-overlay" :
-            bgPattern === 'dots' ? "bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-500/10 via-transparent to-transparent bg-[size:10px_10px]" :
-            "bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:20px_20px]"
+            "w-full h-full flex relative z-10 items-center justify-center",
+            layout === 'flex-row' ? "flex-row" :
+            layout === 'flex-row-reverse' ? "flex-row-reverse" :
+            layout === 'flex-col-reverse' ? "flex-col-reverse" :
+            layout === 'overlay' ? "relative" : "flex-col",
+            gapClass
           )}
-          style={{ opacity: bgPatternOpacity }}
-        />
-      )}
-
-      {/* 2. Background Uploaded/URL Images */}
-      {bgImages.map(img => {
-        const src = resolveImgSrc(img);
-        if (!src) return null;
-        return (
-          <img
-            key={img.id}
-            src={src}
-            alt="Background pattern"
-            className={cn(
-              "absolute inset-0 w-full h-full object-cover pointer-events-none z-0 transition-all",
-              img.blendMode && img.blendMode !== 'none' ? `mix-blend-${img.blendMode}` : "opacity-15",
-              img.shape === 'circle' ? "rounded-full" : ""
-            )}
-            style={{ 
-              opacity: (img.width ? img.width / 100 : 0.15),
-              padding: img.padding ? `${img.padding}px` : undefined
-            }}
-          />
-        );
-      })}
-
-      {/* 3. Watermark */}
-      {renderWatermark()}
-
-      {/* 5. Main Content Layout (Texts and Flow Images) */}
-      <div 
-        className={cn(
-          "w-full h-full flex relative z-10 items-center justify-center",
-          layout === 'flex-row' ? "flex-row" :
-          layout === 'flex-row-reverse' ? "flex-row-reverse" :
-          layout === 'flex-col-reverse' ? "flex-col-reverse" :
-          layout === 'overlay' ? "relative" : "flex-col",
-          gapClass
-        )}
-      >
-        {/* Left media block */}
-        {leftImages.length > 0 && (
-          <div className="flex flex-col gap-2 shrink-0">
-            {leftImages.map(renderImageItem)}
-          </div>
-        )}
-
-        {/* Vertical group for Top images, Texts, and Bottom images */}
-        <div className="flex-grow flex flex-col justify-center w-full gap-3">
-          {topImages.length > 0 && (
-            <div className="flex flex-row gap-2 justify-center flex-wrap">
-              {topImages.map(renderImageItem)}
+        >
+          {/* Left media block */}
+          {leftImages.length > 0 && (
+            <div className="flex flex-col gap-2 shrink-0">
+              {leftImages.map(renderImageItem)}
             </div>
           )}
 
-          {/* Texts blocks list */}
-          <div className="space-y-2 w-full flex flex-col justify-center">
-            {texts.map((t) => {
-              const textStyle: React.CSSProperties = {};
-              if (t.color) {
-                textStyle.color = t.color;
-              }
-              
-              // Preset text style matching standard categories
-              const isTitle = t.type === 'title';
-              const isSubtitle = t.type === 'subtitle';
-              const isCaption = t.type === 'caption';
-              
-              const defaultColorClass = t.color ? "" : (
-                isTitle ? "text-[var(--md-sys-color-on-surface)]" :
-                isSubtitle ? "text-[var(--md-sys-color-primary)] dark:text-[var(--md-sys-color-secondary)]" :
-                isCaption ? "text-[var(--md-sys-color-on-surface-variant)]/60" :
-                "text-[var(--md-sys-color-on-surface-variant)]"
-              );
+          {/* Vertical group for Top images, Texts, and Bottom images */}
+          <div className="flex-grow flex flex-col justify-center w-full gap-3">
+            {topImages.length > 0 && (
+              <div className="flex flex-row gap-2 justify-center flex-wrap">
+                {topImages.map(renderImageItem)}
+              </div>
+            )}
 
-              return (
-                <div
-                  key={t.id}
-                  className={cn(
-                    getFontSizeClass(t.size, isTvMode),
-                    getFontFamilyClass(t.font),
-                    getFontWeightClass(t.weight),
-                    getTextAlignClass(t.align),
-                    defaultColorClass,
-                    isTitle ? "tracking-wide uppercase mb-1 font-black" :
-                    isSubtitle ? "tracking-widest uppercase mb-1" : ""
-                  )}
-                  style={textStyle}
-                >
-                  {t.content}
+            {/* Texts blocks list */}
+            <div className="space-y-2 w-full flex flex-col justify-center">
+              {texts.map((t) => {
+                const textStyle: React.CSSProperties = {};
+                if (t.color) {
+                  textStyle.color = t.color;
+                }
+                
+                if (t.glow) {
+                  const glowColor = t.color || "var(--md-sys-color-primary)";
+                  textStyle.textShadow = `0 0 10px ${glowColor}, 0 0 20px ${glowColor}`;
+                }
+
+                // Preset text style matching standard categories
+                const isTitle = t.type === 'title';
+                const isSubtitle = t.type === 'subtitle';
+                const isCaption = t.type === 'caption';
+                
+                const defaultColorClass = t.color ? "" : (
+                  isTitle ? "text-[var(--md-sys-color-on-surface)]" :
+                  isSubtitle ? "text-[var(--md-sys-color-primary)] dark:text-[var(--md-sys-color-secondary)]" :
+                  isCaption ? "text-[var(--md-sys-color-on-surface-variant)]/60" :
+                  "text-[var(--md-sys-color-on-surface-variant)]"
+                );
+
+                if (t.marquee) {
+                  return (
+                    <div 
+                      key={t.id} 
+                      className={cn(
+                        "card-marquee-container",
+                        getFontSizeClass(t.size, isTvMode),
+                        getFontFamilyClass(t.font),
+                        getFontWeightClass(t.weight),
+                        defaultColorClass,
+                        isTitle ? "tracking-wide uppercase mb-1 font-black" :
+                        isSubtitle ? "tracking-widest uppercase mb-1" : ""
+                      )}
+                      style={textStyle}
+                    >
+                      <div className="card-marquee-content">
+                        {t.content}
+                        <span className="opacity-40 px-12">&bull;</span>
+                        {t.content}
+                        <span className="opacity-40 px-12">&bull;</span>
+                      </div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div
+                    key={t.id}
+                    className={cn(
+                      getFontSizeClass(t.size, isTvMode),
+                      getFontFamilyClass(t.font),
+                      getFontWeightClass(t.weight),
+                      getTextAlignClass(t.align),
+                      defaultColorClass,
+                      isTitle ? "tracking-wide uppercase mb-1 font-black" :
+                      isSubtitle ? "tracking-widest uppercase mb-1" : ""
+                    )}
+                    style={textStyle}
+                  >
+                    {t.content}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Countdown Widget */}
+            {timeLeft && (
+              <div className={cn("flex flex-col items-center mt-4 mb-2 z-10 w-full", isTvMode ? "gap-4" : "gap-1")}>
+                {reminder.countdownLabel && (
+                  <div className={cn(
+                    "font-sans font-medium text-center opacity-85 tracking-wide",
+                    isTvMode ? "text-xl" : "text-[10px]"
+                  )}>
+                    {reminder.countdownLabel}
+                  </div>
+                )}
+                <div className="flex flex-row items-center justify-center gap-2">
+                  {[
+                    { value: timeLeft.days, label: language === 'ms' ? 'Hari' : 'Days' },
+                    { value: timeLeft.hours, label: language === 'ms' ? 'Jam' : 'Hours' },
+                    { value: timeLeft.minutes, label: language === 'ms' ? 'Min' : 'Mins' },
+                    { value: timeLeft.seconds, label: language === 'ms' ? 'Saat' : 'Secs' },
+                  ].map((item, idx) => (
+                    <React.Fragment key={idx}>
+                      <div className={cn(
+                        "flex flex-col items-center justify-center bg-black/15 dark:bg-white/10 border border-white/10 rounded-2xl shadow-inner",
+                        isTvMode ? "p-3 min-w-[100px] h-[90px]" : "p-1 min-w-[44px] h-[36px]"
+                      )}>
+                        <span className={cn("font-mono font-bold leading-none", isTvMode ? "text-3xl" : "text-sm")}>
+                          {String(item.value).padStart(2, '0')}
+                        </span>
+                        <span className={cn("font-sans uppercase opacity-60 tracking-wider font-semibold", isTvMode ? "text-[10px] mt-1" : "text-[6px] mt-0.5")}>
+                          {item.label}
+                        </span>
+                      </div>
+                      {idx < 3 && (
+                        <span className={cn("font-mono font-bold opacity-60", isTvMode ? "text-3xl mx-1" : "text-sm mx-0.5")}>
+                          :
+                        </span>
+                      )}
+                    </React.Fragment>
+                  ))}
                 </div>
-              );
-            })}
+              </div>
+            )}
+
+            {bottomImages.length > 0 && (
+              <div className="flex flex-row gap-2 justify-center flex-wrap">
+                {bottomImages.map(renderImageItem)}
+              </div>
+            )}
           </div>
 
-          {bottomImages.length > 0 && (
-            <div className="flex flex-row gap-2 justify-center flex-wrap">
-              {bottomImages.map(renderImageItem)}
+          {/* Right media block */}
+          {rightImages.length > 0 && (
+            <div className="flex flex-col gap-2 shrink-0">
+              {rightImages.map(renderImageItem)}
             </div>
           )}
         </div>
-
-        {/* Right media block */}
-        {rightImages.length > 0 && (
-          <div className="flex flex-col gap-2 shrink-0">
-            {rightImages.map(renderImageItem)}
-          </div>
-        )}
-      </div>
-    </motion.div>
+      </motion.div>
+    </>
   );
 }

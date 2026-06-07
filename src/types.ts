@@ -47,6 +47,8 @@ export interface TvModeReminderText {
   font?: 'sans' | 'serif' | 'mono';
   align?: 'left' | 'center' | 'right' | 'justify';
   weight?: 'normal' | 'medium' | 'bold' | 'black';
+  glow?: boolean;
+  marquee?: boolean;
 }
 
 export interface TvModeReminderImage {
@@ -86,6 +88,14 @@ export interface TvModeReminder {
   borderHighlight?: 'none' | 'left' | 'top' | 'right' | 'bottom' | 'all';
   bgPattern?: 'none' | 'islamic' | 'geometric' | 'dots';
   bgPatternOpacity?: number; // 0 to 1
+
+  // Refinements: Scheduling, transitions, countdowns
+  transition?: 'fade' | 'slide-left' | 'slide-right' | 'zoom';
+  daysOfWeek?: number[];
+  startHour?: number;
+  endHour?: number;
+  countdownTarget?: string;
+  countdownLabel?: string;
 }
 
 export interface GeneralSettings {
