@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Tv,
@@ -16,10 +16,33 @@ import {
   GripVertical,
   Copy,
   VolumeX,
-  MapPin
+  MapPin,
+  Image as ImageIcon,
+  Palette,
+  Grid,
+  Type,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
+  Check
 } from "lucide-react";
 
-// Category-specific styles for reminders
+import { cn } from "../lib/utils";
+import { useAppContext } from "../AppContext";
+import { useVisualStyle, getStyleClasses } from "../hooks/useVisualStyle";
+import {
+  saveMosqueLogo,
+  getMosqueLogoBlob,
+  clearMosqueLogo,
+  saveAsset,
+  getAssetBlob,
+  deleteAsset
+} from "../lib/db";
+import { TvModeReminder, TvModeReminderText, TvModeReminderImage } from "../types";
+import { TvModeReminderCard } from "./TvModeReminderCard";
+import { StorageManager } from "../lib/StorageManager";
+
 const getCategoryStyles = (type: TvModeReminder['type'], enabled: boolean) => {
   if (!enabled) {
     return {
@@ -54,6 +77,11 @@ const getCategoryStyles = (type: TvModeReminder['type'], enabled: boolean) => {
         cardClass: "border-l-4 border-l-rose-500 dark:border-l-rose-400 bg-[var(--md-sys-color-surface-container-low)] border-[var(--md-sys-color-outline)]/10 shadow-[0_4px_20px_-4px_rgba(244,63,94,0.12)] hover:shadow-[0_8px_24px_-4px_rgba(244,63,94,0.2)]",
         badgeClass: "bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-200"
       };
+    case 'custom':
+      return {
+        cardClass: "border-l-4 border-l-emerald-500 dark:border-l-emerald-450 bg-[var(--md-sys-color-surface-container-low)] border-[var(--md-sys-color-outline)]/10 shadow-[0_4px_20px_-4px_rgba(16,185,129,0.12)] hover:shadow-[0_8px_24px_-4px_rgba(16,185,129,0.2)]",
+        badgeClass: "bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200"
+      };
     default:
       return {
         cardClass: "border-l-4 border-l-primary-500 bg-[var(--md-sys-color-surface-container-low)] border-[var(--md-sys-color-outline)]/10",
@@ -61,15 +89,6 @@ const getCategoryStyles = (type: TvModeReminder['type'], enabled: boolean) => {
       };
   }
 };
-import { cn } from "../lib/utils";
-import { useAppContext } from "../AppContext";
-import { useVisualStyle, getStyleClasses } from "../hooks/useVisualStyle";
-import {
-  saveMosqueLogo,
-  getMosqueLogoBlob,
-  clearMosqueLogo
-} from "../lib/db";
-import { TvModeReminder } from "../types";
 
 export function MosqueTvSettings() {
   const { settings, updateSettings, t } = useAppContext();
@@ -112,15 +131,79 @@ export function MosqueTvSettings() {
     setCollapsedReminders({});
   };
 
+  // Tab states for each card's sub-editor: Record<cardId, 'content' | 'media' | 'style'>
+  const [activeCardTabs, setActiveCardTabs] = useState<Record<string, 'content' | 'media' | 'style'>>({});
+  
+  // Loaded object URLs for IndexedDB binary images
+  const [loadedAssetUrls, setLoadedAssetUrls] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    let active = true;
+    const loadAssets = async () => {
+      const list = settings.tvModeRemindersList || [];
+      const urls: Record<string, string> = {};
+      
+      for (const r of list) {
+        const images = r.images || [];
+        for (const img of images) {
+          if (img.isUploaded && img.assetKey) {
+            try {
+              const blob = await getAssetBlob(img.assetKey);
+              if (blob) {
+                urls[img.assetKey] = URL.createObjectURL(blob);
+              }
+            } catch (err) {
+              console.error(`Failed to load asset for key ${img.assetKey}:`, err);
+            }
+          }
+        }
+      }
+      
+      if (active) {
+        // Revoke old object URLs first to prevent leaks
+        Object.values(loadedAssetUrls).forEach(url => {
+          try { URL.revokeObjectURL(url); } catch (e) {}
+        });
+        setLoadedAssetUrls(urls);
+      }
+    };
+    
+    loadAssets();
+    
+    return () => {
+      active = false;
+    };
+  }, [settings.tvModeRemindersList]);
+
   const handleAddReminder = () => {
     const newList = [
       ...(settings.tvModeRemindersList || []),
       {
         id: Math.random().toString(36).substring(2, 9),
-        type: 'hadith' as const,
-        text: settings.language === 'ms' ? 'Peringatan baru...' : 'New reminder...',
-        title: '',
-        enabled: true
+        type: 'custom' as const,
+        text: '', // Fallback
+        title: '', // Fallback
+        enabled: true,
+        duration: 15,
+        texts: [
+          {
+            id: Math.random().toString(36).substring(2, 9),
+            content: settings.language === 'ms' ? 'Peringatan Baru...' : 'New Reminder...',
+            type: 'body' as const,
+            size: 'md' as const,
+            font: 'sans' as const,
+            align: 'center' as const,
+            weight: 'normal' as const
+          }
+        ],
+        images: [],
+        layout: 'flex-col' as const,
+        gap: 6,
+        bgPattern: 'none' as const,
+        bgPatternOpacity: 0.07,
+        borderHighlight: 'left' as const,
+        bgColor: '', 
+        bgGradient: ''
       }
     ];
     updateSettings({ tvModeRemindersList: newList });
@@ -133,8 +216,21 @@ export function MosqueTvSettings() {
     updateSettings({ tvModeRemindersList: newList });
   };
 
-  const handleDeleteReminder = (id: string) => {
-    const newList = (settings.tvModeRemindersList || []).filter(r => r.id !== id);
+  const handleDeleteReminder = async (id: string) => {
+    const list = settings.tvModeRemindersList || [];
+    const reminder = list.find(r => r.id === id);
+    if (reminder && reminder.images) {
+      for (const img of reminder.images) {
+        if (img.isUploaded && img.assetKey) {
+          try {
+            await deleteAsset(img.assetKey);
+          } catch (err) {
+            console.error("Failed to delete asset:", err);
+          }
+        }
+      }
+    }
+    const newList = list.filter(r => r.id !== id);
     updateSettings({ tvModeRemindersList: newList });
   };
 
@@ -152,20 +248,53 @@ export function MosqueTvSettings() {
     updateSettings({ tvModeRemindersList: list });
   };
 
-  const handleDuplicateReminder = (reminder: TvModeReminder) => {
-    const newList = [...(settings.tvModeRemindersList || [])];
-    const index = newList.findIndex(r => r.id === reminder.id);
+  const handleDuplicateReminder = async (reminder: TvModeReminder) => {
+    const list = [...(settings.tvModeRemindersList || [])];
+    const index = list.findIndex(r => r.id === reminder.id);
+    const newId = Math.random().toString(36).substring(2, 9);
+    
+    // Duplicate any uploaded images in IndexedDB
+    const duplicatedImages = [...(reminder.images || [])];
+    for (let i = 0; i < duplicatedImages.length; i++) {
+      const img = duplicatedImages[i];
+      if (img.isUploaded && img.assetKey) {
+        try {
+          const blob = await getAssetBlob(img.assetKey);
+          if (blob) {
+            const newImageId = Math.random().toString(36).substring(2, 9);
+            const newAssetKey = `reminder-image-${newId}-${newImageId}`;
+            const newUrl = await saveAsset(newAssetKey, blob);
+            duplicatedImages[i] = {
+              ...img,
+              id: newImageId,
+              assetKey: newAssetKey,
+              url: newUrl
+            };
+          }
+        } catch (err) {
+          console.error("Failed to duplicate asset:", err);
+        }
+      } else {
+        duplicatedImages[i] = {
+          ...img,
+          id: Math.random().toString(36).substring(2, 9)
+        };
+      }
+    }
+    
     const duplicated: TvModeReminder = {
       ...reminder,
-      id: Math.random().toString(36).substring(2, 9),
+      id: newId,
+      images: duplicatedImages,
       title: reminder.title ? `${reminder.title} (${settings.language === 'ms' ? 'Salinan' : 'Copy'})` : (settings.language === 'ms' ? 'Salinan' : 'Copy')
     };
+    
     if (index !== -1) {
-      newList.splice(index + 1, 0, duplicated);
+      list.splice(index + 1, 0, duplicated);
     } else {
-      newList.push(duplicated);
+      list.push(duplicated);
     }
-    updateSettings({ tvModeRemindersList: newList });
+    updateSettings({ tvModeRemindersList: list });
   };
 
   const handleBulkToggleReminders = () => {
@@ -174,6 +303,78 @@ export function MosqueTvSettings() {
     const allEnabled = list.every(r => r.enabled !== false);
     const newList = list.map(r => ({ ...r, enabled: !allEnabled }));
     updateSettings({ tvModeRemindersList: newList });
+  };
+
+  const handleUploadReminderImage = async (reminderId: string, imageId: string, file: File) => {
+    if (file.size > 2 * 1024 * 1024) {
+      alert(settings.language === 'ms' 
+        ? 'Saiz gambar melebihi had 2MB. Sila guna gambar yang lebih kecil.' 
+        : 'Image size exceeds the 2MB limit. Please upload a smaller image.');
+      return;
+    }
+    try {
+      const assetKey = `reminder-image-${reminderId}-${imageId}`;
+      const url = await saveAsset(assetKey, file);
+      
+      const list = settings.tvModeRemindersList || [];
+      const updatedList = list.map(r => {
+        if (r.id === reminderId) {
+          const images = r.images || [];
+          const updatedImages = images.map(img => 
+            img.id === imageId ? { ...img, url, assetKey, isUploaded: true } : img
+          );
+          // Sync legacy imageUrl for compatibility if it's the first image
+          const imageUrl = images[0]?.id === imageId ? url : r.imageUrl;
+          return { ...r, images: updatedImages, imageUrl };
+        }
+        return r;
+      });
+      updateSettings({ tvModeRemindersList: updatedList });
+    } catch (err) {
+      console.error("Failed to save image asset:", err);
+    }
+  };
+
+  const handleAddImageBlock = (reminderId: string) => {
+    const list = settings.tvModeRemindersList || [];
+    const updatedList = list.map(r => {
+      if (r.id === reminderId) {
+        const images = r.images || [];
+        const newImage: TvModeReminderImage = {
+          id: Math.random().toString(36).substring(2, 9),
+          url: '',
+          position: 'right',
+          width: 40,
+          shape: 'rounded',
+          blendMode: 'none',
+          padding: 0
+        };
+        return { ...r, images: [...images, newImage] };
+      }
+      return r;
+    });
+    updateSettings({ tvModeRemindersList: updatedList });
+  };
+
+  const handleAddTextBlock = (reminderId: string) => {
+    const list = settings.tvModeRemindersList || [];
+    const updatedList = list.map(r => {
+      if (r.id === reminderId) {
+        const texts = r.texts || [];
+        const newText: TvModeReminderText = {
+          id: Math.random().toString(36).substring(2, 9),
+          content: settings.language === 'ms' ? 'Teks baru...' : 'New text...',
+          type: 'body',
+          size: 'md',
+          font: 'sans',
+          align: 'center',
+          weight: 'normal'
+        };
+        return { ...r, texts: [...texts, newText] };
+      }
+      return r;
+    });
+    updateSettings({ tvModeRemindersList: updatedList });
   };
 
   // Logo uploading states & handlers
@@ -265,6 +466,67 @@ export function MosqueTvSettings() {
   }, [settings.tvModeCenterWidget]);
 
   const remindersList = settings.tvModeRemindersList || [];
+  const normalizedRemindersList = useMemo(() => {
+    return remindersList.map(r => {
+      const texts: TvModeReminderText[] = r.texts && r.texts.length > 0 ? r.texts : [];
+      if (texts.length === 0) {
+        // legacy conversion
+        if (r.title && r.type !== 'donation') {
+          texts.push({
+            id: 'legacy-ref',
+            content: r.title,
+            type: 'subtitle',
+            size: 'lg',
+            font: 'sans',
+            align: 'center',
+            weight: 'bold'
+          });
+        }
+        if (r.text) {
+          texts.push({
+            id: 'legacy-body',
+            content: r.text,
+            type: 'body',
+            size: 'md',
+            font: r.type === 'warning' ? 'sans' : 'serif',
+            align: 'center',
+            weight: r.type === 'warning' ? 'bold' : 'normal'
+          });
+        }
+        if (r.title && r.type === 'donation') {
+          texts.push({
+            id: 'legacy-title',
+            content: r.title,
+            type: 'title',
+            size: 'xl',
+            font: 'sans',
+            align: 'left',
+            weight: 'black'
+          });
+        }
+      }
+
+      const images: TvModeReminderImage[] = r.images && r.images.length > 0 ? r.images : [];
+      if (images.length === 0 && r.imageUrl) {
+        images.push({
+          id: 'legacy-img',
+          url: r.imageUrl,
+          position: r.type === 'donation' ? 'right' : 'background',
+          width: r.type === 'donation' ? 40 : 100,
+          shape: r.type === 'donation' ? 'rounded' : 'original',
+          blendMode: 'none',
+          padding: 0
+        });
+      }
+
+      return {
+        ...r,
+        texts,
+        images
+      };
+    });
+  }, [remindersList]);
+
   const activeCount = remindersList.filter(r => r.enabled !== false).length;
   const countText = t("remindersCount" as any)
     .replace("{count}", String(remindersList.length)) + 
@@ -975,7 +1237,7 @@ export function MosqueTvSettings() {
                                 {/* Mini location badge */}
                                 <div className="hidden sm:flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[var(--md-sys-color-surface-container-high)] text-[9px] font-bold border border-[var(--md-sys-color-outline-variant)]/30">
                                   <MapPin size={10} className="text-[var(--md-sys-color-primary)]" />
-                                  <span className="truncate max-w-[80px]">{settings.locationName || t("selectedZone")}</span>
+                                  <span className="truncate max-w-[80px]">{StorageManager.getZone() || t("selectZone")}</span>
                                 </div>
                               </div>
 
@@ -1301,7 +1563,7 @@ export function MosqueTvSettings() {
                     </div>
                   ) : (
                     <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1">
-                      {remindersList.map((reminder, idx) => {
+                      {normalizedRemindersList.map((reminder, idx) => {
                         const isCollapsed = !!collapsedReminders[reminder.id];
                         const { cardClass, badgeClass } = getCategoryStyles(reminder.type, reminder.enabled !== false);
                         return (
@@ -1332,7 +1594,7 @@ export function MosqueTvSettings() {
                                 {/* Collapsed Preview Text */}
                                 {isCollapsed && (
                                   <span className="text-xs font-bold text-[var(--md-sys-color-on-surface-variant)] truncate max-w-[120px] sm:max-w-[200px] ml-1">
-                                    {reminder.title || reminder.text}
+                                    {(reminder.texts && reminder.texts[0]?.content) || reminder.title || reminder.text}
                                   </span>
                                 )}
                               </div>
@@ -1367,11 +1629,11 @@ export function MosqueTvSettings() {
                                     whileHover={{ scale: 1.15 }}
                                     whileTap={{ scale: 0.9 }}
                                     type="button"
-                                    disabled={idx === remindersList.length - 1}
+                                    disabled={idx === normalizedRemindersList.length - 1}
                                     onClick={() => handleMoveReminder(idx, 'down')}
                                     className={cn(
                                       "p-1 text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-high)] rounded-full transition-all cursor-pointer",
-                                      idx === remindersList.length - 1 && "opacity-30 cursor-not-allowed"
+                                      idx === normalizedRemindersList.length - 1 && "opacity-30 cursor-not-allowed"
                                     )}
                                     title={t("moveDown" as any)}
                                   >
@@ -1420,155 +1682,669 @@ export function MosqueTvSettings() {
 
                             {/* Expanded Editing Fields */}
                             {!isCollapsed && (
-                              <div className="p-4 space-y-4">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                  {/* Title */}
-                                  <div className="flex flex-col">
-                                    <span className="text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] mb-1">
-                                      {t("reminderTitleLabel" as any)}
-                                    </span>
-                                    <input
-                                      type="text"
-                                      placeholder={t("reminderTitleLabel" as any)}
-                                      value={reminder.title ?? ""}
-                                      onChange={(e) => handleUpdateReminder(reminder.id, { title: e.target.value })}
-                                      className="w-full px-3 py-2 text-xs rounded-xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 outline-none focus:border-[var(--md-sys-color-primary)] font-sans font-medium search-focus-ring animate-all duration-300"
-                                    />
-                                  </div>
-                                  {/* Type */}
-                                  <div className="flex flex-col">
-                                    <span className="text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] mb-1">
-                                      {settings.language === "ms" ? "Kategori" : "Category"}
-                                    </span>
-                                    <select
-                                      value={reminder.type}
-                                      onChange={(e) => handleUpdateReminder(reminder.id, { type: e.target.value as any })}
-                                      className="w-full px-3 py-2 text-xs rounded-xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 outline-none font-bold search-focus-ring animate-all duration-300"
-                                    >
-                                      <option value="hadith">{t("reminderTypeHadith" as any)}</option>
-                                      <option value="quran">{t("reminderTypeQuran" as any)}</option>
-                                      <option value="warning">{t("reminderTypeWarning" as any)}</option>
-                                      <option value="info">{t("reminderTypeInfo" as any)}</option>
-                                      <option value="donation">{t("reminderTypeDonation" as any)}</option>
-                                    </select>
-                                  </div>
+                              <div className="p-4 space-y-4 border-t border-[var(--md-sys-color-outline)]/5 bg-[var(--md-sys-color-surface-container-low)]/30 rounded-b-2xl">
+                                {/* Tab Selection Bar */}
+                                <div className="flex border-b border-[var(--md-sys-color-outline)]/10 pb-2">
+                                  {(['content', 'media', 'style'] as const).map((tab) => {
+                                    const isActive = (activeCardTabs[reminder.id] || 'content') === tab;
+                                    return (
+                                      <button
+                                        key={tab}
+                                        type="button"
+                                        onClick={() => setActiveCardTabs(prev => ({ ...prev, [reminder.id]: tab }))}
+                                        className={cn(
+                                          "flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[10px] font-black uppercase tracking-wider transition-colors border-b-2 cursor-pointer",
+                                          isActive
+                                            ? "border-[var(--md-sys-color-primary)] text-[var(--md-sys-color-primary)]"
+                                            : "border-transparent text-[var(--md-sys-color-on-surface-variant)]/60 hover:text-[var(--md-sys-color-on-surface)]"
+                                        )}
+                                      >
+                                        {tab === 'content' && <Type size={12} />}
+                                        {tab === 'media' && <ImageIcon size={12} />}
+                                        {tab === 'style' && <Palette size={12} />}
+                                        {tab === 'content' ? (settings.language === 'ms' ? 'Kandungan' : 'Content') :
+                                         tab === 'media' ? (settings.language === 'ms' ? 'Media' : 'Media') :
+                                         (settings.language === 'ms' ? 'Gaya & Susun Atur' : 'Style & Layout')}
+                                      </button>
+                                    );
+                                  })}
                                 </div>
 
-                                {/* Text */}
-                                <div className="flex flex-col">
-                                  <span className="text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] mb-1">
-                                    {settings.language === "ms" ? "Teks Kandungan" : "Content Text"}
-                                  </span>
-                                  <textarea
-                                    rows={2}
-                                    placeholder={t("reminderTextLabel" as any)}
-                                    value={reminder.text}
-                                    onChange={(e) => handleUpdateReminder(reminder.id, { text: e.target.value })}
-                                    className="w-full px-3 py-2 text-xs rounded-xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 outline-none focus:border-[var(--md-sys-color-primary)] resize-y font-sans font-medium search-focus-ring animate-all duration-300"
-                                  />
-                                </div>
+                                {/* TAB 1: CONTENT (TEXTS) */}
+                                {(activeCardTabs[reminder.id] || 'content') === 'content' && (
+                                  <div className="space-y-4 pt-1">
+                                    {/* Category Type selector */}
+                                    <div className="flex flex-col">
+                                      <span className="text-[10px] font-black uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)]/60 mb-1">
+                                        {settings.language === "ms" ? "Kategori Asas" : "Base Category"}
+                                      </span>
+                                      <select
+                                        value={reminder.type}
+                                        onChange={(e) => handleUpdateReminder(reminder.id, { type: e.target.value as any })}
+                                        className="w-full px-3 py-2 text-xs rounded-xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 outline-none font-bold search-focus-ring"
+                                      >
+                                        <option value="custom">{settings.language === "ms" ? "Kustom" : "Custom Slide"}</option>
+                                        <option value="hadith">{t("reminderTypeHadith" as any)}</option>
+                                        <option value="quran">{t("reminderTypeQuran" as any)}</option>
+                                        <option value="warning">{t("reminderTypeWarning" as any)}</option>
+                                        <option value="info">{t("reminderTypeInfo" as any)}</option>
+                                        <option value="donation">{t("reminderTypeDonation" as any)}</option>
+                                      </select>
+                                    </div>
 
-                                {reminder.type === 'donation' && (
-                                  <div className="flex flex-col">
-                                    <span className="text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)] mb-1">
-                                      {t("reminderImageUrlLabel" as any)}
-                                    </span>
-                                    <input
-                                      type="text"
-                                      placeholder={t("reminderImageUrlLabel" as any)}
-                                      value={reminder.imageUrl ?? ""}
-                                      onChange={(e) => handleUpdateReminder(reminder.id, { imageUrl: e.target.value })}
-                                      className="w-full px-3 py-2 text-xs rounded-xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 outline-none focus:border-[var(--md-sys-color-primary)] font-sans font-medium search-focus-ring animate-all duration-300"
-                                    />
+                                    {/* Text blocks manager */}
+                                    <div className="space-y-3">
+                                      <div className="flex items-center justify-between">
+                                        <span className="text-[10px] font-black uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)]/60">
+                                          {settings.language === "ms" ? "Blok Teks" : "Text Blocks"}
+                                        </span>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleAddTextBlock(reminder.id)}
+                                          className="flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] text-[8px] font-black uppercase tracking-widest cursor-pointer"
+                                        >
+                                          <Plus size={10} /> Add Block
+                                        </button>
+                                      </div>
+
+                                      <div className="space-y-3">
+                                        {(reminder.texts || []).map((tBlock, tIdx) => (
+                                          <div key={tBlock.id} className="p-3 rounded-xl border border-[var(--md-sys-color-outline)]/10 bg-[var(--md-sys-color-surface)] space-y-2 relative">
+                                            {/* Text input */}
+                                            <textarea
+                                              rows={2}
+                                              placeholder="Enter text content..."
+                                              value={tBlock.content}
+                                              onChange={(e) => {
+                                                const updatedTexts = (reminder.texts || []).map(txt =>
+                                                  txt.id === tBlock.id ? { ...txt, content: e.target.value } : txt
+                                                );
+                                                const updates: Partial<TvModeReminder> = { texts: updatedTexts };
+                                                if (tIdx === 0) updates.text = e.target.value;
+                                                handleUpdateReminder(reminder.id, updates);
+                                              }}
+                                              className="w-full px-3 py-2 text-xs rounded-xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 outline-none focus:border-[var(--md-sys-color-primary)] font-medium resize-y"
+                                            />
+
+                                            {/* Style controls row */}
+                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                              {/* Block type */}
+                                              <div className="flex flex-col">
+                                                <span className="text-[8px] font-bold uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)]/60 mb-0.5">Type</span>
+                                                <select
+                                                  value={tBlock.type}
+                                                  onChange={(e) => {
+                                                    const updatedTexts = (reminder.texts || []).map(txt =>
+                                                      txt.id === tBlock.id ? { ...txt, type: e.target.value as any } : txt
+                                                    );
+                                                    handleUpdateReminder(reminder.id, { texts: updatedTexts });
+                                                  }}
+                                                  className="px-2 py-1 text-[10px] rounded-lg bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline)]/10 outline-none font-bold"
+                                                >
+                                                  <option value="title">Title</option>
+                                                  <option value="subtitle">Subtitle</option>
+                                                  <option value="body">Body</option>
+                                                  <option value="caption">Caption/Ref</option>
+                                                </select>
+                                              </div>
+
+                                              {/* Font family */}
+                                              <div className="flex flex-col">
+                                                <span className="text-[8px] font-bold uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)]/60 mb-0.5">Font</span>
+                                                <select
+                                                  value={tBlock.font || 'sans'}
+                                                  onChange={(e) => {
+                                                    const updatedTexts = (reminder.texts || []).map(txt =>
+                                                      txt.id === tBlock.id ? { ...txt, font: e.target.value as any } : txt
+                                                    );
+                                                    handleUpdateReminder(reminder.id, { texts: updatedTexts });
+                                                  }}
+                                                  className="px-2 py-1 text-[10px] rounded-lg bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline)]/10 outline-none font-medium"
+                                                >
+                                                  <option value="sans">Sans-Serif</option>
+                                                  <option value="serif">Serif (Quranic)</option>
+                                                  <option value="mono">Monospace</option>
+                                                </select>
+                                              </div>
+
+                                              {/* Font size */}
+                                              <div className="flex flex-col">
+                                                <span className="text-[8px] font-bold uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)]/60 mb-0.5">Size</span>
+                                                <select
+                                                  value={tBlock.size || 'md'}
+                                                  onChange={(e) => {
+                                                    const updatedTexts = (reminder.texts || []).map(txt =>
+                                                      txt.id === tBlock.id ? { ...txt, size: e.target.value as any } : txt
+                                                    );
+                                                    handleUpdateReminder(reminder.id, { texts: updatedTexts });
+                                                  }}
+                                                  className="px-2 py-1 text-[10px] rounded-lg bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline)]/10 outline-none font-medium"
+                                                >
+                                                  <option value="sm">Small</option>
+                                                  <option value="md">Normal</option>
+                                                  <option value="lg">Large</option>
+                                                  <option value="xl">X-Large</option>
+                                                  <option value="2xl">2X-Large</option>
+                                                  <option value="3xl">3X-Large</option>
+                                                </select>
+                                              </div>
+
+                                              {/* Weight */}
+                                              <div className="flex flex-col">
+                                                <span className="text-[8px] font-bold uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)]/60 mb-0.5">Weight</span>
+                                                <select
+                                                  value={tBlock.weight || 'normal'}
+                                                  onChange={(e) => {
+                                                    const updatedTexts = (reminder.texts || []).map(txt =>
+                                                      txt.id === tBlock.id ? { ...txt, weight: e.target.value as any } : txt
+                                                    );
+                                                    handleUpdateReminder(reminder.id, { texts: updatedTexts });
+                                                  }}
+                                                  className="px-2 py-1 text-[10px] rounded-lg bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline)]/10 outline-none font-medium"
+                                                >
+                                                  <option value="normal">Normal</option>
+                                                  <option value="medium">Medium</option>
+                                                  <option value="bold">Bold</option>
+                                                  <option value="black">Heavy Black</option>
+                                                </select>
+                                              </div>
+                                            </div>
+
+                                            {/* Text alignment and color */}
+                                            <div className="flex items-center justify-between pt-1 gap-2 flex-wrap">
+                                              <div className="flex items-center gap-1 bg-[var(--md-sys-color-surface-container-high)] p-0.5 rounded-lg border border-[var(--md-sys-color-outline)]/10">
+                                                {([
+                                                  { val: 'left', ico: AlignLeft },
+                                                  { val: 'center', ico: AlignCenter },
+                                                  { val: 'right', ico: AlignRight },
+                                                  { val: 'justify', ico: AlignJustify }
+                                                ] as const).map(btn => {
+                                                  const isSel = (tBlock.align || 'center') === btn.val;
+                                                  const Icon = btn.ico;
+                                                  return (
+                                                    <button
+                                                      key={btn.val}
+                                                      type="button"
+                                                      onClick={() => {
+                                                        const updatedTexts = (reminder.texts || []).map(txt =>
+                                                          txt.id === tBlock.id ? { ...txt, align: btn.val } : txt
+                                                        );
+                                                        handleUpdateReminder(reminder.id, { texts: updatedTexts });
+                                                      }}
+                                                      className={cn(
+                                                        "p-1 rounded-md transition-colors cursor-pointer",
+                                                        isSel
+                                                          ? "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)]"
+                                                          : "text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-highest)]"
+                                                      )}
+                                                    >
+                                                      <Icon size={12} />
+                                                    </button>
+                                                  );
+                                                })}
+                                              </div>
+
+                                              <div className="flex items-center gap-1.5">
+                                                <input
+                                                  type="color"
+                                                  value={tBlock.color || "#000000"}
+                                                  onChange={(e) => {
+                                                    const updatedTexts = (reminder.texts || []).map(txt =>
+                                                      txt.id === tBlock.id ? { ...txt, color: e.target.value } : txt
+                                                    );
+                                                    handleUpdateReminder(reminder.id, { texts: updatedTexts });
+                                                  }}
+                                                  className="w-5 h-5 rounded-md border-0 p-0 cursor-pointer overflow-hidden bg-transparent"
+                                                />
+                                                <span className="text-[9px] font-mono text-[var(--md-sys-color-on-surface-variant)]">{tBlock.color || 'Default'}</span>
+
+                                                <button
+                                                  type="button"
+                                                  disabled={(reminder.texts || []).length <= 1}
+                                                  onClick={() => {
+                                                    const updatedTexts = (reminder.texts || []).filter(txt => txt.id !== tBlock.id);
+                                                    handleUpdateReminder(reminder.id, { texts: updatedTexts });
+                                                  }}
+                                                  className="p-1 text-[var(--md-sys-color-error)] hover:bg-[var(--md-sys-color-error-container)]/30 rounded-lg disabled:opacity-35 cursor-pointer ml-3"
+                                                >
+                                                  <Trash2 size={12} />
+                                                </button>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
                                   </div>
                                 )}
 
-                                {/* Duration */}
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pt-1.5 border-t border-[var(--md-sys-color-outline)]/5">
-                                  <span className="text-[10px] font-bold text-[var(--md-sys-color-on-surface-variant)]">
-                                    {t("reminderDurationLabel" as any)}
-                                  </span>
-                                  <div className="flex items-center gap-2 max-w-[200px] w-full justify-end">
-                                    {/* @ts-ignore */}
-                                    <md-slider
-                                      min="5"
-                                      max="120"
-                                      step="5"
-                                      value={reminder.duration ?? settings.tvModeReminderInterval ?? 15}
-                                      labeled
-                                      ticks
-                                      onChange={(e: any) => handleUpdateReminder(reminder.id, { duration: parseInt(e.target.value) })}
-                                      className="flex-1"
-                                    ></md-slider>
-                                    <span className="text-xs font-mono font-bold text-[var(--md-sys-color-primary)] w-8 text-right">
-                                      {reminder.duration ?? settings.tvModeReminderInterval ?? 15}s
-                                    </span>
-                                  </div>
-                                </div>
+                                {/* TAB 2: MEDIA (IMAGES) */}
+                                {(activeCardTabs[reminder.id] || 'content') === 'media' && (
+                                  <div className="space-y-4 pt-1">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-[10px] font-black uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)]/60">
+                                        {settings.language === "ms" ? "Senarai Gambar" : "Images List"}
+                                      </span>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleAddImageBlock(reminder.id)}
+                                        className="flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] text-[8px] font-black uppercase tracking-widest cursor-pointer"
+                                      >
+                                        <Plus size={10} /> Add Image
+                                      </button>
+                                    </div>
 
-                                {/* Live Preview */}
-                                <div className="rounded-xl border border-[var(--md-sys-color-outline)]/10 p-3 bg-[var(--md-sys-color-surface-container-high)] text-center space-y-1 relative overflow-hidden">
-                                  <span className="text-[9px] font-black uppercase tracking-widest text-[var(--md-sys-color-on-surface-variant)]/60 block text-left mb-1.5 relative z-10">
-                                    {settings.language === "ms" ? "Pratonton Kad" : "Card Live Preview"}
-                                  </span>
-                                  <div className={cn(
-                                    "p-4 rounded-2xl flex flex-col justify-center items-center text-center relative overflow-hidden min-h-[100px] border shadow-sm w-full transition-colors",
-                                    reminder.type === 'hadith' ? "bg-[var(--md-sys-color-primary-container)]/10 border-[var(--md-sys-color-primary)]/20 shadow-[0_0_15px_-3px_rgba(168,85,247,0.15)]" :
-                                    reminder.type === 'quran' ? "bg-amber-500/5 border-amber-500/20 shadow-[0_0_15px_-3px_rgba(245,158,11,0.15)]" :
-                                    reminder.type === 'warning' ? "bg-[var(--md-sys-color-error-container)]/5 border-[var(--md-sys-color-error)]/25 shadow-[0_0_15px_-3px_rgba(249,115,22,0.15)]" :
-                                    reminder.type === 'info' ? "bg-blue-500/5 border-blue-500/20 shadow-[0_0_15px_-3px_rgba(59,130,246,0.15)]" :
-                                    "bg-rose-500/5 border-rose-500/20 flex-row justify-between items-center text-left shadow-[0_0_15px_-3px_rgba(244,63,94,0.15)]"
-                                  )}>
-                                    {/* Repeating Islamic geometric pattern background overlay */}
-                                    <div className="absolute inset-0 islamic-pattern-overlay opacity-[0.07] pointer-events-none z-0" />
-                                    
-                                    {reminder.type === 'donation' ? (
-                                      <>
-                                        <div className="flex-1 flex flex-col justify-center items-start relative z-10">
-                                          <Heart size={20} className="text-rose-500 mb-1.5 stroke-[2]" />
-                                          <span className="text-[9px] uppercase tracking-wider font-bold text-rose-500 mb-0.5">
-                                            {settings.language === 'ms' ? 'SUMBANGAN' : 'DONATION'}
-                                          </span>
-                                          {reminder.title && <h5 className="text-xs font-black text-[var(--md-sys-color-on-surface)] leading-tight">{reminder.title}</h5>}
-                                          <p className="text-[10px] font-medium text-[var(--md-sys-color-on-surface-variant)] leading-normal mt-0.5">{reminder.text}</p>
-                                        </div>
-                                        {reminder.imageUrl && (
-                                          <div className="w-12 h-12 bg-white p-1 rounded-lg border border-[var(--md-sys-color-outline)]/10 flex items-center justify-center shrink-0 relative z-10">
-                                            <img src={reminder.imageUrl} className="w-full h-full object-contain" alt="QR" />
-                                          </div>
-                                        )}
-                                      </>
+                                    {(reminder.images || []).length === 0 ? (
+                                      <div className="p-6 border border-dashed border-[var(--md-sys-color-outline)]/20 rounded-xl text-center text-[10px] text-[var(--md-sys-color-on-surface-variant)]/65">
+                                        {settings.language === 'ms' ? 'Tiada gambar ditambah. Sila tambah untuk memaparkan media.' : 'No images added. Click Add Image to include logos, posters, or QR Codes.'}
+                                      </div>
                                     ) : (
-                                      <>
-                                        {reminder.type === 'hadith' && <BookOpen size={20} className="text-purple-500 mb-1.5 stroke-[2] relative z-10" />}
-                                        {reminder.type === 'quran' && <Sparkles size={20} className="text-amber-500 mb-1.5 stroke-[2] relative z-10" />}
-                                        {reminder.type === 'warning' && <VolumeX size={20} className="text-orange-500 mb-1.5 stroke-[2] relative z-10" />}
-                                        {reminder.type === 'info' && <Tv size={20} className="text-blue-500 mb-1.5 stroke-[2] relative z-10" />}
-                                        <span className={cn(
-                                          "text-[9px] uppercase tracking-widest font-black mb-1 relative z-10",
-                                          reminder.type === 'hadith' ? "text-purple-650 dark:text-purple-400" :
-                                          reminder.type === 'quran' ? "text-amber-600 dark:text-amber-400" :
-                                          reminder.type === 'warning' ? "text-orange-650 dark:text-orange-400" :
-                                          "text-blue-600 dark:text-blue-400"
-                                        )}>
-                                          {reminder.type === 'hadith' ? (settings.language === 'ms' ? 'HADITH' : 'AUTHENTIC HADITH') :
-                                           reminder.type === 'quran' ? (settings.language === 'ms' ? 'AL-QURAN' : 'AL-QURAN REVELATION') :
-                                           reminder.type === 'warning' ? (settings.language === 'ms' ? 'PERINGATAN MESRA' : 'KIND REMINDER') :
-                                           (settings.language === 'ms' ? 'MAKLUMAN MASJID' : 'ANNOUNCEMENT')}
-                                        </span>
-                                        <p className={cn(
-                                          "text-xs leading-relaxed max-w-xs font-medium relative z-10",
-                                          reminder.type === 'warning' ? "font-bold text-[var(--md-sys-color-on-surface)]" : "italic font-serif text-[var(--md-sys-color-on-surface-variant)]"
-                                        )}>
-                                          "{reminder.text}"
-                                        </p>
-                                        {reminder.title && (
-                                          <span className="text-[10px] font-bold text-[var(--md-sys-color-on-surface-variant)] mt-1.5 bg-[var(--md-sys-color-surface)] px-2 py-0.5 rounded-full border border-[var(--md-sys-color-outline)]/10 relative z-10">
-                                            {reminder.title}
-                                          </span>
-                                        )}
-                                      </>
+                                      <div className="space-y-3">
+                                        {(reminder.images || []).map((img, imgIdx) => {
+                                          const loadedSrc = img.isUploaded && img.assetKey ? loadedAssetUrls[img.assetKey] : img.url;
+                                          return (
+                                            <div key={img.id} className="p-3 rounded-xl border border-[var(--md-sys-color-outline)]/10 bg-[var(--md-sys-color-surface)] space-y-3">
+                                              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+                                                <div className="sm:col-span-3 flex justify-center">
+                                                  {loadedSrc ? (
+                                                    <div className="relative w-14 h-14 bg-white p-1 rounded-lg border border-[var(--md-sys-color-outline)]/10 flex items-center justify-center overflow-hidden">
+                                                      <img src={loadedSrc} className="w-full h-full object-contain" alt="" />
+                                                      <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                          const updatedImages = (reminder.images || []).map(image =>
+                                                            image.id === img.id ? { ...image, url: '', isUploaded: false, assetKey: undefined } : image
+                                                          );
+                                                          handleUpdateReminder(reminder.id, { images: updatedImages });
+                                                        }}
+                                                        className="absolute inset-0 bg-red-600/80 hover:bg-red-700/90 text-white flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity rounded-lg cursor-pointer"
+                                                        title="Remove Image Source"
+                                                      >
+                                                        <Trash2 size={14} />
+                                                      </button>
+                                                    </div>
+                                                  ) : (
+                                                    <div className="w-14 h-14 rounded-lg border border-dashed border-[var(--md-sys-color-outline)]/20 flex flex-col items-center justify-center text-[8px] text-[var(--md-sys-color-on-surface-variant)]/60 bg-[var(--md-sys-color-surface-container-low)]">
+                                                      <ImageIcon size={16} className="stroke-[1.5] mb-1 opacity-50" />
+                                                      No Media
+                                                    </div>
+                                                  )}
+                                                </div>
+
+                                                <div className="sm:col-span-9 space-y-2">
+                                                  <div className="flex items-center gap-2">
+                                                    <label className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-lg bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] cursor-pointer hover:opacity-90 active:scale-95 transition-all">
+                                                      <Upload size={12} />
+                                                      {settings.language === 'ms' ? 'Muat Naik Fail' : 'Upload File'}
+                                                      <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        className="hidden"
+                                                        onChange={(e) => {
+                                                          const file = e.target.files?.[0];
+                                                          if (file) handleUploadReminderImage(reminder.id, img.id, file);
+                                                        }}
+                                                      />
+                                                    </label>
+                                                    <span className="text-[8px] font-bold text-[var(--md-sys-color-on-surface-variant)]/60">Max 2MB</span>
+                                                  </div>
+
+                                                  <input
+                                                    type="text"
+                                                    placeholder="... or paste external image URL"
+                                                    value={img.url && !img.isUploaded ? img.url : ''}
+                                                    onChange={(e) => {
+                                                      const updatedImages = (reminder.images || []).map(image =>
+                                                        image.id === img.id ? { ...image, url: e.target.value, isUploaded: false, assetKey: undefined } : image
+                                                      );
+                                                      const updates: Partial<TvModeReminder> = { images: updatedImages };
+                                                      if (imgIdx === 0) updates.imageUrl = e.target.value;
+                                                      handleUpdateReminder(reminder.id, updates);
+                                                    }}
+                                                    className="w-full px-3 py-1.5 text-[10px] rounded-lg bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 outline-none"
+                                                  />
+                                                </div>
+                                              </div>
+
+                                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-[var(--md-sys-color-outline)]/5">
+                                                <div className="flex flex-col">
+                                                  <span className="text-[8px] font-bold uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)]/60 mb-0.5">Position</span>
+                                                  <select
+                                                    value={img.position}
+                                                    onChange={(e) => {
+                                                      const updatedImages = (reminder.images || []).map(image =>
+                                                        image.id === img.id ? { ...image, position: e.target.value as any } : image
+                                                      );
+                                                      handleUpdateReminder(reminder.id, { images: updatedImages });
+                                                    }}
+                                                    className="px-2 py-1 text-[10px] rounded-lg bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline)]/10 outline-none"
+                                                  >
+                                                    <option value="right">Right Side</option>
+                                                    <option value="left">Left Side</option>
+                                                    <option value="top">Top Header</option>
+                                                    <option value="bottom">Bottom Footer</option>
+                                                    <option value="background">Background Overlay</option>
+                                                  </select>
+                                                </div>
+
+                                                <div className="flex flex-col">
+                                                  <span className="text-[8px] font-bold uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)]/60 mb-0.5">Width / Scale</span>
+                                                  <select
+                                                    value={img.width || 40}
+                                                    onChange={(e) => {
+                                                      const updatedImages = (reminder.images || []).map(image =>
+                                                        image.id === img.id ? { ...image, width: parseInt(e.target.value) } : image
+                                                      );
+                                                      handleUpdateReminder(reminder.id, { images: updatedImages });
+                                                    }}
+                                                    className="px-2 py-1 text-[10px] rounded-lg bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline)]/10 outline-none"
+                                                  >
+                                                    <option value="15">15%</option>
+                                                    <option value="25">25%</option>
+                                                    <option value="30">30%</option>
+                                                    <option value="40">40%</option>
+                                                    <option value="50">50%</option>
+                                                    <option value="60">60%</option>
+                                                    <option value="80">80%</option>
+                                                    <option value="100">100% (Full)</option>
+                                                  </select>
+                                                </div>
+
+                                                <div className="flex flex-col">
+                                                  <span className="text-[8px] font-bold uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)]/60 mb-0.5">Shape style</span>
+                                                  <select
+                                                    value={img.shape || 'rounded'}
+                                                    onChange={(e) => {
+                                                      const updatedImages = (reminder.images || []).map(image =>
+                                                        image.id === img.id ? { ...image, shape: e.target.value as any } : image
+                                                      );
+                                                      handleUpdateReminder(reminder.id, { images: updatedImages });
+                                                    }}
+                                                    className="px-2 py-1 text-[10px] rounded-lg bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline)]/10"
+                                                  >
+                                                    <option value="original">Original Aspect</option>
+                                                    <option value="rounded">Rounded Card</option>
+                                                    <option value="circle">Circular Logo</option>
+                                                    <option value="square">Sharp Square</option>
+                                                  </select>
+                                                </div>
+
+                                                <div className="flex flex-col">
+                                                  <span className="text-[8px] font-bold uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)]/60 mb-0.5">Blend Mode</span>
+                                                  <select
+                                                    value={img.blendMode || 'none'}
+                                                    onChange={(e) => {
+                                                      const updatedImages = (reminder.images || []).map(image =>
+                                                        image.id === img.id ? { ...image, blendMode: e.target.value as any } : image
+                                                      );
+                                                      handleUpdateReminder(reminder.id, { images: updatedImages });
+                                                    }}
+                                                    className="px-2 py-1 text-[10px] rounded-lg bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline)]/10"
+                                                  >
+                                                    <option value="none">Normal</option>
+                                                    <option value="multiply">Multiply (Darken)</option>
+                                                    <option value="screen">Screen (Lighten)</option>
+                                                    <option value="overlay">Overlay</option>
+                                                  </select>
+                                                </div>
+                                              </div>
+
+                                              <div className="flex items-center justify-between pt-1 text-[9px] text-[var(--md-sys-color-on-surface-variant)]/60">
+                                                <div className="flex items-center gap-2">
+                                                  <span>Padding:</span>
+                                                  <input
+                                                    type="range"
+                                                    min="0"
+                                                    max="24"
+                                                    step="4"
+                                                    value={img.padding || 0}
+                                                    onChange={(e) => {
+                                                      const updatedImages = (reminder.images || []).map(image =>
+                                                        image.id === img.id ? { ...image, padding: parseInt(e.target.value) } : image
+                                                      );
+                                                      handleUpdateReminder(reminder.id, { images: updatedImages });
+                                                    }}
+                                                    className="w-16 h-1 accent-[var(--md-sys-color-primary)] cursor-pointer"
+                                                  />
+                                                  <span className="font-mono">{img.padding || 0}px</span>
+                                                </div>
+
+                                                <button
+                                                  type="button"
+                                                  onClick={async () => {
+                                                    if (img.isUploaded && img.assetKey) {
+                                                      try { await deleteAsset(img.assetKey); } catch (e) {}
+                                                    }
+                                                    const updatedImages = (reminder.images || []).filter(image => image.id !== img.id);
+                                                    handleUpdateReminder(reminder.id, { images: updatedImages });
+                                                  }}
+                                                  className="flex items-center gap-0.5 text-red-500 hover:bg-red-50 px-2 py-0.5 rounded-lg transition-colors cursor-pointer"
+                                                >
+                                                  <Trash2 size={10} /> Remove Image
+                                                </button>
+                                              </div>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
                                     )}
+                                  </div>
+                                )}
+
+                                {/* TAB 3: STYLE & LAYOUT */}
+                                {(activeCardTabs[reminder.id] || 'content') === 'style' && (
+                                  <div className="space-y-4 pt-1 text-xs">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                      <div className="flex flex-col">
+                                        <span className="text-[10px] font-black uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)]/60 mb-1">
+                                          {settings.language === "ms" ? "Susun Atur Utama" : "Layout Direction"}
+                                        </span>
+                                        <select
+                                          value={reminder.layout || 'flex-col'}
+                                          onChange={(e) => handleUpdateReminder(reminder.id, { layout: e.target.value as any })}
+                                          className="px-3 py-2 text-xs rounded-xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 outline-none"
+                                        >
+                                          <option value="flex-col">Vertical Stack (Centered)</option>
+                                          <option value="flex-col-reverse">Vertical Stack (Reverse)</option>
+                                          <option value="flex-row">Horizontal Split (Media Right)</option>
+                                          <option value="flex-row-reverse">Horizontal Split (Media Left)</option>
+                                          <option value="overlay">Overlaid Cover (Media Back)</option>
+                                        </select>
+                                      </div>
+
+                                      <div className="flex flex-col">
+                                        <span className="text-[10px] font-black uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)]/60 mb-1">
+                                          {settings.language === "ms" ? "Jarak Elemen (Gap)" : "Element Spacing (Gap)"}
+                                        </span>
+                                        <select
+                                          value={reminder.gap ?? 6}
+                                          onChange={(e) => handleUpdateReminder(reminder.id, { gap: parseInt(e.target.value) })}
+                                          className="px-3 py-2 text-xs rounded-xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 outline-none"
+                                        >
+                                          <option value="0">None (0)</option>
+                                          <option value="2">Tight (8px)</option>
+                                          <option value="4">Small (16px)</option>
+                                          <option value="6">Normal (24px)</option>
+                                          <option value="8">Comfortable (32px)</option>
+                                          <option value="12">Wide (48px)</option>
+                                        </select>
+                                      </div>
+                                    </div>
+
+                                    <div className="space-y-3 border-t border-[var(--md-sys-color-outline)]/5 pt-3">
+                                      <span className="text-[10px] font-black uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)]/60 block">
+                                        Custom Colors & Glows
+                                      </span>
+
+                                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                        <div className="flex flex-col">
+                                          <span className="text-[9px] text-[var(--md-sys-color-on-surface-variant)]/80 mb-0.5">Background Solid</span>
+                                          <div className="flex items-center gap-1">
+                                            <input
+                                              type="color"
+                                              value={reminder.bgColor || "#000000"}
+                                              onChange={(e) => handleUpdateReminder(reminder.id, { bgColor: e.target.value })}
+                                              className="w-6 h-6 rounded-md border-0 p-0 cursor-pointer"
+                                            />
+                                            <button
+                                              type="button"
+                                              onClick={() => handleUpdateReminder(reminder.id, { bgColor: undefined })}
+                                              className="text-[9px] hover:underline cursor-pointer"
+                                            >
+                                              Reset
+                                            </button>
+                                          </div>
+                                        </div>
+
+                                        <div className="flex flex-col">
+                                          <span className="text-[9px] text-[var(--md-sys-color-on-surface-variant)]/80 mb-0.5">Card Shadow Glow</span>
+                                          <div className="flex items-center gap-1">
+                                            <input
+                                              type="color"
+                                              value={reminder.bgGlowColor || "#000000"}
+                                              onChange={(e) => handleUpdateReminder(reminder.id, { bgGlowColor: e.target.value })}
+                                              className="w-6 h-6 rounded-md border-0 p-0 cursor-pointer"
+                                            />
+                                            <button
+                                              type="button"
+                                              onClick={() => handleUpdateReminder(reminder.id, { bgGlowColor: undefined })}
+                                              className="text-[9px] hover:underline cursor-pointer"
+                                            >
+                                              Reset
+                                            </button>
+                                          </div>
+                                        </div>
+
+                                        <div className="flex flex-col col-span-2 sm:col-span-1">
+                                          <span className="text-[9px] text-[var(--md-sys-color-on-surface-variant)]/80 mb-0.5">Border highlight</span>
+                                          <div className="flex items-center gap-1">
+                                            <input
+                                              type="color"
+                                              value={reminder.borderColor || "#000000"}
+                                              onChange={(e) => handleUpdateReminder(reminder.id, { borderColor: e.target.value })}
+                                              className="w-6 h-6 rounded-md border-0 p-0 cursor-pointer"
+                                            />
+                                            <button
+                                              type="button"
+                                              onClick={() => handleUpdateReminder(reminder.id, { borderColor: undefined })}
+                                              className="text-[9px] hover:underline cursor-pointer"
+                                            >
+                                              Reset
+                                            </button>
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      <div className="flex flex-col">
+                                        <div className="flex justify-between items-center mb-1">
+                                          <span className="text-[9px] text-[var(--md-sys-color-on-surface-variant)]/80">Background Gradient CSS (e.g. linear-gradient(...))</span>
+                                          <button
+                                            type="button"
+                                            onClick={() => handleUpdateReminder(reminder.id, { bgGradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' })}
+                                            className="text-[8px] bg-[var(--md-sys-color-surface-container-highest)] px-1.5 py-0.5 rounded font-bold hover:opacity-80 cursor-pointer"
+                                          >
+                                            Try Demo
+                                          </button>
+                                        </div>
+                                        <input
+                                          type="text"
+                                          placeholder="linear-gradient(to right, #4facfe 0%, #00f2fe 100%)"
+                                          value={reminder.bgGradient || ''}
+                                          onChange={(e) => handleUpdateReminder(reminder.id, { bgGradient: e.target.value || undefined })}
+                                          className="w-full px-3 py-1.5 text-xs rounded-xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 outline-none"
+                                        />
+                                      </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-[var(--md-sys-color-outline)]/5 pt-3">
+                                      <div className="flex flex-col">
+                                        <span className="text-[10px] font-black uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)]/60 mb-1">
+                                          Highlight Border Placement
+                                        </span>
+                                        <select
+                                          value={reminder.borderHighlight || 'none'}
+                                          onChange={(e) => handleUpdateReminder(reminder.id, { borderHighlight: e.target.value as any })}
+                                          className="px-3 py-2 text-xs rounded-xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 outline-none"
+                                        >
+                                          <option value="none">No highlight borders</option>
+                                          <option value="left">Left Accent Border</option>
+                                          <option value="top">Top Accent Border</option>
+                                          <option value="right">Right Accent Border</option>
+                                          <option value="bottom">Bottom Accent Border</option>
+                                          <option value="all">Full Accent Borders</option>
+                                        </select>
+                                      </div>
+
+                                      <div className="flex flex-col">
+                                        <span className="text-[10px] font-black uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)]/60 mb-1">
+                                          Background Pattern Style
+                                        </span>
+                                        <select
+                                          value={reminder.bgPattern || 'none'}
+                                          onChange={(e) => handleUpdateReminder(reminder.id, { bgPattern: e.target.value as any })}
+                                          className="px-3 py-2 text-xs rounded-xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 outline-none"
+                                        >
+                                          <option value="none">No Pattern (Solid)</option>
+                                          <option value="islamic">Islamic Geometric Overlay</option>
+                                          <option value="dots">Radial Dot Grid</option>
+                                          <option value="geometric">Linear Square Grid</option>
+                                        </select>
+                                      </div>
+                                    </div>
+
+                                    {reminder.bgPattern && reminder.bgPattern !== 'none' && (
+                                      <div className="flex items-center gap-3 bg-[var(--md-sys-color-surface-container)] px-3 py-2 rounded-xl border border-[var(--md-sys-color-outline)]/10">
+                                        <span className="text-[9px] font-bold text-[var(--md-sys-color-on-surface-variant)]">Pattern Opacity:</span>
+                                        <input
+                                          type="range"
+                                          min="1"
+                                          max="40"
+                                          value={Math.round((reminder.bgPatternOpacity ?? 0.07) * 100)}
+                                          onChange={(e) => handleUpdateReminder(reminder.id, { bgPatternOpacity: parseInt(e.target.value) / 100 })}
+                                          className="flex-1 h-1 accent-[var(--md-sys-color-primary)] cursor-pointer"
+                                        />
+                                        <span className="font-mono text-[10px] font-bold text-[var(--md-sys-color-primary)]">{Math.round((reminder.bgPatternOpacity ?? 0.07) * 100)}%</span>
+                                      </div>
+                                    )}
+
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pt-1.5 border-t border-[var(--md-sys-color-outline)]/5">
+                                      <span className="text-[10px] font-bold text-[var(--md-sys-color-on-surface-variant)]">
+                                        {t("reminderDurationLabel" as any)}
+                                      </span>
+                                      <div className="flex items-center gap-2 max-w-[200px] w-full justify-end">
+                                        {/* @ts-ignore */}
+                                        <md-slider
+                                          min="5"
+                                          max="120"
+                                          step="5"
+                                          value={reminder.duration ?? settings.tvModeReminderInterval ?? 15}
+                                          labeled
+                                          ticks
+                                          onChange={(e: any) => handleUpdateReminder(reminder.id, { duration: parseInt(e.target.value) })}
+                                          className="flex-1"
+                                        ></md-slider>
+                                        <span className="text-xs font-mono font-bold text-[var(--md-sys-color-primary)] w-8 text-right">
+                                          {reminder.duration ?? settings.tvModeReminderInterval ?? 15}s
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Card Live Preview Container */}
+                                <div className="rounded-xl border border-[var(--md-sys-color-outline)]/10 p-3 bg-[var(--md-sys-color-surface-container-high)] space-y-1 relative overflow-hidden">
+                                  <span className="text-[9px] font-black uppercase tracking-widest text-[var(--md-sys-color-on-surface-variant)]/60 block text-left mb-1.5 relative z-10">
+                                    {settings.language === "ms" ? "Pratonton Kad Live (16:9)" : "Card Live Preview (16:9)"}
+                                  </span>
+                                  <div className="w-full flex items-center justify-center p-2 rounded-2xl bg-neutral-900/5 dark:bg-black/20">
+                                    <div className="w-full aspect-video max-w-sm rounded-xl overflow-hidden shadow-md flex bg-[var(--md-sys-color-surface)] border border-[var(--md-sys-color-outline)]/5 relative">
+                                      <TvModeReminderCard
+                                        reminder={reminder}
+                                        assetUrls={loadedAssetUrls}
+                                        language={settings.language}
+                                        isTvMode={false}
+                                      />
+                                    </div>
                                   </div>
                                 </div>
                               </div>

@@ -133,6 +133,63 @@ export async function clearMosqueLogo(): Promise<void> {
   }
 }
 
+/**
+ * Saves a generic asset blob to IndexedDB under a specific key and returns a revocable object URL.
+ */
+export async function saveAsset(key: string, blob: Blob): Promise<string> {
+  const db = await initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORE_NAME, 'readwrite');
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.put(blob, key);
+    
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const url = URL.createObjectURL(blob);
+      resolve(url);
+    };
+  });
+}
+
+/**
+ * Retrieves a generic asset blob from IndexedDB under a specific key.
+ */
+export async function getAssetBlob(key: string): Promise<Blob | null> {
+  try {
+    const db = await initDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readonly');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.get(key);
+      
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result || null);
+    });
+  } catch (e) {
+    console.error(`Failed to access IndexedDB asset for key ${key}:`, e);
+    return null;
+  }
+}
+
+/**
+ * Clears a generic asset from IndexedDB under a specific key.
+ */
+export async function deleteAsset(key: string): Promise<void> {
+  try {
+    const db = await initDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readwrite');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.delete(key);
+      
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve();
+    });
+  } catch (e) {
+    console.error(`Failed to clear IndexedDB asset for key ${key}:`, e);
+  }
+}
+
 export interface CachedPrayerData {
   zone: string;
   prayerTime: any[];

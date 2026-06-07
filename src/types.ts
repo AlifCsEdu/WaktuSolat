@@ -38,14 +38,54 @@ export type Preferences = Record<PrayerKey, PrayerPreference>;
 
 export type SunnahTimeKey = "suhoor" | "morningForbidden" | "duha" | "middayForbidden" | "eveningForbidden" | "firstThird" | "midnight" | "tahajjud";
 
+export interface TvModeReminderText {
+  id: string;
+  content: string;
+  type: 'title' | 'subtitle' | 'body' | 'caption';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
+  color?: string; // Hex color or class name
+  font?: 'sans' | 'serif' | 'mono';
+  align?: 'left' | 'center' | 'right' | 'justify';
+  weight?: 'normal' | 'medium' | 'bold' | 'black';
+}
+
+export interface TvModeReminderImage {
+  id: string;
+  url: string; // Base64 or external url
+  isUploaded?: boolean;
+  assetKey?: string; // IndexedDB key e.g., 'reminder-image-...'
+  position: 'left' | 'right' | 'top' | 'bottom' | 'background';
+  width?: number; // scale/width in % or px
+  height?: number;
+  align?: 'start' | 'center' | 'end';
+  blendMode?: 'none' | 'multiply' | 'screen' | 'overlay';
+  shape?: 'original' | 'circle' | 'square' | 'rounded';
+  padding?: number; // in pixels
+}
+
 export interface TvModeReminder {
   id: string;
-  type: 'hadith' | 'quran' | 'warning' | 'info' | 'donation';
-  text: string;
-  title?: string;
-  imageUrl?: string;
+  type: 'hadith' | 'quran' | 'warning' | 'info' | 'donation' | 'custom';
+  text: string; // Fallback / legacy field
+  title?: string; // Fallback / legacy field
+  imageUrl?: string; // Fallback / legacy field
   enabled?: boolean;
   duration?: number;
+  
+  // Custom overhaul fields
+  texts?: TvModeReminderText[];
+  images?: TvModeReminderImage[];
+  layout?: 'flex-row' | 'flex-row-reverse' | 'flex-col' | 'flex-col-reverse' | 'overlay';
+  gap?: number; // Tailwind class-friendly value e.g., 2, 4, 6, 8
+  
+  // Background & Borders styling
+  bgColor?: string; // Hex color or CSS variable or gradient classes
+  bgGradient?: string; // Preset gradient
+  bgGlowColor?: string; // Glow shadow color
+  borderColor?: string;
+  borderHighlight?: 'none' | 'left' | 'top' | 'right' | 'bottom' | 'all';
+  bgPattern?: 'none' | 'islamic' | 'geometric' | 'dots';
+  bgPatternOpacity?: number; // 0 to 1
 }
 
 export interface GeneralSettings {

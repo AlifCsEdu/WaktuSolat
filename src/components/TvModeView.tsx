@@ -26,7 +26,8 @@ import {
 import { PrayerData, GeneralSettings, TvModeReminder } from "../types";
 import { cn } from "../lib/utils";
 import { getHijriFormatted } from "../lib/holidays";
-import { getMosqueLogoBlob } from "../lib/db";
+import { getMosqueLogoBlob, getAssetBlob } from "../lib/db";
+import { TvModeReminderCard } from "./TvModeReminderCard";
 import { WeatherWidget } from "./WeatherWidget";
 
 interface TvModeViewProps {
@@ -1433,6 +1434,59 @@ function TvModeRemindersWidget({ reminders, interval, language, t }: TvModeRemin
     ];
   }, [reminders, language]);
 
+  // Loaded object URLs for IndexedDB binary images
+  const [loadedAssetUrls, setLoadedAssetUrls] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    let active = true;
+    const loadAssets = async () => {
+      const list = activeReminders;
+      const urls: Record<string, string> = {};
+      
+      for (const r of list) {
+        const images = r.images || [];
+        for (const img of images) {
+          if (img.isUploaded && img.assetKey) {
+            try {
+              const blob = await getAssetBlob(img.assetKey);
+              if (blob) {
+                urls[img.assetKey] = URL.createObjectURL(blob);
+              }
+            } catch (err) {
+              console.error(`Failed to load asset for key ${img.assetKey}:`, err);
+            }
+          }
+        }
+      }
+      
+      if (active) {
+        setLoadedAssetUrls(prev => {
+          Object.values(prev).forEach(url => {
+            try { URL.revokeObjectURL(url); } catch (e) {}
+          });
+          return urls;
+        });
+      }
+    };
+    
+    loadAssets();
+    
+    return () => {
+      active = false;
+    };
+  }, [activeReminders]);
+
+  useEffect(() => {
+    return () => {
+      setLoadedAssetUrls(prev => {
+        Object.values(prev).forEach(url => {
+          try { URL.revokeObjectURL(url); } catch (e) {}
+        });
+        return {};
+      });
+    };
+  }, []);
+
   useEffect(() => {
     if (currentIdx >= activeReminders.length) {
       setCurrentIdx(0);
@@ -1455,155 +1509,15 @@ function TvModeRemindersWidget({ reminders, interval, language, t }: TvModeRemin
   const currentReminder = activeReminders[currentIdx] || activeReminders[0];
 
   const renderCard = () => {
-    switch (currentReminder.type) {
-      case 'hadith':
-        return (
-          <motion.div
-            key={currentReminder.id}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.5 }}
-            className="flex-1 flex flex-col justify-center items-center text-center p-8 bg-[var(--md-sys-color-primary-container)]/10 border-l-4 border-l-[var(--md-sys-color-primary)] border border-y-[var(--md-sys-color-primary)]/10 border-r-[var(--md-sys-color-primary)]/10 rounded-[36px] relative overflow-hidden h-full"
-          >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--md-sys-color-primary)]/5 rounded-full blur-2xl pointer-events-none" />
-            <Quote size={140} className="text-[var(--md-sys-color-primary)]/5 absolute -right-6 -top-6 pointer-events-none rotate-180 z-0" />
-            <BookOpen size={48} className="text-[var(--md-sys-color-primary)] mb-6 stroke-[1.5] z-10" />
-            <span className="text-xs uppercase tracking-[0.25em] font-black text-[var(--md-sys-color-primary)] mb-3 z-10">
-              {language === 'ms' ? 'HADITH RIWAYAT' : 'AUTHENTIC HADITH'}
-            </span>
-            <p className="text-2xl font-serif italic text-[var(--md-sys-color-on-surface)] leading-relaxed max-w-xl font-medium z-10">
-              "{currentReminder.text}"
-            </p>
-            {currentReminder.title && (
-              <span className="text-sm font-bold text-[var(--md-sys-color-on-surface-variant)] mt-6 bg-[var(--md-sys-color-surface)] px-4 py-1.5 rounded-full ring-1 ring-[var(--md-sys-color-outline)]/10 shadow-sm z-10">
-                {currentReminder.title}
-              </span>
-            )}
-          </motion.div>
-        );
-
-      case 'quran':
-        return (
-          <motion.div
-            key={currentReminder.id}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.5 }}
-            className="flex-1 flex flex-col justify-center items-center text-center p-8 bg-amber-500/5 border-l-4 border-l-amber-500 border border-y-amber-500/10 border-r-amber-500/10 rounded-[36px] relative overflow-hidden h-full"
-          >
-            <div className="absolute top-0 left-0 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
-            <Quote size={140} className="text-amber-500/5 absolute -right-6 -top-6 pointer-events-none rotate-180 z-0" />
-            <Sparkles size={48} className="text-amber-500 mb-6 stroke-[1.5] z-10" />
-            <span className="text-xs uppercase tracking-[0.25em] font-black text-amber-600 dark:text-amber-400 mb-3 z-10">
-              {language === 'ms' ? 'FIRMAN ALLAH (AL-QURAN)' : 'REVELATION (AL-QURAN)'}
-            </span>
-            <p className="text-2xl font-serif italic text-[var(--md-sys-color-on-surface)] leading-relaxed max-w-xl font-medium z-10">
-              "{currentReminder.text}"
-            </p>
-            {currentReminder.title && (
-              <span className="text-sm font-bold text-amber-700 dark:text-amber-300 mt-6 bg-amber-500/10 px-4 py-1.5 rounded-full shadow-sm z-10">
-                {currentReminder.title}
-              </span>
-            )}
-          </motion.div>
-        );
-
-      case 'warning':
-        return (
-          <motion.div
-            key={currentReminder.id}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.5 }}
-            className="flex-1 flex flex-col justify-center items-center text-center p-8 bg-[var(--md-sys-color-error-container)]/5 border-l-4 border-l-[var(--md-sys-color-error)] border border-y-[var(--md-sys-color-error)]/10 border-r-[var(--md-sys-color-error)]/10 rounded-[36px] relative overflow-hidden h-full"
-          >
-            <div className="absolute inset-x-0 top-0 h-2 bg-gradient-to-r from-red-500 via-transparent to-red-500 opacity-20 pointer-events-none" />
-            <AlertCircle size={140} className="text-[var(--md-sys-color-error)]/5 absolute -right-6 -top-6 pointer-events-none z-0" />
-            <VolumeX size={48} className="text-[var(--md-sys-color-error)] mb-6 stroke-[1.5] z-10" />
-            <span className="text-xs uppercase tracking-[0.25em] font-black text-[var(--md-sys-color-error)] mb-3 z-10">
-              {language === 'ms' ? 'PERINGATAN MESRA' : 'KIND REMINDER'}
-            </span>
-            <p className="text-2xl font-sans font-black text-[var(--md-sys-color-on-surface)] leading-relaxed max-w-xl z-10">
-              {currentReminder.text}
-            </p>
-            {currentReminder.title && (
-              <span className="text-sm font-bold text-[var(--md-sys-color-error)] mt-6 bg-[var(--md-sys-color-error-container)]/30 px-4 py-1.5 rounded-full shadow-sm z-10">
-                {currentReminder.title}
-              </span>
-            )}
-          </motion.div>
-        );
-
-      case 'info':
-        return (
-          <motion.div
-            key={currentReminder.id}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.5 }}
-            className="flex-1 flex flex-col justify-center items-center text-center p-8 bg-blue-500/5 border-l-4 border-l-blue-500 border border-y-blue-500/10 border-r-blue-500/10 rounded-[36px] relative overflow-hidden h-full"
-          >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
-            <Tv size={140} className="text-blue-500/5 absolute -right-6 -top-6 pointer-events-none z-0" />
-            <BookOpen size={48} className="text-blue-500 mb-6 stroke-[1.5] z-10" />
-            <span className="text-xs uppercase tracking-[0.25em] font-black text-blue-600 dark:text-blue-400 mb-3 z-10">
-              {language === 'ms' ? 'MAKLUMAN MASJID' : 'MOSQUE ANNOUNCEMENT'}
-            </span>
-            {currentReminder.title && (
-              <h4 className="text-xl font-black text-[var(--md-sys-color-on-surface)] mb-2 z-10">
-                {currentReminder.title}
-              </h4>
-            )}
-            <p className="text-xl font-sans font-semibold text-[var(--md-sys-color-on-surface-variant)] leading-relaxed max-w-xl z-10">
-              {currentReminder.text}
-            </p>
-          </motion.div>
-        );
-
-      case 'donation':
-        return (
-          <motion.div
-            key={currentReminder.id}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.5 }}
-            className="flex-1 flex flex-col sm:flex-row items-center justify-between p-8 bg-rose-500/5 border-l-4 border-l-rose-500 border border-y-rose-500/10 border-r-rose-500/10 rounded-[36px] relative overflow-hidden h-full gap-6"
-          >
-            <Heart size={140} className="text-rose-500/5 absolute -right-6 -top-6 pointer-events-none z-0" />
-            <div className="flex-1 flex flex-col justify-center items-start text-left z-10">
-              <Heart size={40} className="text-rose-500 mb-4 stroke-[1.5] animate-pulse" />
-              <span className="text-xs uppercase tracking-[0.25em] font-black text-rose-600 dark:text-rose-400 mb-2">
-                {language === 'ms' ? 'SUMBANGAN IMARAH' : 'MOSQUE DONATION'}
-              </span>
-              {currentReminder.title && (
-                <h4 className="text-xl font-black text-[var(--md-sys-color-on-surface)] mb-2">
-                  {currentReminder.title}
-                </h4>
-              )}
-              <p className="text-lg font-sans font-semibold text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
-                {currentReminder.text}
-              </p>
-            </div>
-            {currentReminder.imageUrl && (
-              <div className="w-40 h-40 shrink-0 rounded-2xl bg-white p-2 flex items-center justify-center shadow-lg ring-4 ring-rose-500/10 pointer-events-none z-10">
-                <img
-                  src={currentReminder.imageUrl}
-                  alt="Donation QR Code"
-                  className="w-full h-full object-contain"
-                />
-              </div>
-            )}
-          </motion.div>
-        );
-
-      default:
-        return null;
-    }
+    return (
+      <TvModeReminderCard
+        key={currentReminder.id}
+        reminder={currentReminder}
+        assetUrls={loadedAssetUrls}
+        language={language}
+        isTvMode={true}
+      />
+    );
   };
 
   return (
