@@ -125,8 +125,121 @@ const getPresetStyles = (type: string, isTvMode: boolean) => {
   }
 };
 
+export const playSynthesizedChime = (chimeType: 'bell' | 'chime' | 'gong' | 'notification', volumeVal: number) => {
+  if (typeof window === 'undefined') return;
+  try {
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
+    const dest = ctx.destination;
+    
+    // Volume node
+    const gainNode = ctx.createGain();
+    const gainVal = (volumeVal ?? 80) / 100 * 0.35; // cap max gain
+    gainNode.gain.setValueAtTime(0, ctx.currentTime);
+    gainNode.gain.linearRampToValueAtTime(gainVal, ctx.currentTime + 0.02);
+    gainNode.connect(dest);
+    
+    if (chimeType === 'bell') {
+      const frequencies = [880, 1320, 1760, 2200];
+      const gains = [1.0, 0.5, 0.25, 0.1];
+      frequencies.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const oscGain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        oscGain.gain.setValueAtTime(gains[idx], ctx.currentTime);
+        oscGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 3.0);
+        osc.connect(oscGain);
+        oscGain.connect(gainNode);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 3.0);
+      });
+      gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 3.0);
+    } else if (chimeType === 'chime') {
+      const notes = [523.25, 659.25, 783.99, 1046.50];
+      notes.forEach((freq, idx) => {
+        const startTime = ctx.currentTime + idx * 0.15;
+        const osc = ctx.createOscillator();
+        const oscGain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, startTime);
+        oscGain.gain.setValueAtTime(0.4, startTime);
+        oscGain.gain.exponentialRampToValueAtTime(0.001, startTime + 1.5);
+        osc.connect(oscGain);
+        oscGain.connect(gainNode);
+        osc.start(startTime);
+        osc.stop(startTime + 1.5);
+      });
+      gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 2.0);
+    } else if (chimeType === 'gong') {
+      const freqs = [110, 115, 220, 330];
+      freqs.forEach((freq) => {
+        const osc = ctx.createOscillator();
+        const oscGain = ctx.createGain();
+        osc.type = freq < 150 ? 'triangle' : 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        oscGain.gain.setValueAtTime(0.4, ctx.currentTime);
+        oscGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 4.0);
+        osc.connect(oscGain);
+        oscGain.connect(gainNode);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 4.0);
+      });
+      const bufferSize = ctx.sampleRate * 2.0;
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let j = 0; j < bufferSize; j++) {
+        data[j] = Math.random() * 2 - 1;
+      }
+      const noiseNode = ctx.createBufferSource();
+      noiseNode.buffer = buffer;
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(400, ctx.currentTime);
+      filter.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 2.0);
+      filter.Q.setValueAtTime(3.0, ctx.currentTime);
+      
+      const noiseGain = ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.12, ctx.currentTime);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 2.0);
+      
+      noiseNode.connect(filter);
+      filter.connect(noiseGain);
+      noiseGain.connect(gainNode);
+      noiseNode.start(ctx.currentTime);
+      noiseNode.stop(ctx.currentTime + 2.0);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 4.0);
+    } else if (chimeType === 'notification') {
+      const osc = ctx.createOscillator();
+      const oscGain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15);
+      oscGain.gain.setValueAtTime(0.5, ctx.currentTime);
+      oscGain.gain.setValueAtTime(0.001, ctx.currentTime + 0.1);
+      oscGain.gain.setValueAtTime(0.5, ctx.currentTime + 0.15);
+      oscGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+      osc.connect(oscGain);
+      oscGain.connect(gainNode);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.4);
+      gainNode.gain.setValueAtTime(gainVal, ctx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    }
+  } catch (e) {
+    console.warn("Failed to play synthesized chime:", e);
+  }
+};
+
 export function TvModeReminderCard({ reminder, assetUrls = {}, language = 'ms', isTvMode = false }: TvModeReminderCardProps) {
   const [timeLeft, setTimeLeft] = React.useState<{ days: number; hours: number; minutes: number; seconds: number } | null>(null);
+
+  React.useEffect(() => {
+    if (isTvMode && reminder.chime && reminder.chime !== 'none') {
+      playSynthesizedChime(reminder.chime, reminder.chimeVolume ?? 80);
+    }
+  }, [reminder.id, reminder.chime, isTvMode]);
 
   React.useEffect(() => {
     if (!reminder.countdownTarget) {
@@ -417,6 +530,55 @@ export function TvModeReminderCard({ reminder, assetUrls = {}, language = 'ms', 
           animation: card-marquee-scroll 20s linear infinite;
           will-change: transform;
         }
+        @keyframes float-particle-up {
+          0% { transform: translateY(110%) scale(0.7); opacity: 0; }
+          20% { opacity: 0.35; }
+          80% { opacity: 0.35; }
+          100% { transform: translateY(-20%) scale(1.1); opacity: 0; }
+        }
+        .floating-particle {
+          position: absolute;
+          bottom: -40px;
+          background: radial-gradient(circle, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 70%);
+          border-radius: 50%;
+          pointer-events: none;
+          z-index: 1;
+          animation: float-particle-up linear infinite;
+        }
+        @keyframes ambient-pulse-slow {
+          0% { transform: scale(1) translate(0px, 0px); opacity: 0.06; }
+          50% { transform: scale(1.15) translate(25px, -20px); opacity: 0.14; }
+          100% { transform: scale(1) translate(0px, 0px); opacity: 0.06; }
+        }
+        @keyframes ambient-pulse-slow-reverse {
+          0% { transform: scale(1.1) translate(0px, 0px); opacity: 0.04; }
+          50% { transform: scale(0.95) translate(-30px, 15px); opacity: 0.11; }
+          100% { transform: scale(1.1) translate(0px, 0px); opacity: 0.04; }
+        }
+        .ambient-pulse-blob-1 {
+          position: absolute;
+          width: 60%;
+          height: 60%;
+          top: 5%;
+          left: 5%;
+          border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+          filter: blur(50px);
+          animation: ambient-pulse-slow 20s ease-in-out infinite;
+          z-index: 0;
+          pointer-events: none;
+        }
+        .ambient-pulse-blob-2 {
+          position: absolute;
+          width: 60%;
+          height: 60%;
+          bottom: 5%;
+          right: 5%;
+          border-radius: 60% 40% 30% 70% / 50% 60% 50% 40%;
+          filter: blur(50px);
+          animation: ambient-pulse-slow-reverse 26s ease-in-out infinite;
+          z-index: 0;
+          pointer-events: none;
+        }
       `}</style>
       <motion.div
         key={reminder.id}
@@ -442,6 +604,48 @@ export function TvModeReminderCard({ reminder, assetUrls = {}, language = 'ms', 
             )}
             style={{ opacity: bgPatternOpacity }}
           />
+        )}
+
+        {/* 1b. Ambient Visual Effects */}
+        {reminder.bgEffect === 'floating-particles' && (
+          <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+            {Array.from({ length: 8 }).map((_, idx) => {
+              const size = 30 + (idx * 15) % 65; // 30px to 95px
+              const left = 5 + (idx * 13) % 90; // 5% to 95%
+              const duration = 12 + (idx * 3) % 13; // 12s to 25s
+              const delay = (idx * 1.5) % 8; // 0s to 8s
+              return (
+                <div 
+                  key={idx}
+                  className="floating-particle"
+                  style={{
+                    width: `${size}px`,
+                    height: `${size}px`,
+                    left: `${left}%`,
+                    animationDuration: `${duration}s`,
+                    animationDelay: `${delay}s`,
+                  }}
+                />
+              );
+            })}
+          </div>
+        )}
+
+        {reminder.bgEffect === 'ambient-pulses' && (
+          <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+            <div 
+              className="ambient-pulse-blob-1 bg-[var(--md-sys-color-primary)]"
+              style={{
+                background: reminder.borderColor || undefined
+              }}
+            />
+            <div 
+              className="ambient-pulse-blob-2 bg-[var(--md-sys-color-secondary-container)]"
+              style={{
+                background: reminder.bgGlowColor || undefined
+              }}
+            />
+          </div>
         )}
 
         {/* 2. Background Uploaded/URL Images */}

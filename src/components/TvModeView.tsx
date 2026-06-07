@@ -667,6 +667,7 @@ export function TvModeView({
                     language={settings.language}
                     t={t}
                     currentTime={currentTime}
+                    todayData={todayData}
                   />
                 )}
                 {settings.tvModeCenterWidget === 'slideshow' && (
@@ -906,6 +907,7 @@ export function TvModeView({
                     language={settings.language}
                     t={t}
                     currentTime={currentTime}
+                    todayData={todayData}
                   />
                 )}
                 {settings.tvModeCenterWidget === 'slideshow' && (
@@ -1143,6 +1145,7 @@ export function TvModeView({
                     language={settings.language}
                     t={t}
                     currentTime={currentTime}
+                    todayData={todayData}
                   />
                 )}
                 {settings.tvModeCenterWidget === 'slideshow' && (
@@ -1410,9 +1413,10 @@ interface TvModeRemindersWidgetProps {
   language: 'ms' | 'en';
   t: (key: any) => string;
   currentTime?: Date;
+  todayData?: PrayerData | null;
 }
 
-function TvModeRemindersWidget({ reminders, interval, language, t, currentTime }: TvModeRemindersWidgetProps) {
+function TvModeRemindersWidget({ reminders, interval, language, t, currentTime, todayData }: TvModeRemindersWidgetProps) {
   const [currentIdx, setCurrentIdx] = useState(0);
 
   const currentHour = currentTime ? currentTime.getHours() : new Date().getHours();
@@ -1434,6 +1438,36 @@ function TvModeRemindersWidget({ reminders, interval, language, t, currentTime }
         } else {
           // Overnight range e.g., 22:00 to 04:00
           if (currentHour < r.startHour && currentHour > r.endHour) return false;
+        }
+      }
+
+      // Prayer window check
+      if (todayData && r.startPrayer && r.startPrayer !== 'none' && r.endPrayer && r.endPrayer !== 'none') {
+        const getPrayerTimeDate = (prayerName: string) => {
+          let key: string = prayerName;
+          if (prayerName === 'fajr') key = 'fajr';
+          else if (prayerName === 'dhuhr') key = 'dhuhr';
+          else if (prayerName === 'asr') key = 'asr';
+          
+          const timeStr = todayData[key as keyof typeof todayData] as string;
+          if (!timeStr) return null;
+          const [h, m] = timeStr.split(':').map(Number);
+          const d = new Date(currentTime || new Date());
+          d.setHours(h, m, 0, 0);
+          return d;
+        };
+
+        const start = getPrayerTimeDate(r.startPrayer);
+        const end = getPrayerTimeDate(r.endPrayer);
+        
+        if (start && end) {
+          const cTime = currentTime || new Date();
+          if (start.getTime() <= end.getTime()) {
+            if (cTime.getTime() < start.getTime() || cTime.getTime() > end.getTime()) return false;
+          } else {
+            // Overnight window e.g. Isha to Fajr
+            if (cTime.getTime() < start.getTime() && cTime.getTime() > end.getTime()) return false;
+          }
         }
       }
       return true;
@@ -1459,7 +1493,7 @@ function TvModeRemindersWidget({ reminders, interval, language, t, currentTime }
         title: "Surah Al-Baqarah: 43"
       }
     ];
-  }, [reminders, language, currentHour, currentDay]);
+  }, [reminders, language, currentTime, todayData]);
 
   // Loaded object URLs for IndexedDB binary images
   const [loadedAssetUrls, setLoadedAssetUrls] = useState<Record<string, string>>({});

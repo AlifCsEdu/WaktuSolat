@@ -40,7 +40,7 @@ import {
   deleteAsset
 } from "../lib/db";
 import { TvModeReminder, TvModeReminderText, TvModeReminderImage } from "../types";
-import { TvModeReminderCard } from "./TvModeReminderCard";
+import { TvModeReminderCard, playSynthesizedChime } from "./TvModeReminderCard";
 import { StorageManager } from "../lib/StorageManager";
 
 const getCategoryStyles = (type: TvModeReminder['type'], enabled: boolean) => {
@@ -113,7 +113,10 @@ const PRESETS = [
         { id: "p1-1", content: "Sila Senyapkan Telefon Bimbit", type: "title" as const, size: "lg" as const, font: "sans" as const, align: "center" as const, weight: "bold" as const, glow: true },
         { id: "p1-2", content: "Matikan atau tetapkan peranti anda kepada mod senyap sebelum solat bermula demi menjaga kekhusyukan jemaah lain.", type: "body" as const, size: "md" as const, font: "sans" as const, align: "center" as const, weight: "normal" as const }
       ],
-      images: []
+      images: [],
+      chime: "notification" as const,
+      chimeVolume: 90,
+      bgEffect: "ambient-pulses" as const
     }
   },
   {
@@ -129,7 +132,9 @@ const PRESETS = [
         { id: "p2-1", content: "Kuliah Tafsir Mingguan", type: "title" as const, size: "xl" as const, font: "sans" as const, align: "center" as const, weight: "black" as const, color: "#facc15" },
         { id: "p2-2", content: "Siri Kuliah Kitab Tafsir Jalalain bersama Ustaz Dr. Ali bin Ahmad. Setiap Sabtu selepas Solat Maghrib. Semua dijemput hadir.", type: "body" as const, size: "lg" as const, font: "serif" as const, align: "center" as const, weight: "medium" as const, color: "#ffffff" }
       ],
-      images: []
+      images: [],
+      chime: "bell" as const,
+      chimeVolume: 80
     }
   },
   {
@@ -155,7 +160,10 @@ const PRESETS = [
           blendMode: "none" as const,
           padding: 4
         }
-      ]
+      ],
+      chime: "chime" as const,
+      chimeVolume: 70,
+      bgEffect: "floating-particles" as const
     }
   },
   {
@@ -172,7 +180,10 @@ const PRESETS = [
       ],
       images: [],
       countdownTarget: getLocalFutureDate(),
-      countdownLabel: "Menghitung Hari Menuju Bulan Ramadhan Al-Mubarak:"
+      countdownLabel: "Menghitung Hari Menuju Bulan Ramadhan Al-Mubarak:",
+      chime: "gong" as const,
+      chimeVolume: 70,
+      bgEffect: "ambient-pulses" as const
     }
   }
 ];
@@ -2461,7 +2472,7 @@ export function MosqueTvSettings() {
                                       </div>
                                     </div>
 
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-[var(--md-sys-color-outline)]/5 pt-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-[var(--md-sys-color-outline)]/5 pt-3">
                                       <div className="flex flex-col">
                                         <span className="text-[10px] font-black uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)]/60 mb-1">
                                           Highlight Border Placement
@@ -2493,6 +2504,21 @@ export function MosqueTvSettings() {
                                           <option value="islamic">Islamic Geometric Overlay</option>
                                           <option value="dots">Radial Dot Grid</option>
                                           <option value="geometric">Linear Square Grid</option>
+                                        </select>
+                                      </div>
+
+                                      <div className="flex flex-col">
+                                        <span className="text-[10px] font-black uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)]/60 mb-1">
+                                          {settings.language === 'ms' ? 'Kesan Latar Belakang' : 'Background Visual Effect'}
+                                        </span>
+                                        <select
+                                          value={reminder.bgEffect || 'none'}
+                                          onChange={(e) => handleUpdateReminder(reminder.id, { bgEffect: e.target.value as any })}
+                                          className="px-3 py-2 text-xs rounded-xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 outline-none"
+                                        >
+                                          <option value="none">{settings.language === 'ms' ? 'Tiada Kesan' : 'No Visual Effect'}</option>
+                                          <option value="floating-particles">{settings.language === 'ms' ? 'Buih Terapung' : 'Floating Particles'}</option>
+                                          <option value="ambient-pulses">{settings.language === 'ms' ? 'Denyutan Ambient' : 'Ambient Pulsing Blobs'}</option>
                                         </select>
                                       </div>
                                     </div>
@@ -2590,6 +2616,103 @@ export function MosqueTvSettings() {
                                               {Array.from({ length: 24 }).map((_, h) => (
                                                 <option key={h} value={h}>{String(h).padStart(2, '0')}:59</option>
                                               ))}
+                                            </select>
+                                          </div>
+                                        </div>
+
+                                        {/* Chime Sound Select */}
+                                        <div className="flex flex-col">
+                                          <span className="text-[9px] text-[var(--md-sys-color-on-surface-variant)]/80 mb-1">
+                                            {settings.language === 'ms' ? 'Bunyi Loceng (Chime)' : 'Alert Chime Sound'}
+                                          </span>
+                                          <div className="flex items-center gap-1.5">
+                                            <select
+                                              value={reminder.chime || 'none'}
+                                              onChange={(e) => handleUpdateReminder(reminder.id, { chime: e.target.value as any })}
+                                              className="px-3 py-2 text-xs rounded-xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 outline-none flex-1 font-semibold"
+                                            >
+                                              <option value="none">{settings.language === 'ms' ? 'Tiada Bunyi' : 'No Sound'}</option>
+                                              <option value="bell">Loceng (Bell)</option>
+                                              <option value="chime">Tiub Loceng (Chime)</option>
+                                              <option value="gong">Gong Klasik (Gong)</option>
+                                              <option value="notification">Notifikasi Ringkas (Beep)</option>
+                                            </select>
+                                            {reminder.chime && reminder.chime !== 'none' && (
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  if (reminder.chime && reminder.chime !== 'none') {
+                                                    playSynthesizedChime(reminder.chime, reminder.chimeVolume ?? 80);
+                                                  }
+                                                }}
+                                                className="px-2.5 py-2 rounded-xl text-[10px] font-bold bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] hover:opacity-90 cursor-pointer flex items-center justify-center shrink-0"
+                                              >
+                                                Test
+                                              </button>
+                                            )}
+                                          </div>
+                                        </div>
+
+                                        {/* Chime Volume */}
+                                        <div className="flex flex-col">
+                                          <span className="text-[9px] text-[var(--md-sys-color-on-surface-variant)]/80 mb-1">
+                                            {settings.language === 'ms' ? 'Tahap Bunyi' : 'Chime Volume'}
+                                          </span>
+                                          <div className="flex items-center gap-2 pt-1">
+                                            <input
+                                              type="range"
+                                              min="10"
+                                              max="100"
+                                              step="10"
+                                              disabled={!reminder.chime || reminder.chime === 'none'}
+                                              value={reminder.chimeVolume ?? 80}
+                                              onChange={(e) => handleUpdateReminder(reminder.id, { chimeVolume: parseInt(e.target.value) })}
+                                              className="flex-1 h-1 accent-[var(--md-sys-color-primary)] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                                            />
+                                            <span className="font-mono text-[10px] w-8 text-right font-bold text-[var(--md-sys-color-primary)]">
+                                              {reminder.chimeVolume ?? 80}%
+                                            </span>
+                                          </div>
+                                        </div>
+
+                                        {/* Prayer targeting */}
+                                        <div className="flex flex-col col-span-1 sm:col-span-2">
+                                          <span className="text-[9px] text-[var(--md-sys-color-on-surface-variant)]/80 mb-1">
+                                            {settings.language === 'ms' ? 'Sasaran Selang Waktu Solat' : 'Target Prayer Time Window'}
+                                          </span>
+                                          <div className="flex items-center gap-1.5">
+                                            <select
+                                              value={reminder.startPrayer || 'none'}
+                                              onChange={(e) => handleUpdateReminder(reminder.id, { 
+                                                startPrayer: e.target.value as any,
+                                                endPrayer: e.target.value !== 'none' ? (reminder.endPrayer && reminder.endPrayer !== 'none' ? reminder.endPrayer : 'isha') : 'none'
+                                              })}
+                                              className="px-3 py-2 text-xs rounded-xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 outline-none flex-1 font-semibold"
+                                            >
+                                              <option value="none">-- {settings.language === 'ms' ? 'Setiap Waktu' : 'All Times'} --</option>
+                                              <option value="imsak">Imsak</option>
+                                              <option value="fajr">Subuh (Fajr)</option>
+                                              <option value="syuruk">Syuruk (Sunrise)</option>
+                                              <option value="dhuhr">Zohor (Dhuhr)</option>
+                                              <option value="asr">Asar (Asr)</option>
+                                              <option value="maghrib">Maghrib</option>
+                                              <option value="isha">Isyak (Isha)</option>
+                                            </select>
+                                            <span className="text-xs text-[var(--md-sys-color-on-surface-variant)] font-bold">to</span>
+                                            <select
+                                              value={reminder.endPrayer || 'none'}
+                                              disabled={!reminder.startPrayer || reminder.startPrayer === 'none'}
+                                              onChange={(e) => handleUpdateReminder(reminder.id, { endPrayer: e.target.value as any })}
+                                              className="px-3 py-2 text-xs rounded-xl bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline)]/10 outline-none flex-1 font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
+                                            >
+                                              <option value="none">-</option>
+                                              <option value="imsak">Imsak</option>
+                                              <option value="fajr">Subuh (Fajr)</option>
+                                              <option value="syuruk">Syuruk (Sunrise)</option>
+                                              <option value="dhuhr">Zohor (Dhuhr)</option>
+                                              <option value="asr">Asar (Asr)</option>
+                                              <option value="maghrib">Maghrib</option>
+                                              <option value="isha">Isyak (Isha)</option>
                                             </select>
                                           </div>
                                         </div>

@@ -96,6 +96,11 @@ export interface TvModeReminder {
   endHour?: number;
   countdownTarget?: string;
   countdownLabel?: string;
+  chime?: 'none' | 'bell' | 'chime' | 'gong' | 'notification';
+  chimeVolume?: number;
+  startPrayer?: 'none' | 'imsak' | 'fajr' | 'syuruk' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
+  endPrayer?: 'none' | 'imsak' | 'fajr' | 'syuruk' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
+  bgEffect?: 'none' | 'floating-particles' | 'ambient-pulses';
 }
 
 export interface GeneralSettings {
