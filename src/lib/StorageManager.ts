@@ -1,5 +1,6 @@
 import { GeneralSettings, DEFAULT_GENERAL_SETTINGS, PrayerData } from "../types";
-import { VisualStyle, ThemeShape } from "../hooks/useVisualStyle";
+type VisualStyle = string;
+type ThemeShape = string;
 
 /**
  * A type-safe centralized storage service wrapper for localStorage.

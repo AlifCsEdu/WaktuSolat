@@ -1,0 +1,498 @@
+<script lang="ts">
+  import { parse, isSameWeek, format } from "date-fns";
+  import { ms, enUS } from "date-fns/locale";
+  import { CalendarDays, Info, Copy, Check, Clock, Moon, Sunrise, Sun, SunMedium, SunDim, Sunset } from "lucide-svelte";
+  import { fly } from "svelte/transition";
+
+  import { getIslamicEvent, getHijriFormatted } from "../../lib/holidays";
+  import { cn } from "../../lib/utils";
+  import { appSettings } from "../../state/settings.svelte";
+  import type { PrayerData, PrayerKey } from "../../types";
+
+  let { 
+    data = [], 
+    view = "monthly", 
+    isLoading = false, 
+    onPrayerSelect 
+  } = $props<{
+    data: PrayerData[];
+    view?: "daily" | "weekly" | "monthly";
+    isLoading: boolean;
+    onPrayerSelect: (prayer: { key: PrayerKey; time: string; dateValue: string; hijriValue: string }) => void;
+  }>();
+
+  let settings = $derived(appSettings.settings);
+  let isMalay = $derived(settings.language === "ms");
+  let visualStyle = $derived(settings.visualStyle || 'default');
+  let iconStroke = $derived(visualStyle === 'retro' ? 3 : visualStyle === 'glass' || visualStyle === 'soft' ? 1.5 : 2);
+  let t = $derived((k: any) => appSettings.t(k));
+
+  const timesToDisplay: PrayerKey[] = ["imsak", "fajr", "syuruk", "dhuhr", "asr", "maghrib", "isha"];
+
+  const PRAYER_ICONS: Record<string, any> = {
+    imsak: Moon,
+    fajr: Sunrise,
+    syuruk: Sun,
+    dhuhr: SunMedium,
+    asr: SunDim,
+    maghrib: Sunset,
+    isha: Moon
+  };
+
+  let copiedRowDate = $state<string | null>(null);
+  let nextPrayerKey = $state<string | null>(null);
+  let timerInterval: number;
+
+  function updateTimer() {
+    if (view !== "daily" || data.length === 0) {
+      nextPrayerKey = null;
+      return;
+    }
+    const day = data[0];
+    if (!day || day.date !== format(new Date(), "dd-MMM-yyyy")) {
+      nextPrayerKey = null;
+      return;
+    }
+
+    const parsePrayerTime = (timeStr: string, date: Date) => {
+      if (!timeStr) return null;
+      const [h, m, s] = timeStr.split(":").map(Number);
+      const d = new Date(date);
+      d.setHours(h, m, s || 0, 0);
+      return d;
+    };
+
+    const now = new Date();
+    const prayers = ["imsak", "fajr", "syuruk", "dhuhr", "asr", "maghrib", "isha"] as const;
+    
+    let nextKey: string | null = null;
+    for (const k of prayers) {
+      const timeStr = day[k];
+      if (timeStr) {
+        const pTime = parsePrayerTime(timeStr, now);
+        if (pTime && pTime > now) {
+          nextKey = k;
+          break;
+        }
+      }
+    }
+    nextPrayerKey = nextKey;
+  }
+
+  $effect(() => {
+    updateTimer();
+    clearInterval(timerInterval);
+    timerInterval = window.setInterval(updateTimer, 60000);
+    return () => clearInterval(timerInterval);
+  });
+
+  function handleCopyDaySchedule(day: PrayerData) {
+    const formattedHijri = getHijriFormatted(day.date, settings.hijriMethod, settings.hijriAdjustment, settings.hijriFormat || "both", settings.language, day.hijri);
+    let text = `${day.date.replace(/-/g, " ")} (${formattedHijri} - ${day.day})\n`;
+    timesToDisplay.forEach(k => {
+      text += `${t(k as any)}: ${day[k] ? day[k].substring(0, 5) : "--:--"}\n`;
+    });
+
+    navigator.clipboard.writeText(text).then(() => {
+      copiedRowDate = day.date;
+      setTimeout(() => copiedRowDate = null, 2000);
+    });
+  }
+</script>
+
+{#if data.length === 0 && !isLoading}
+  <div class={cn(
+    "p-12 flex items-center justify-center bg-[var(--md-sys-color-surface-container)] shadow-sm rounded-3xl border border-[var(--md-sys-color-outline)]/12",
+    visualStyle === "glass" && "bg-[var(--glass-bg)] backdrop-blur-md border-[var(--glass-border)]"
+  )}>
+    <p class="text-[var(--md-sys-color-on-surface-variant)] font-black text-sm uppercase tracking-widest text-center">
+      {t("noData")}
+    </p>
+  </div>
+{:else if view === "daily"}
+  {@const day = data[0]}
+  {@const isToday = day ? day.date === format(new Date(), "dd-MMM-yyyy") : false}
+  {@const evt = day ? getIslamicEvent(day.hijri) : null}
+  {#if day}
+    <div class="flex flex-col gap-6 max-w-4xl mx-auto w-full">
+      <div
+        in:fly={{ y: 12, duration: 400 }}
+        class={cn(
+          "bg-[var(--md-sys-color-surface-container)] rounded-[32px] sm:rounded-[40px] p-6 sm:p-10 flex flex-col items-center text-center gap-4 relative overflow-hidden shadow-sm transition-all duration-300",
+          isToday && "bg-gradient-to-br from-[var(--md-sys-color-primary-container)] to-[var(--md-sys-color-primary-container)]/40 ring-4 ring-[var(--md-sys-color-primary)]/20 shadow-md",
+          visualStyle === "glass" && "border-none",
+          visualStyle === "retro" && "border-[4px] border-[var(--md-sys-color-on-surface)] rounded-none shadow-[8px_8px_0px_0px_var(--md-sys-color-on-surface)]"
+        )}
+      >
+        {#if isToday}
+          <div class="absolute top-0 left-0 w-full h-1.5 bg-[var(--md-sys-color-primary)] shadow-[0_0_12px_var(--md-sys-color-primary)]"></div>
+        {/if}
+        
+        <div class="flex flex-col items-center gap-1 select-none">
+           <span class="text-[10px] sm:text-xs font-black text-[var(--md-sys-color-on-surface-variant)] uppercase tracking-widest opacity-85">
+             {format(parse(day.date, "dd-MMM-yyyy", new Date()), "EEEE", { locale: settings.language === 'ms' ? ms : enUS })}
+           </span>
+           <h3 class="md3-display-small font-black text-[var(--md-sys-color-on-surface)] tracking-tighter mt-1">
+             {format(parse(day.date, "dd-MMM-yyyy", new Date()), "dd MMMM yyyy", { locale: settings.language === 'ms' ? ms : enUS })}
+           </h3>
+        </div>
+        
+        <div class="flex items-center gap-2 mt-1 px-5 py-2.5 bg-[var(--md-sys-color-surface-container-high)] rounded-full border border-[var(--md-sys-color-outline)]/8 text-[var(--md-sys-color-on-surface-variant)] shadow-inner text-xs font-bold transition-all">
+           {#if !settings.hijriFormat || settings.hijriFormat === 'both' || settings.hijriFormat === 'text'}
+             <span class="font-black text-xs">{getHijriFormatted(day.date, settings.hijriMethod, settings.hijriAdjustment, "text", settings.language, day.hijri)}</span>
+           {/if}
+           {#if !settings.hijriFormat || settings.hijriFormat === 'both'}
+             <span class="opacity-40">•</span>
+           {/if}
+           {#if !settings.hijriFormat || settings.hijriFormat === 'both' || settings.hijriFormat === 'number'}
+             <span class="font-sans font-black text-[10px] opacity-75">
+               {getHijriFormatted(day.date, settings.hijriMethod, settings.hijriAdjustment, "number", settings.language, day.hijri)}
+             </span>
+           {/if}
+        </div>
+
+        {#if evt}
+          <div class={`mt-2 px-4 py-1.5 rounded-full text-[10px] font-black text-white uppercase tracking-widest shadow-sm select-none ${evt.color || 'bg-[var(--md-sys-color-primary)]'}`}>
+            {evt.title}
+          </div>
+        {/if}
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5 w-full">
+        {#each timesToDisplay as k, idx}
+          {@const Icon = PRAYER_ICONS[k]}
+          {@const timeStr = day[k as keyof PrayerData] as string}
+          {#if timeStr && Icon}
+            {@const isNext = nextPrayerKey === k}
+            <button
+              in:fly={{ y: 10, duration: 400, delay: idx * 40 }}
+              onclick={() => onPrayerSelect({ key: k as PrayerKey, time: timeStr.substring(0, 5), dateValue: day.date, hijriValue: day.hijri })}
+              class={cn(
+                "group relative border p-5 sm:p-6 flex flex-col items-center gap-3.5 overflow-hidden shadow-sm hover:shadow-md hover:scale-[0.98] active:scale-[0.95] cursor-pointer transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[var(--md-sys-color-primary)]",
+                isNext
+                  ? "bg-[var(--md-sys-color-primary-container)]/15 border-[var(--md-sys-color-primary)]/40 ring-1 ring-[var(--md-sys-color-primary)]/30"
+                  : "bg-[var(--md-sys-color-surface-container)] border-[var(--md-sys-color-outline)]/5",
+                isToday && !isNext && "bg-[var(--md-sys-color-primary-container)]/10 ring-1 ring-[var(--md-sys-color-primary)]/20",
+                visualStyle === "glass" && "border-none shadow-none",
+                visualStyle === "retro" && "border-[3px] border-[var(--md-sys-color-on-surface)] rounded-none shadow-[4px_4px_0px_0px_var(--md-sys-color-on-surface)]",
+                visualStyle !== "retro" && "rounded-[32px] sm:rounded-[40px]"
+              )}
+            >
+              <md-ripple></md-ripple>
+              {#if isNext}
+                <span class="absolute top-2.5 right-2.5 px-2 py-0.5 bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] rounded-md text-[7px] font-black uppercase tracking-wider shadow-xs z-10">
+                  {isMalay ? "Seterusnya" : "Next"}
+                </span>
+              {/if}
+              <div class={cn(
+                "w-10 h-10 rounded-full flex items-center justify-center relative z-10 shrink-0 shadow-inner",
+                isNext 
+                  ? "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)]" 
+                  : "bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]"
+              )}>
+                <Icon size={18} strokeWidth={iconStroke} />
+              </div>
+              <div class="flex flex-col items-center z-10 select-none">
+                <span class="text-[10px] font-black opacity-80 uppercase tracking-widest text-[var(--md-sys-color-on-surface-variant)]">{t(k)}</span>
+                <span class={cn(
+                  "md3-headline-small font-black font-sans tracking-tighter mt-1",
+                  isNext ? "text-[var(--md-sys-color-primary)]" : "text-[var(--md-sys-color-on-surface)]"
+                )}>{timeStr.substring(0, 5)}</span>
+              </div>
+            </button>
+          {/if}
+        {/each}
+      </div>
+    </div>
+  {/if}
+{:else if view === "weekly"}
+  <div class="flex flex-col gap-4 max-w-4xl mx-auto w-full pb-8">
+    {#each data as day, idx}
+      {@const isToday = day.date === format(new Date(), "dd-MMM-yyyy")}
+      {@const evt = getIslamicEvent(day.hijri)}
+      
+      <div 
+        in:fly={{ x: -15, duration: 400, delay: idx * 30 }}
+        class={cn(
+          "bg-[var(--md-sys-color-surface-container)] rounded-[32px] p-5 lg:p-6 flex flex-col lg:flex-row gap-4 lg:items-center relative overflow-hidden border border-[var(--md-sys-color-outline)]/5 shadow-[3px_3px_0px_0px_var(--md-sys-color-outline-variant)] hover:shadow-[5px_5px_0px_0px_var(--md-sys-color-primary)]/20 hover:-translate-y-0.5 transition-all duration-300",
+          isToday && "bg-[var(--md-sys-color-primary-container)]/10 ring-2 ring-[var(--md-sys-color-primary)]/35 shadow-[3px_3px_0px_0px_var(--md-sys-color-primary)]/20",
+          visualStyle === "glass" && "border-none shadow-none",
+          visualStyle === "retro" && "border-2 border-[var(--md-sys-color-on-surface)] rounded-none shadow-[3px_3px_0px_0px_var(--md-sys-color-on-surface)]"
+        )}
+      >
+        {#if isToday}
+          <div class="absolute left-0 top-0 bottom-0 w-1 bg-[var(--md-sys-color-primary)]"></div>
+        {/if}
+
+        <div class="flex flex-col min-w-[190px] shrink-0 gap-0.5 select-none">
+          <span class={cn("font-black md3-title-large tracking-tight flex items-center gap-1.5", isToday ? "text-[var(--md-sys-color-primary)]" : "text-[var(--md-sys-color-on-surface)]")}>
+            {format(parse(day.date, "dd-MMM-yyyy", new Date()), "dd MMMM", { locale: settings.language === 'ms' ? ms : enUS })}
+            {#if isToday}
+              <span class="px-2 py-0.5 bg-[var(--md-sys-color-primary)] text-white text-[8px] font-black uppercase rounded-md tracking-wider flex items-center gap-1 shadow-sm">
+                <CalendarDays size={10} /> {t("today")}
+              </span>
+            {/if}
+          </span>
+          <span class="text-[10px] font-black opacity-80 uppercase tracking-widest text-[var(--md-sys-color-on-surface-variant)] mt-0.5">
+            {format(parse(day.date, "dd-MMM-yyyy", new Date()), "EEEE", { locale: settings.language === 'ms' ? ms : enUS })}
+          </span>
+          <span class="text-[9px] font-sans font-black opacity-55 mt-1">
+            {#if !settings.hijriFormat || settings.hijriFormat === 'both' || settings.hijriFormat === 'text'}
+              {getHijriFormatted(day.date, settings.hijriMethod, settings.hijriAdjustment, "text", settings.language, day.hijri)}
+            {/if}
+          </span>
+          <span class="font-sans opacity-60 font-black">
+            {#if !settings.hijriFormat || settings.hijriFormat === 'both' || settings.hijriFormat === 'number'}
+              {getHijriFormatted(day.date, settings.hijriMethod, settings.hijriAdjustment, "number", settings.language, day.hijri)}
+            {/if}
+          </span>
+          
+          {#if evt}
+            <span class={`mt-2.5 inline-flex w-fit px-2.5 py-0.5 rounded-full text-[9px] font-black text-white uppercase tracking-wider shadow-sm ${evt.color || 'bg-[var(--md-sys-color-primary)]'}`}>
+              {evt.title}
+            </span>
+          {/if}
+        </div>
+        
+        <div class="flex flex-wrap gap-2 flex-1 lg:justify-end mt-2 lg:mt-0">
+          {#each timesToDisplay as k}
+            {@const Icon = PRAYER_ICONS[k]}
+            <button
+              onclick={() => onPrayerSelect({
+                key: k,
+                time: day[k] ? day[k].substring(0, 5) : "--:--",
+                dateValue: day.date,
+                hijriValue: day.hijri
+              })}
+              class={cn(
+                "relative flex items-center gap-2 p-2.5 rounded-xl bg-[var(--md-sys-color-surface-container-low)] hover:bg-[var(--md-sys-color-surface-container-highest)] border border-[var(--md-sys-color-outline)]/5 flex-1 min-w-[90px] justify-center lg:justify-start lg:flex-none overflow-hidden hover:scale-[0.98] active:scale-[0.95] transition-all duration-250 cursor-pointer shadow-xs",
+                isToday && "bg-[var(--md-sys-color-surface)]",
+                visualStyle === "retro" && "border-2 border-[var(--md-sys-color-on-surface)] rounded-none"
+              )}
+            >
+              <md-ripple></md-ripple>
+              <div class="p-1 rounded-full bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] relative z-10 shrink-0">
+                <Icon size={12} strokeWidth={iconStroke} />
+              </div>
+              <div class="flex flex-col items-center lg:items-start leading-none z-10 select-none">
+                <span class="text-[9px] font-black uppercase tracking-widest opacity-60 text-[var(--md-sys-color-on-surface-variant)]">{t(k)}</span>
+                <span class="font-sans font-black text-xs sm:text-sm mt-0.5 text-[var(--md-sys-color-on-surface)]">{day[k] ? day[k].substring(0, 5) : "--:--"}</span>
+              </div>
+            </button>
+          {/each}
+        </div>
+      </div>
+    {/each}
+  </div>
+{:else}
+  <!-- Monthly Table Redesign (Visual Masterpiece) -->
+  <div class="md:hidden flex flex-col gap-4 pb-8 w-full">
+    {#each data as day, idx}
+      {@const isToday = day.date === format(new Date(), "dd-MMM-yyyy")}
+      {@const dateObj = parse(day.date, "dd-MMM-yyyy", new Date())}
+      {@const evt = getIslamicEvent(day.hijri)}
+      
+      <div
+        in:fly={{ y: 12, duration: 400, delay: Math.min(idx * 20, 300) }}
+        class={cn(
+          "bg-[var(--md-sys-color-surface-container)] rounded-[24px] p-4 flex flex-col gap-3 relative overflow-hidden border border-[var(--md-sys-color-outline)]/5 shadow-sm transition-all duration-200",
+          isToday && "bg-[var(--md-sys-color-primary-container)]/15 border-[var(--md-sys-color-primary)] ring-2 ring-[var(--md-sys-color-primary)]/20 shadow-md",
+          visualStyle === "retro" && "border-2 border-[var(--md-sys-color-on-surface)] rounded-none shadow-[2px_2px_0px_0px_var(--md-sys-color-on-surface)]"
+        )}
+      >
+        <div class="flex items-center justify-between border-b border-[var(--md-sys-color-outline)]/8 pb-2 relative pr-8">
+          <div class="flex flex-col leading-none">
+            <span class={cn("text-sm font-black tracking-tight", isToday ? "text-[var(--md-sys-color-primary)]" : "text-[var(--md-sys-color-on-surface)]")}>
+              {format(dateObj, "dd MMM yyyy", { locale: settings.language === 'ms' ? ms : enUS })}
+            </span>
+            <span class="text-[9px] font-black opacity-60 uppercase tracking-widest text-[var(--md-sys-color-on-surface-variant)] mt-1">
+              {format(dateObj, "EEEE", { locale: settings.language === 'ms' ? ms : enUS })}
+            </span>
+          </div>
+          
+          <div class="flex flex-col items-end leading-none">
+            <span class="text-[10px] font-black text-[var(--md-sys-color-on-surface-variant)]">
+              {getHijriFormatted(day.date, settings.hijriMethod, settings.hijriAdjustment, "text", settings.language, day.hijri).split(" (")[0]}
+            </span>
+            {#if evt}
+              <span class="mt-1 px-1.5 py-0.5 rounded bg-[var(--md-sys-color-primary)] text-white text-[8px] font-black uppercase tracking-widest">
+                {evt.title}
+              </span>
+            {/if}
+          </div>
+
+          <div class="absolute right-0 top-0">
+            <button
+              onclick={(e) => {
+                e.stopPropagation();
+                handleCopyDaySchedule(day);
+              }}
+              class={cn(
+                "w-7 h-7 flex items-center justify-center rounded-lg transition-all cursor-pointer shadow-xs",
+                copiedRowDate === day.date
+                  ? "bg-[#25D366] text-white"
+                  : "bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-primary)] hover:text-white border border-[var(--md-sys-color-outline)]/5"
+              )}
+            >
+              {#if copiedRowDate === day.date}
+                <Check size={12} strokeWidth={3} />
+              {:else}
+                <Copy size={12} strokeWidth={iconStroke} />
+              {/if}
+            </button>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-1.5 justify-between">
+          {#each timesToDisplay as k}
+            <button 
+              onclick={(e) => {
+                e.stopPropagation();
+                onPrayerSelect({
+                  key: k,
+                  time: day[k] ? day[k].substring(0, 5) : "--:--",
+                  dateValue: day.date,
+                  hijriValue: day.hijri
+                });
+              }}
+              class="flex flex-col items-center flex-1 min-w-[40px] p-1.5 rounded-lg bg-[var(--md-sys-color-surface-container-low)] hover:bg-[var(--md-sys-color-primary-container)]/25 active:scale-95 transition-all cursor-pointer border border-transparent hover:border-[var(--md-sys-color-primary)]/15"
+            >
+              <span class="text-[7px] font-black uppercase opacity-65 text-[var(--md-sys-color-on-surface-variant)]">{t(k).slice(0, 3)}</span>
+              <span class="font-sans font-black text-[10px] text-[var(--md-sys-color-on-surface)] mt-0.5">{day[k] ? day[k].substring(0, 5) : "--:--"}</span>
+            </button>
+          {/each}
+        </div>
+      </div>
+    {/each}
+  </div>
+
+  <div class={cn(
+    "hidden md:block w-full overflow-x-auto bg-[var(--md-sys-color-surface-container)] rounded-[28px] border border-[var(--md-sys-color-outline)]/8 p-3 sm:p-5 shadow-xs transition-all duration-300",
+    visualStyle === "glass" && "bg-[var(--glass-bg)]/35 backdrop-blur-md border-[var(--glass-border)] shadow-inner"
+  )}>
+    <table class="w-full text-left border-collapse min-w-[920px] sm:min-w-[1020px]">
+      <thead>
+        <tr class="border-b border-[var(--md-sys-color-outline)]/12 text-[var(--md-sys-color-on-surface)]">
+          <th class="py-4 px-4 font-black uppercase tracking-widest text-[9px] sm:text-xs w-[140px] text-[var(--md-sys-color-primary)]">{t("gregorianDate")}</th>
+          <th class="py-4 px-4 font-black uppercase tracking-widest text-[9px] sm:text-xs w-[150px] text-[var(--md-sys-color-primary)]">{t("hijriDate")}</th>
+          <th class="py-4 px-4 font-black uppercase tracking-widest text-[9px] sm:text-xs w-[100px] text-[var(--md-sys-color-primary)]">{t("day")}</th>
+          {#each timesToDisplay as k}
+            <th class="py-4 px-1 font-black uppercase tracking-widest text-[9px] sm:text-xs text-center text-[var(--md-sys-color-on-surface-variant)]">{t(k)}</th>
+          {/each}
+          <th class="py-4 px-2 font-black uppercase tracking-widest text-[9px] sm:text-xs w-[60px] text-center text-[var(--md-sys-color-primary)]">{t("copy" as any)}</th>
+        </tr>
+      </thead>
+      <tbody class={cn("divide-y divide-[var(--md-sys-color-outline)]/5 transition-opacity duration-300", isLoading && "opacity-40")}>
+        {#each data as day, idx}
+          {@const isToday = day.date === format(new Date(), "dd-MMM-yyyy")}
+          {@const dateObj = parse(day.date, "dd-MMM-yyyy", new Date())}
+          {@const isCurrentWeekDay = isSameWeek(dateObj, new Date(), { weekStartsOn: 1 })}
+          {@const evt = getIslamicEvent(day.hijri)}
+          
+          <tr 
+            in:fly={{ y: 8, duration: 400, delay: Math.min(idx * 15, 400) }}
+            class={cn(
+              "transition-all duration-200 group relative border-b border-[var(--md-sys-color-outline)]/4",
+              isToday 
+                ? "bg-[var(--md-sys-color-primary-container)]/30 hover:bg-[var(--md-sys-color-primary-container)]/40 text-[var(--md-sys-color-on-primary-container)] z-[2]" 
+                : isCurrentWeekDay
+                  ? "bg-[var(--md-sys-color-secondary-container)]/8 hover:bg-[var(--md-sys-color-secondary-container)]/15" 
+                  : "hover:bg-[var(--md-sys-color-surface-container-high)]/50"
+            )}
+          >
+            <td class="py-3.5 px-4 tabular-nums relative select-none border-r border-[var(--md-sys-color-outline)]/8">
+              {#if isToday}
+                <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-[var(--md-sys-color-primary)] rounded-r-full shadow-[0_0_8px_var(--md-sys-color-primary)]"></div>
+              {/if}
+              <div class={cn("font-black text-xs sm:text-sm tracking-tight", isToday && "text-[var(--md-sys-color-primary)]")}>
+                {format(dateObj, "dd MMM yyyy", { locale: settings.language === 'ms' ? ms : enUS })}
+              </div>
+              {#if isToday}
+                <span class="mt-1 inline-flex gap-1 items-center px-1.5 py-0.5 bg-[var(--md-sys-color-primary)] text-white text-[8px] rounded uppercase tracking-wider font-black w-fit shadow-sm">
+                  <CalendarDays size={10} /> {t("today")}
+                </span>
+              {/if}
+            </td>
+
+            <td class="py-3.5 px-4 select-none border-r border-[var(--md-sys-color-outline)]/8">
+              <div class="flex flex-col gap-0.5">
+                {#if !settings.hijriFormat || settings.hijriFormat === 'both' || settings.hijriFormat === 'text'}
+                  <span class="text-xs font-black whitespace-nowrap">{getHijriFormatted(day.date, settings.hijriMethod, settings.hijriAdjustment, "text", settings.language, day.hijri).split(" (")[0]}</span>
+                {/if}
+                {#if !settings.hijriFormat || settings.hijriFormat === 'both' || settings.hijriFormat === 'number'}
+                  <span class="text-[9px] font-sans font-black opacity-55 tabular-nums">
+                    {getHijriFormatted(day.date, settings.hijriMethod, settings.hijriAdjustment, "number", settings.language, day.hijri)}
+                  </span>
+                {/if}
+              </div>
+              {#if evt}
+                <div class="mt-1 flex">
+                  <span class={cn(
+                    "inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-black text-white uppercase tracking-widest shadow-xs",
+                    evt.color || "bg-[var(--md-sys-color-primary)]"
+                  )}>
+                    {evt.title}
+                  </span>
+                </div>
+              {/if}
+            </td>
+
+            <td class="py-3.5 px-4 text-xs font-black opacity-75 uppercase tracking-wider select-none border-r border-[var(--md-sys-color-outline)]/8">
+              {format(dateObj, "EEEE", { locale: settings.language === 'ms' ? ms : enUS })}
+            </td>
+
+            {#each timesToDisplay as k}
+              <td class="py-1.5 px-0.5 text-center align-middle border-r border-[var(--md-sys-color-outline)]/8">
+                <button 
+                  onclick={() => onPrayerSelect({
+                    key: k,
+                    time: day[k] ? day[k].substring(0, 5) : "--:--",
+                    dateValue: day.date,
+                    hijriValue: day.hijri
+                  })}
+                  class={cn(
+                    "relative w-full py-2 px-1 flex flex-col items-center justify-center gap-0.5 rounded-xl border border-transparent overflow-hidden focus:outline-none focus:ring-2 focus:ring-[var(--md-sys-color-primary)] hover:scale-105 active:scale-[0.94] cursor-pointer transition-all duration-300",
+                    isToday 
+                      ? "bg-[var(--md-sys-color-surface)] text-[var(--md-sys-color-primary)]" 
+                      : "bg-[var(--md-sys-color-surface-container-low)]/80 text-[var(--md-sys-color-on-surface)] group-hover:bg-[var(--md-sys-color-surface)] group-hover:border-[var(--md-sys-color-outline)]/8"
+                  )}
+                  title={t(k)}
+                >
+                  <md-ripple></md-ripple>
+                  <span class="tabular-nums font-sans text-[11px] sm:text-xs font-black whitespace-nowrap">{day[k] ? day[k].substring(0, 5) : "--:--"}</span>
+                </button>
+              </td>
+            {/each}
+
+            <td class="py-1.5 px-2 text-center align-middle">
+              <button
+                onclick={() => handleCopyDaySchedule(day)}
+                title={isMalay ? "Salin Jadual Hari Ini" : "Copy Today's Schedule"}
+                class={cn(
+                  "w-7 h-7 flex items-center justify-center rounded-lg hover:scale-110 active:scale-90 transition-all cursor-pointer shadow-xs mx-auto",
+                  copiedRowDate === day.date
+                    ? "bg-[#25D366] text-white"
+                    : "bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-primary)] hover:text-white border border-[var(--md-sys-color-outline)]/5"
+                )}
+              >
+                {#if copiedRowDate === day.date}
+                  <Check size={12} strokeWidth={3} />
+                {:else}
+                  <Copy size={12} strokeWidth={iconStroke} />
+                {/if}
+              </button>
+            </td>
+          </tr>
+        {/each}
+      </tbody>
+    </table>
+    
+    {#if data.length === 0 && !isLoading}
+      <div class="p-12 flex items-center justify-center select-none">
+        <p class="text-[var(--md-sys-color-on-surface-variant)] font-black text-sm uppercase tracking-widest text-center">
+          {t("noData")}
+        </p>
+      </div>
+    {/if}
+  </div>
+{/if}

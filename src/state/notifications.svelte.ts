@@ -1,0 +1,232 @@
+import { PrayerData, PrayerKey, Preferences, PrayerPreference, NotificationSound, PreAlertTime } from '../types';
+import { appSettings } from './settings.svelte';
+import { StorageManager } from '../lib/StorageManager';
+import { activePrayerState } from './activePrayer.svelte';
+import { currentTimeState } from './time.svelte';
+
+const DEFAULT_PREFS: Preferences = {
+  imsak: { enabled: false, sound: 'default', preAlert: 0, offset: 0, iqamahOffset: 10 },
+  fajr: { enabled: false, sound: 'default', preAlert: 0, offset: 0, iqamahOffset: 10 },
+  syuruk: { enabled: false, sound: 'default', preAlert: 0, offset: 0, iqamahOffset: 0 },
+  dhuhr: { enabled: false, sound: 'default', preAlert: 0, offset: 0, iqamahOffset: 10 },
+  asr: { enabled: false, sound: 'default', preAlert: 0, offset: 0, iqamahOffset: 10 },
+  maghrib: { enabled: false, sound: 'default', preAlert: 0, offset: 0, iqamahOffset: 5 },
+  isha: { enabled: false, sound: 'default', preAlert: 0, offset: 0, iqamahOffset: 10 }
+};
+
+class NotificationsState {
+  preferences = $state<Preferences>(DEFAULT_PREFS);
+  permission = $state<NotificationPermission>("default");
+
+  private notifiedRef: Record<string, boolean> = {};
+  private prevDateRef: string | null = null;
+
+  constructor() {
+    if (typeof window !== "undefined") {
+      this.permission = Notification.permission;
+      
+      const savedV2 = StorageManager.getItem('prayer_notifications_v2');
+      if (savedV2) {
+        try {
+          this.preferences = { ...DEFAULT_PREFS, ...JSON.parse(savedV2) };
+        } catch (e) {}
+      } else {
+        const savedV1 = StorageManager.getItem('prayer_notifications');
+        if (savedV1) {
+          try {
+            const oldPref = JSON.parse(savedV1);
+            const newPref: Partial<Preferences> = {};
+            for (const k in DEFAULT_PREFS) {
+              const key = k as PrayerKey;
+              newPref[key] = { enabled: oldPref[key] || false, sound: 'default', preAlert: 0, offset: 0, iqamahOffset: DEFAULT_PREFS[key].iqamahOffset };
+            }
+            this.preferences = { ...DEFAULT_PREFS, ...newPref } as Preferences;
+          } catch (e) {}
+        }
+      }
+
+      $effect.root(() => {
+        $effect(() => {
+          StorageManager.setItem('prayer_notifications_v2', JSON.stringify(this.preferences));
+        });
+
+        $effect(() => {
+          this.checkNotifications(currentTimeState.value, activePrayerState.todayData);
+        });
+      });
+    }
+  }
+
+  async requestPermission() {
+    if (typeof Notification !== "undefined" && Notification.permission !== "granted") {
+      const p = await Notification.requestPermission();
+      this.permission = p;
+    }
+  }
+
+  async togglePreference(key: PrayerKey) {
+    let p = this.permission;
+    if (p === 'default' && !this.preferences[key].enabled) {
+      if (typeof Notification !== "undefined") {
+        p = await Notification.requestPermission();
+        this.permission = p;
+      }
+    }
+    
+    this.preferences[key] = { ...this.preferences[key], enabled: !this.preferences[key].enabled };
+  }
+
+  updatePreference(key: PrayerKey, updates: Partial<PrayerPreference>) {
+    this.preferences[key] = { ...this.preferences[key], ...updates };
+  }
+
+  resetPreferences() {
+    this.preferences = DEFAULT_PREFS;
+  }
+
+  playSound(sound: NotificationSound, message: string) {
+    const volumeMultiplier = (appSettings.settings.soundVolume ?? 80) / 100;
+    
+    if (sound === 'voice') {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(message);
+        utterance.lang = appSettings.t("language") === "ms" ? 'ms-MY' : 'en-US';
+        utterance.volume = volumeMultiplier;
+        window.speechSynthesis.speak(utterance);
+      }
+      return;
+    } 
+    
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const startTime = ctx.currentTime;
+      
+      const playTone = (freq: number, type: OscillatorType, delay: number, dur: number, vol = 0.1) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, startTime + delay);
+        
+        gain.gain.setValueAtTime(0, startTime + delay);
+        gain.gain.linearRampToValueAtTime(vol * volumeMultiplier, startTime + delay + Math.min(0.05, dur * 0.1));
+        gain.gain.exponentialRampToValueAtTime(0.00001, startTime + delay + dur);
+        
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(startTime + delay);
+        osc.stop(startTime + delay + dur);
+      };
+
+      if (sound === 'beep') {
+        playTone(880, 'sine', 0, 0.5, 0.1);
+        playTone(880, 'sine', 0.6, 0.5, 0.1);
+      } else if (sound === 'chime') {
+        playTone(523.25, 'sine', 0, 1.2, 0.15); 
+        playTone(659.25, 'sine', 0.15, 1.2, 0.15); 
+        playTone(783.99, 'sine', 0.3, 2.0, 0.15); 
+        playTone(1046.50, 'sine', 0.45, 2.5, 0.2); 
+      } else if (sound === 'soft-chime') {
+        playTone(440, 'triangle', 0, 1.5, 0.08); 
+        playTone(329.63, 'triangle', 0.4, 2.0, 0.08); 
+        playTone(440, 'triangle', 0.8, 1.5, 0.05); 
+      } else if (sound === 'bell-echo') {
+        playTone(659.25, 'sine', 0, 2.0, 0.15); 
+        playTone(830.61, 'sine', 0.15, 2.0, 0.1); 
+        playTone(987.77, 'sine', 0.3, 2.5, 0.1); 
+        playTone(1318.51, 'sine', 0.45, 3.0, 0.15); 
+        playTone(659.25, 'sine', 0.8, 1.5, 0.04);
+        playTone(1318.51, 'sine', 1.2, 1.5, 0.03);
+      } else if (sound === 'ambient-gong') {
+        playTone(110.00, 'triangle', 0, 3.5, 0.25); 
+        playTone(220.00, 'sine', 0.05, 3.0, 0.15); 
+        playTone(329.63, 'sine', 0.1, 2.5, 0.1); 
+        playTone(440.00, 'sine', 0.15, 2.0, 0.08); 
+      } else if (sound === 'digital-sweep') {
+        playTone(523.25, 'sine', 0, 0.25, 0.08); 
+        playTone(587.33, 'sine', 0.08, 0.25, 0.08); 
+        playTone(659.25, 'sine', 0.16, 0.25, 0.08); 
+        playTone(783.99, 'sine', 0.24, 0.5, 0.12); 
+        playTone(1046.50, 'sine', 0.32, 1.0, 0.15); 
+      } else if (sound === 'azan1' || sound === 'azan2') {
+        const file = sound === 'azan1' ? '/audio/azan-makkah.mp3' : '/audio/azan-madinah.mp3';
+        const audio = new Audio(file);
+        audio.volume = volumeMultiplier * 0.5;
+        audio.play().catch(err => {
+          if (sound === 'azan1') {
+            playTone(392.00, 'sine', 0, 1.2, 0.2); 
+            playTone(392.00, 'sine', 1.2, 2.0, 0.2); 
+            playTone(349.23, 'sine', 3.4, 0.8, 0.2); 
+            playTone(392.00, 'sine', 4.2, 2.5, 0.2); 
+          } else {
+            playTone(440.00, 'sine', 0, 1.2, 0.2); 
+            playTone(440.00, 'sine', 1.4, 1.5, 0.2); 
+            playTone(493.88, 'sine', 3.0, 1.0, 0.2); 
+            playTone(440.00, 'sine', 4.2, 2.5, 0.2); 
+          }
+        });
+      }
+    } catch (e) {}
+  }
+
+  private checkNotifications(currentTime: Date, todayData: PrayerData | null) {
+    if (!todayData || this.permission !== 'granted') return;
+
+    if (this.prevDateRef !== todayData.date) {
+      this.notifiedRef = {};
+      this.prevDateRef = todayData.date;
+    }
+
+    const timeString = `${currentTime.getHours().toString().padStart(2, '0')}:${currentTime.getMinutes().toString().padStart(2, '0')}`;
+    
+    Object.keys(this.preferences).forEach((key) => {
+      const pKey = key as PrayerKey;
+      const pref = this.preferences[pKey];
+      
+      if (pref.enabled && todayData[pKey as keyof PrayerData]) {
+        const pTimeStr = (todayData[pKey as keyof PrayerData] as string).substring(0, 5);
+        
+        const notificationKey = `${todayData.date}-${pKey}-main`;
+        if (pTimeStr === timeString && !this.notifiedRef[notificationKey]) {
+          this.notifiedRef[notificationKey] = true;
+          
+          const prayerName = appSettings.t(pKey) as string;
+          const body = (appSettings.t("prayerTimeNow") as string).replace("{prayer}", prayerName);
+          const title = (appSettings.t("prayerNotification") as string).replace("{prayer}", prayerName);
+          
+          try {
+            new Notification(title, { body, requireInteraction: true });
+            this.playSound(pref.sound, body);
+          } catch (e) {}
+        }
+        
+        if (pref.preAlert > 0) {
+          const [h, m] = pTimeStr.split(':').map(Number);
+          const pDataDate = new Date();
+          pDataDate.setHours(h, m, 0, 0);
+          pDataDate.setMinutes(pDataDate.getMinutes() - pref.preAlert);
+          const preAlertStr = `${pDataDate.getHours().toString().padStart(2, '0')}:${pDataDate.getMinutes().toString().padStart(2, '0')}`;
+          
+          const preAlertKey = `${todayData.date}-${pKey}-pre`;
+          
+          if (preAlertStr === timeString && !this.notifiedRef[preAlertKey]) {
+            this.notifiedRef[preAlertKey] = true;
+            
+            const prayerName = appSettings.t(pKey) as string;
+            const preBody = (appSettings.t("preAlertMessage") as string).replace("{minutes}", pref.preAlert.toString()).replace("{prayer}", prayerName);
+            const preTitle = (appSettings.t("preAlertNotification") as string).replace("{prayer}", prayerName);
+            
+            try {
+              new Notification(preTitle, { body: preBody, requireInteraction: true });
+              if (pref.sound !== 'default') {
+                 this.playSound(pref.sound, preBody);
+              }
+            } catch (e) {}
+          }
+        }
+      }
+    });
+  }
+}
+
+export const notificationsState = new NotificationsState();

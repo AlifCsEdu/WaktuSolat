@@ -59,7 +59,8 @@ class AnalyticsService {
     }
 
     // Output message in development console
-    if (process.env.NODE_ENV !== "production") {
+    // @ts-ignore
+    if (import.meta.env.MODE !== "production") {
       console.log(`📊 [Analytics Event: "${eventName}"]:`, params);
     }
   }
