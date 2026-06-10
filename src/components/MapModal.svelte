@@ -1,6 +1,7 @@
 <script lang="ts">
   import { X, Navigation, MapPin } from "lucide-svelte";
   import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
+  import { portal } from "../lib/portal";
   import L from "leaflet";
   import type { FeatureCollection, Geometry, Feature } from "geojson";
   // @ts-ignore
@@ -227,6 +228,7 @@
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div 
+    use:portal
     class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/80 sm:overflow-y-auto" 
     transition:fade={{ duration: 200 }}
     onclick={(e) => {

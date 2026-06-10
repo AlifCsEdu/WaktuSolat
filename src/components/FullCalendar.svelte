@@ -11,7 +11,8 @@
   import PrayerTimesListView from "./calendar/PrayerTimesListView.svelte";
   import EventsListView from "./calendar/EventsListView.svelte";
   import SelectedDayModal from "./calendar/SelectedDayModal.svelte";
-  import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
+  import { m3Fade as fade, m3Fly as fly, m3Slide as slide, m3Scale as scale } from "../lib/transitions";
+  import { portal } from "../lib/portal";
 
   let { 
     isOpen, 
@@ -29,8 +30,12 @@
   let view = $state<"daily" | "weekly" | "monthly">("monthly");
   let currentDate = $state<Date>(new Date());
   
-  let dataCache = $state<Record<string, PrayerData[]>>({
-    [format(new Date(), "yyyy-MM")]: initialMonthData
+  let dataCache = $state<Record<string, PrayerData[]>>(() => {
+    const key = format(new Date(), "yyyy-MM");
+    if (initialMonthData && initialMonthData.length >= 28) {
+      return { [key]: initialMonthData };
+    }
+    return {};
   });
   
   let isLoading = $state(false);
@@ -186,6 +191,7 @@
 
 {#if isOpen}
   <div
+    use:portal
     transition:fly={{ y: 20, duration: 300 }}
     class={cn(
       "fixed inset-0 z-40 w-full h-full flex flex-col font-sans text-[var(--md-sys-color-on-background)] overflow-hidden transition-all duration-300 select-none",
@@ -464,6 +470,7 @@
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div 
+    use:portal
     transition:fade={{ duration: 200 }}
     class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm"
     onclick={() => selectedPrayer = null}

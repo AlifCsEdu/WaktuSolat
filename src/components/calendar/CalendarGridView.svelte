@@ -100,7 +100,8 @@
   <div class="flex-1 min-h-0 w-full overflow-hidden relative">
     {#key currentDate.toISOString()}
       <div
-        in:fade={{ duration: 200, delay: 50 }}
+        in:fly={{ y: 15, duration: 350, easing: cubicOut }}
+        out:fade={{ duration: 150, isExit: true }}
         class="grid grid-cols-7 grid-rows-6 gap-1.5 sm:gap-2 h-full w-full justify-items-center items-center sm:justify-items-stretch sm:items-stretch"
       >
         {#each days as d, i (d.toISOString())}
@@ -119,7 +120,6 @@
           <!-- svelte-ignore a11y_click_events_have_key_events -->
           <!-- svelte-ignore a11y_no_static_element_interactions -->
           <div
-            in:fly={{ y: 10, duration: 400, delay: i * 15 + 50, easing: cubicOut }}
             onclick={() => {
               if (pData) onSelectDay(pData);
             }}

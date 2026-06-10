@@ -1,5 +1,6 @@
 <script lang="ts">
   import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
+  import { portal } from "../lib/portal";
   import {
     X, Bell, BellRing, Volume2, VolumeX, Volume1, Mic, Activity,
     Settings as SettingsIcon, Clock, Smartphone, Music, ChevronDown, ChevronLeft,
@@ -1109,7 +1110,7 @@
 {/snippet}
 
 {#if isOpen}
-  <div in:fade={{ duration: 200 }} out:fade={{ duration: 200 , isExit: true}} class="fixed inset-0 z-[10005] flex items-end sm:items-center justify-center p-0 sm:p-6" style="isolation: isolate">
+  <div use:portal in:fade={{ duration: 200 }} out:fade={{ duration: 200 , isExit: true}} class="fixed inset-0 z-[10005] flex items-end sm:items-center justify-center p-0 sm:p-6" style="isolation: isolate">
     <style>
       @keyframes bounce-bar {
         0%, 100% { height: 4px; }

@@ -1,6 +1,5 @@
 import { cubicOut, cubicIn, quintOut, quintIn, expoOut, expoIn, backOut, backIn } from "svelte/easing";
-import { fade as svelteFade, fly as svelteFly, slide as svelteSlide } from "svelte/transition";
-
+import { fade as svelteFade, fly as svelteFly, slide as svelteSlide, scale as svelteScale } from "svelte/transition";
 // Material 3 / Apple approximations using Svelte's built-in easings
 export const emphasizedEntrance = quintOut; // Smooth, long tail deceleration
 export const emphasizedExit = quintIn;      // Sharp acceleration
@@ -52,5 +51,19 @@ export function m3Slide(node: Element, params: any = {}) {
     duration: params.duration ?? (isExit ? DEFAULT_EXIT_DURATION : DEFAULT_ENTER_DURATION),
     easing: params.easing ?? (isExit ? emphasizedExit : emphasizedEntrance),
     delay: params.delay ?? 0,
+  });
+}
+
+/**
+ * Antigravity Custom Scale Transition
+ */
+export function m3Scale(node: Element, params: any = {}) {
+  const isExit = params.isExit || false;
+  return svelteScale(node, {
+    duration: params.duration ?? (isExit ? DEFAULT_EXIT_DURATION : DEFAULT_ENTER_DURATION),
+    easing: params.easing ?? (isExit ? emphasizedExit : emphasizedEntrance),
+    delay: params.delay ?? 0,
+    start: params.start ?? 0,
+    opacity: params.opacity ?? 0,
   });
 }

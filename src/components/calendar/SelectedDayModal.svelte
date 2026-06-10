@@ -1,5 +1,6 @@
 <script lang="ts">
   import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../../lib/transitions";
+  import { portal } from "../../lib/portal";
   import { X, CalendarDays, Share2, Check, Clock, Moon, Sunrise, Sun, SunMedium, SunDim, Sunset } from "lucide-svelte";
   import type { PrayerData } from "../../types";
   import { getAllEventsForDay, getHijriFormatted } from "../../lib/holidays";
@@ -117,6 +118,7 @@
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div 
+    use:portal
     in:fade={{ duration: 200 }} 
     out:fade={{ duration: 200 , isExit: true}}
     class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/85 backdrop-blur-sm sm:overflow-y-auto"
