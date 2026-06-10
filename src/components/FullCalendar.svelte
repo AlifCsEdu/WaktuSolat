@@ -30,13 +30,11 @@
   let view = $state<"daily" | "weekly" | "monthly">("monthly");
   let currentDate = $state<Date>(new Date());
   
-  let dataCache = $state<Record<string, PrayerData[]>>(() => {
-    const key = format(new Date(), "yyyy-MM");
-    if (initialMonthData && initialMonthData.length >= 28) {
-      return { [key]: initialMonthData };
-    }
-    return {};
-  });
+  let dataCache = $state<Record<string, PrayerData[]>>(
+    initialMonthData && initialMonthData.length >= 28
+      ? { [format(new Date(), "yyyy-MM")]: initialMonthData }
+      : {}
+  );
   
   let isLoading = $state(false);
   let showLoadingState = $state(false);
@@ -102,7 +100,7 @@
           throw new Error("Invalid calendar JSON");
         }
         
-        dataCache[key] = data.prayerTime || [];
+        dataCache = { ...dataCache, [key]: data.prayerTime || [] };
       } catch (err) {
         error = t("failedToLoad");
       } finally {

@@ -34,6 +34,7 @@
 
   let weather = $state<any>(null);
   let isLoading = $state(true);
+  let lastProvider = $state<string | null>(null);
 
   let visualStyle = $derived(appSettings.settings.visualStyle);
   let settings = $derived(appSettings.settings);
@@ -67,8 +68,12 @@
   $effect(() => {
     if (!selectedZone) return;
 
+    const provider = settings.weatherProvider || 'best_match';
     const coords = userCoords ? [userCoords.lat, userCoords.lng] : (ZONE_COORDINATES[selectedZone] || [3.13, 101.68]);
     const [lat, lng] = coords;
+
+    const force = lastProvider !== null && lastProvider !== provider;
+    lastProvider = provider;
 
     let isMounted = true;
 
@@ -154,7 +159,7 @@
 
     (window as any).refreshWeatherFn = () => { fetchWeather(true); };
 
-    fetchWeather();
+    fetchWeather(force);
     intervalId = setInterval(() => fetchWeather(), 30 * 60 * 1000);
 
     return () => {

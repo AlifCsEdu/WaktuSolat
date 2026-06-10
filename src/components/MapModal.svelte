@@ -58,6 +58,20 @@
   });
 
   $effect(() => {
+    if (isOpen && map) {
+      map.invalidateSize();
+      const t1 = setTimeout(() => map?.invalidateSize(), 100);
+      const t2 = setTimeout(() => map?.invalidateSize(), 350);
+      const t3 = setTimeout(() => map?.invalidateSize(), 700);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+        clearTimeout(t3);
+      };
+    }
+  });
+
+  $effect(() => {
     if (isOpen && !geoData) {
       fetch('/malaysia-jakim.geojson')
         .then(res => res.json())
@@ -306,7 +320,7 @@
         
         <div 
           use:mapAction
-          style="width: 100%; height: 100%; min-height: 400px;"
+          class="absolute inset-0 w-full h-full"
         ></div>
       </div>
     </div>
