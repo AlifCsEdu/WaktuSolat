@@ -1,46 +1,14 @@
+import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
-import { svelte } from '@sveltejs/vite-plugin-svelte';
-import path from 'path';
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig } from 'vite';
 
-export default defineConfig(({mode}) => {
-  const env = loadEnv(mode, '.', '');
-  return {
-    plugins: [svelte(), tailwindcss()],
-    resolve: {
-      alias: {
-        '@': path.resolve(__dirname, '.'),
-      },
-    },
-    build: {
-      target: 'esnext',
-      minify: 'esbuild',
-      rollupOptions: {
-        output: {
-          manualChunks(id) {
-            if (id.includes('node_modules')) {
-              // Only extract massive isolated libraries to prevent circular dependencies
-              if (id.includes('@material/web')) {
-                return 'vendor-material';
-              }
-              if (id.includes('leaflet')) {
-                return 'vendor-map';
-              }
-              if (id.includes('motion')) {
-                return 'vendor-motion';
-              }
-            }
-          }
-        }
-      }
-    },
-    esbuild: {
-      drop: ['console', 'debugger'],
-    },
-    server: {
-      // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modify—file watching is disabled to prevent flickering during agent edits.
-      hmr: process.env.DISABLE_HMR !== 'true',
-    },
-  };
+export default defineConfig({
+  plugins: [sveltekit(), tailwindcss()],
+
+  esbuild: {
+    drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
+  },
+  server: {
+    hmr: process.env.DISABLE_HMR !== 'true',
+  },
 });

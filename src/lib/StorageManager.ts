@@ -11,6 +11,9 @@ export const StorageManager = {
    * Helper to write item safely to localStorage
    */
   setItem(key: string, value: string): boolean {
+    if (typeof window === "undefined" || !window.localStorage) {
+      return false;
+    }
     try {
       localStorage.setItem(key, value);
       return true;
@@ -24,6 +27,9 @@ export const StorageManager = {
    * Helper to read item safely from localStorage
    */
   getItem(key: string): string | null {
+    if (typeof window === "undefined" || !window.localStorage) {
+      return null;
+    }
     try {
       return localStorage.getItem(key);
     } catch (e) {
@@ -36,6 +42,9 @@ export const StorageManager = {
    * Helper to remove item safely from localStorage
    */
   removeItem(key: string): boolean {
+    if (typeof window === "undefined" || !window.localStorage) {
+      return false;
+    }
     try {
       localStorage.removeItem(key);
       return true;
@@ -104,6 +113,9 @@ export const StorageManager = {
   },
 
   clearAllCachedPrayerData(): void {
+    if (typeof window === "undefined" || !window.localStorage) {
+      return;
+    }
     try {
       const keysToRemove: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {

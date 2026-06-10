@@ -55,9 +55,9 @@
         } catch(e) {}
       })();
     </script>
+    %sveltekit.head%
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.ts"></script>
+    <div>%sveltekit.body%</div>
   </body>
 </html>

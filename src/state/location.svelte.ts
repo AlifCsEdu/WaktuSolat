@@ -5,6 +5,7 @@ import { analytics } from "../lib/analytics";
 
 class LocationState {
   selectedZone = $state(StorageManager.getZone() || "SGR01");
+  defaultZone = $state(StorageManager.getZone());
   promptZone = $state<string | null>(null);
   promptLocationName = $state<string | null>(null);
   autoUpdatedZone = $state<string | null>(null);
@@ -49,10 +50,17 @@ class LocationState {
   setZone(zone: string, isAuto = false) {
     this.isAutoZoneChange = isAuto;
     this.selectedZone = zone;
+    this.defaultZone = zone;
     StorageManager.setZone(zone);
     if (!isAuto) {
       StorageManager.saveRecentZone(zone);
     }
+  }
+
+  saveAsDefault() {
+    this.defaultZone = this.selectedZone;
+    StorageManager.setZone(this.selectedZone);
+    StorageManager.saveRecentZone(this.selectedZone);
   }
 
   checkLocation(force = false) {

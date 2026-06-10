@@ -7,6 +7,9 @@ coverage/
 .env*
 !.env.example
 .agents/
+.svelte-kit/
+playwright-report/
+test-results/
 
 # Playwright test screenshots
 tests/e2e/screenshots/

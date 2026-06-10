@@ -27,6 +27,9 @@ Object.defineProperty(global, "localStorage", {
   writable: true,
 });
 
+global.window = global as any;
+
+
 describe("StorageManager Centralized Service", () => {
   beforeEach(() => {
     localStorage.clear();
