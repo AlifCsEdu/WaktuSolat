@@ -5,6 +5,7 @@ import { fetchWithRetry } from "../lib/api";
 import { analytics } from "../lib/analytics";
 import { locationState } from "./location.svelte";
 import { appSettings } from "./settings.svelte";
+import { untrack } from "svelte";
 
 class PrayerTimesState {
   weekData = $state<PrayerData[]>([]);
@@ -26,12 +27,14 @@ class PrayerTimesState {
     $effect.root(() => {
       $effect(() => {
         const zone = locationState.selectedZone;
-        if (zone && zone !== this.currentZone) {
-          this.currentZone = zone;
-          this.weekData = StorageManager.getCachedPrayerData(zone);
-          this.isLoading = this.weekData.length === 0;
-          this.fetchSolat(zone);
-        }
+        untrack(() => {
+          if (zone && zone !== this.currentZone) {
+            this.currentZone = zone;
+            this.weekData = StorageManager.getCachedPrayerData(zone);
+            this.isLoading = this.weekData.length === 0;
+            this.fetchSolat(zone);
+          }
+        });
       });
       
       $effect(() => {
@@ -44,12 +47,16 @@ class PrayerTimesState {
       });
     });
 
+    let debounceTimer: any;
     const handleOnline = () => {
-      if (appSettings.settings.autoSyncOffline) {
-        this.triggerSilentSync();
-      } else {
-        this.showOnlineSyncToast = true;
-      }
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        if (appSettings.settings.autoSyncOffline) {
+          this.triggerSilentSync();
+        } else {
+          this.showOnlineSyncToast = true;
+        }
+      }, 300);
     };
     window.addEventListener("online", handleOnline);
 
@@ -63,6 +70,7 @@ class PrayerTimesState {
     if (!zone) return;
     this.isSyncing = true;
     this.syncStatus = 'idle';
+    this.showOnlineSyncToast = true;
     try {
       let url = `/api/solat/${zone}`;
       const range = appSettings.settings.offlineCachedRange;
@@ -105,19 +113,26 @@ class PrayerTimesState {
   }
 
   async fetchSolat(zone: string) {
+    console.log('[fetchSolat] CALLED:', { zone, onLine: navigator.onLine });
     this.isLoading = true;
 
     const loadFromCache = async () => {
       try {
+        console.log('[loadFromCache] attempting database read for zone:', zone);
         const cached = await getOfflinePrayers(zone);
+        console.log('[loadFromCache] cached data retrieved:', JSON.stringify(cached));
         if (cached && cached.prayerTime && Array.isArray(cached.prayerTime) && cached.prayerTime.length > 0) {
           this.weekData = cached.prayerTime;
           StorageManager.setCachedPrayerData(zone, cached.prayerTime);
           this.isOfflineModeActive = true;
           this.error = null;
+          console.log('[loadFromCache] successfully loaded from IndexedDB cache');
           return true;
+        } else {
+          console.log('[loadFromCache] no valid cached data found in IndexedDB');
         }
       } catch (e: any) {
+        console.error('[loadFromCache] error:', e.message, e.stack);
         analytics.logError(e, { context: "loadFromCache", zone });
       }
       return false;
@@ -144,6 +159,12 @@ class PrayerTimesState {
         try {
           const range = appSettings.settings.offlineCachedRange || 'month';
           await saveOfflinePrayers(zone, data.prayerTime, range);
+          if (!appSettings.settings.offlineCachedRange) {
+            appSettings.updateSettings({
+              offlineCachedRange: range,
+              offlineCachedAt: Date.now()
+            });
+          }
         } catch (saveErr) {
           console.warn("Auto-save offline prayers failed:", saveErr);
         }

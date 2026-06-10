@@ -527,6 +527,10 @@ export const translations = {
     aboutDesc: "Waktu Solat Expressive ialah projek sumber terbuka untuk memaparkan waktu solat dengan indah. Data diperolehi dari e-Solat JAKIM.",
     version: "Versi",
     developer: "Pembangun",
+    updateAvailable: "Kemaskini Tersedia",
+    updateAvailableDesc: "Versi baharu aplikasi tersedia. Segarkan semula untuk menggunakan versi terkini.",
+    updateLater: "Nanti",
+    updateRefresh: "Segarkan Semula",
   },
   en: {
     appTitle: "Waktu Solat",
@@ -1056,6 +1060,10 @@ export const translations = {
     hudIqamahAdd: "+1 Minute",
     hudIqamahSub: "-1 Minute",
     wakeUpPrompt: "Press any key or click again to wake up",
+    updateAvailable: "Update Available",
+    updateAvailableDesc: "A new version of the app is available. Refresh to apply the latest updates.",
+    updateLater: "Later",
+    updateRefresh: "Refresh Now",
   }
 };
 

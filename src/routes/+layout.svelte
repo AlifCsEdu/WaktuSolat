@@ -7,6 +7,7 @@
   
   // Custom Web Component registration
   import "@material/web/button/filled-tonal-button.js";
+  import "@material/web/slider/slider.js";
 
   // Transitions
   import { m3Fade as fade, m3Fly as fly } from '../lib/transitions';
@@ -28,6 +29,8 @@
   import OnboardingFlow from '../components/OnboardingFlow.svelte';
   import TvModeView from '../components/TvModeView.svelte';
   import NotificationPrePrompt from '../components/NotificationPrePrompt.svelte';
+  import UpdateToast from '../components/UpdateToast.svelte';
+  import { dev } from '$app/environment';
 
   import { cn } from '../lib/utils';
   import { StorageManager } from '../lib/StorageManager';
@@ -38,6 +41,18 @@
   let hasCompletedOnboarding = $state(false);
   let showPrePrompt = $state(false);
   let pendingPermissionAction = $state<(() => void) | null>(null);
+  let showUpdateToast = $state(false);
+  let registration = $state<ServiceWorkerRegistration | null>(null);
+
+  function acceptUpdate() {
+    if (registration?.waiting) {
+      registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+    }
+  }
+
+  function dismissUpdate() {
+    showUpdateToast = false;
+  }
 
   // Derived layout aesthetics and overlay conditions
   let isTvMode = $derived(!!appSettings.settings.tvModeEnabled && $page.url.pathname === '/');
@@ -89,14 +104,64 @@
   };
 
   onMount(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).appSettings = appSettings;
+    }
     initState();
     hasCompletedOnboarding = StorageManager.getHasCompletedOnboarding();
     
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').then(
-        (reg) => console.log('ServiceWorker registered:', reg.scope),
-        (err) => console.warn('ServiceWorker registration failed:', err)
-      );
+      // Unregister legacy sw.js if found
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        for (const reg of registrations) {
+          const swUrl = reg.active?.scriptURL || reg.installing?.scriptURL || reg.waiting?.scriptURL || '';
+          if (swUrl.endsWith('/sw.js')) {
+            reg.unregister().then(() => {
+              console.log('Unregistered legacy sw.js');
+            });
+          }
+        }
+      });
+
+      // Register new service worker manually if not in dev mode
+      if (!dev) {
+        navigator.serviceWorker.register('/service-worker.js').then((reg) => {
+          registration = reg;
+          console.log('ServiceWorker registered:', reg.scope);
+
+          // Handle updatefound event
+          reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed') {
+                  // Ensure it doesn't trigger on initial install by verifying a controller exists
+                  if (navigator.serviceWorker.controller) {
+                    showUpdateToast = true;
+                  }
+                }
+              });
+            }
+          });
+
+          // Check if there is already a waiting service worker (e.g. user refreshed but update is waiting)
+          if (reg.waiting && navigator.serviceWorker.controller) {
+            showUpdateToast = true;
+          }
+        }).catch((err) => {
+          console.warn('ServiceWorker registration failed:', err);
+        });
+      }
+
+      // Listen to controllerchange to reload the page when the service worker skips waiting
+      let refreshing = false;
+      const hasController = !!navigator.serviceWorker.controller;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (hasController && !refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      });
     }
   });
 </script>
@@ -165,6 +230,13 @@
     onAccept={() => locationState.acceptPrompt()}
     onDismiss={() => locationState.dismissPrompt()}
   />
+
+  {#if showUpdateToast}
+    <UpdateToast
+      onAccept={acceptUpdate}
+      onDismiss={dismissUpdate}
+    />
+  {/if}
 
   <!-- SvelteKit Page Outlet -->
   {@render children()}

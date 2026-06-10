@@ -120,3 +120,47 @@ Integrity mode: development
 ### Navigation & State
 - [ ] Navigating to `/zone/JHR02` displays the app dashboard showing Johor Bahru prayer times.
 - [ ] Clicking "Set as default" updates the user's localStorage value to Johor Bahru.
+
+## Follow-up — 2026-06-10T11:21:47Z
+
+Implement a premium Offline-First Progressive Web App (PWA) with background prayer time synchronization and background/local push notifications for prayer reminders in the Waktu Solat Expressive SvelteKit application.
+
+Working directory: c:\Users\alif325\Documents\WIndsurf projeks\waktu-solat-expressive
+Integrity mode: development
+
+## Requirements
+
+### R1. PWA Integration & Service Worker
+- Set up a standard PWA web app manifest (`manifest.webmanifest` or `manifest.json`) configuring application shell metadata (icons, colors, standalone display mode).
+- Implement a service worker (using Workbox or custom service worker script) that implements cache-first strategies for static assets (js, css, HTML, fonts, SVGs) to ensure the app shell loads instantly and works completely offline.
+- Add update-handling logic that notifies the user when a new version of the app is available and prompts them to refresh.
+
+### R2. Offline Year-Round Prayer Schedule (IndexedDB)
+- Set up local IndexedDB storage (or a lightweight wrapper) to download and store the complete year-round prayer schedule for the user's selected/favorited zone.
+- Design the application state to fall back to IndexedDB data instantly when the device is offline, updating the UI with a clean, animated "Offline Mode" indicator.
+- Automatically refresh the cached yearly data in the background when online if the cached data is stale.
+
+### R3. Background Local Prayer Notifications
+- Implement background/local prayer alerts (reminders/Azan alerts) that trigger even when the app/tab is in the background or closed.
+- Utilize the best technical mechanism for background alerts (e.g., Service Worker message timers, or Web Push API, or local notification scheduling/triggers).
+- Provide visual toggle switches in the Settings panel for users to customize alerts for individual prayers (Subuh, Zohor, Asar, Maghrib, Isyak) with custom reminder offsets (e.g., 5 minutes before).
+
+### R4. Synchronization Controls & Cache UI
+- Add a visual status panel in Settings showing current database status (e.g., "Cached 365 days of Johor Bahru").
+- Provide a manual "Force Re-sync" action with micro-animations that displays progress during synchronization.
+
+## Acceptance Criteria
+
+### PWA & Offline Loading
+- [ ] Swapping the browser to offline mode (`network: offline`) and reloading the page successfully serves the application shell.
+- [ ] An "Offline" visual badge is visible in the header when navigator.onLine is false, and it transitions smoothly back to "Online" once reconnected.
+
+### Data Caching (IndexedDB)
+- [ ] Stored prayer data for the selected zone includes the entire calendar year.
+- [ ] Inspecting the browser's Application tab shows a valid IndexedDB store containing prayer times mapped by date/zone.
+- [ ] Modifying the calendar to search future dates works completely offline using the cached IndexedDB data.
+
+### Notification Configuration & Scheduling
+- [ ] Toggling notification alerts in Settings successfully updates localStorage and local notification registrations.
+- [ ] Background alerts trigger at the exact scheduled prayer times, showing the prayer name and a helpful message.
+

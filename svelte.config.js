@@ -1,5 +1,5 @@
 import adapter from '@sveltejs/adapter-cloudflare';
-import { vitePreprocess } from './node_modules/@sveltejs/vite-plugin-svelte/src/index.js';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -8,6 +8,9 @@ const config = {
     adapter: adapter(),
     files: {
       assets: 'public'
+    },
+    serviceWorker: {
+      register: false
     }
   }
 };

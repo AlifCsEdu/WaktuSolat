@@ -1,3 +1,4 @@
+import { untrack } from 'svelte';
 import { PrayerKey } from '../types';
 import { appSettings } from './settings.svelte';
 import { activePrayerState } from './activePrayer.svelte';
@@ -21,17 +22,21 @@ class MosqueState {
         // Reset states on prayer time change
         $effect(() => {
           const prevPrayerKey = activePrayerState.computedPrayers.prevPrayerKey;
-          if (prevPrayerKey && prevPrayerKey !== this.lastActivePrayer) {
-            this.manuallyDismissedAzanAlert = null;
-            this.manuallyExitedSolatPrayer = null;
-            
-            this.iqamahModifier = { ...this.iqamahModifier, [prevPrayerKey]: 0 };
-            this.iqamahPausedState = {
-              ...this.iqamahPausedState,
-              [prevPrayerKey]: { paused: false, remainingSecs: 0 },
-            };
-            
-            this.lastActivePrayer = prevPrayerKey;
+          if (prevPrayerKey) {
+            untrack(() => {
+              if (prevPrayerKey !== this.lastActivePrayer) {
+                this.manuallyDismissedAzanAlert = null;
+                this.manuallyExitedSolatPrayer = null;
+                
+                this.iqamahModifier = { ...this.iqamahModifier, [prevPrayerKey]: 0 };
+                this.iqamahPausedState = {
+                  ...this.iqamahPausedState,
+                  [prevPrayerKey]: { paused: false, remainingSecs: 0 },
+                };
+                
+                this.lastActivePrayer = prevPrayerKey;
+              }
+            });
           }
         });
 

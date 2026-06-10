@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from "svelte";
   import { format, differenceInSeconds } from "date-fns";
   import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
   import {
@@ -108,30 +109,36 @@
   });
 
   $effect(() => {
+    const enabled = settings.mosqueLogoEnabled;
+    const customUrl = settings.mosqueLogoUrl;
     let active = true;
     let localUrl = '';
-    if (settings.mosqueLogoEnabled) {
-      if (settings.mosqueLogoUrl) {
-        logoUrl = settings.mosqueLogoUrl;
-      } else {
-        getMosqueLogoBlob().then((blob) => {
-          if (blob && active) {
-            localUrl = URL.createObjectURL(blob);
-            const oldUrl = logoUrl;
-            logoUrl = localUrl;
-            if (oldUrl && oldUrl.startsWith('blob:')) {
-              URL.revokeObjectURL(oldUrl);
+    
+    untrack(() => {
+      if (enabled) {
+        if (customUrl) {
+          logoUrl = customUrl;
+        } else {
+          getMosqueLogoBlob().then((blob) => {
+            if (blob && active) {
+              localUrl = URL.createObjectURL(blob);
+              const oldUrl = logoUrl;
+              logoUrl = localUrl;
+              if (oldUrl && oldUrl.startsWith('blob:')) {
+                URL.revokeObjectURL(oldUrl);
+              }
             }
-          }
-        });
+          });
+        }
+      } else {
+        const oldUrl = logoUrl;
+        logoUrl = null;
+        if (oldUrl && oldUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(oldUrl);
+        }
       }
-    } else {
-      const oldUrl = logoUrl;
-      logoUrl = null;
-      if (oldUrl && oldUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(oldUrl);
-      }
-    }
+    });
+
     return () => {
       active = false;
       if (localUrl) {
@@ -330,9 +337,12 @@
   let currentAnnouncementIdx = $state(0);
 
   $effect(() => {
-    if (currentAnnouncementIdx >= announcements.length) {
-      currentAnnouncementIdx = 0;
-    }
+    const len = announcements.length;
+    untrack(() => {
+      if (currentAnnouncementIdx >= len) {
+        currentAnnouncementIdx = 0;
+      }
+    });
   });
 
   const activeKeys = ["imsak", "fajr", "syuruk", "dhuhr", "asr", "maghrib", "isha"];
@@ -454,49 +464,58 @@
   })());
 
   $effect(() => {
+    const list = activeReminders;
     let active = true;
-    const loadAssets = async () => {
-      const list = activeReminders;
-      const urls: Record<string, string> = {};
-      for (const r of list) {
-        const images = r.images || [];
-        for (const img of images) {
-          if (img.isUploaded && img.assetKey) {
-            try {
-              const blob = await getAssetBlob(img.assetKey);
-              if (blob) {
-                urls[img.assetKey] = URL.createObjectURL(blob);
+    
+    untrack(() => {
+      const loadAssets = async () => {
+        const urls: Record<string, string> = {};
+        for (const r of list) {
+          const images = r.images || [];
+          for (const img of images) {
+            if (img.isUploaded && img.assetKey) {
+              try {
+                const blob = await getAssetBlob(img.assetKey);
+                if (blob) {
+                  urls[img.assetKey] = URL.createObjectURL(blob);
+                }
+              } catch (err) {
+                console.error(`Failed to load asset for key ${img.assetKey}:`, err);
               }
-            } catch (err) {
-              console.error(`Failed to load asset for key ${img.assetKey}:`, err);
             }
           }
         }
-      }
-      if (active) {
+        if (active) {
+          Object.values(reminderAssetUrls).forEach(url => {
+            try { URL.revokeObjectURL(url); } catch (e) {}
+          });
+          reminderAssetUrls = urls;
+        } else {
+          Object.values(urls).forEach(url => {
+            try { URL.revokeObjectURL(url); } catch (e) {}
+          });
+        }
+      };
+      loadAssets();
+    });
+
+    return () => {
+      active = false;
+      untrack(() => {
         Object.values(reminderAssetUrls).forEach(url => {
           try { URL.revokeObjectURL(url); } catch (e) {}
         });
-        reminderAssetUrls = urls;
-      } else {
-        Object.values(urls).forEach(url => {
-          try { URL.revokeObjectURL(url); } catch (e) {}
-        });
-      }
-    };
-    loadAssets();
-    return () => {
-      active = false;
-      Object.values(reminderAssetUrls).forEach(url => {
-        try { URL.revokeObjectURL(url); } catch (e) {}
       });
     };
   });
 
   $effect(() => {
-    if (reminderIdx >= activeReminders.length) {
-      reminderIdx = 0;
-    }
+    const len = activeReminders.length;
+    untrack(() => {
+      if (reminderIdx >= len) {
+        reminderIdx = 0;
+      }
+    });
   });
 
   $effect(() => {
@@ -511,26 +530,83 @@
 
   // Slideshow Widget Logic
   let slideshowIdx = $state(0);
-  const slideshowUrls = $derived(settings.tvModeSlideshowUrls || "");
-  const slideshowParsedUrls = $derived((() => {
-    if (!slideshowUrls || !slideshowUrls.trim()) return [];
-    return slideshowUrls
-      .split("\n")
-      .map((line: string) => line.trim())
-      .filter((line: string) => line.startsWith("http"));
-  })());
+  let slideshowResolvedUrls = $state<string[]>([]);
 
   $effect(() => {
-    if (slideshowIdx >= slideshowParsedUrls.length) {
-      slideshowIdx = 0;
-    }
+    const urlsString = settings.tvModeSlideshowUrls || "";
+    let active = true;
+
+    untrack(() => {
+      const urls = urlsString
+        .split("\n")
+        .map(line => line.trim())
+        .filter(Boolean);
+
+      const resolved: string[] = [];
+      const localBlobUrls: string[] = [];
+
+      const loadSlideshow = async () => {
+        for (const url of urls) {
+          if (url.startsWith("local:")) {
+            const key = url.replace("local:", "");
+            try {
+              const blob = await getAssetBlob(key);
+              if (blob) {
+                const blobUrl = URL.createObjectURL(blob);
+                localBlobUrls.push(blobUrl);
+                resolved.push(blobUrl);
+              }
+            } catch (e) {
+              console.error(`Failed to load local slideshow asset ${key}:`, e);
+            }
+          } else if (url.startsWith("http")) {
+            resolved.push(url);
+          }
+        }
+
+        if (active) {
+          slideshowResolvedUrls.forEach(u => {
+            if (u.startsWith("blob:")) {
+              try { URL.revokeObjectURL(u); } catch (e) {}
+            }
+          });
+          slideshowResolvedUrls = resolved;
+        } else {
+          localBlobUrls.forEach(u => {
+            try { URL.revokeObjectURL(u); } catch (e) {}
+          });
+        }
+      };
+
+      loadSlideshow();
+    });
+
+    return () => {
+      active = false;
+      untrack(() => {
+        slideshowResolvedUrls.forEach(u => {
+          if (u.startsWith("blob:")) {
+            try { URL.revokeObjectURL(u); } catch (e) {}
+          }
+        });
+      });
+    };
   });
 
   $effect(() => {
-    if (slideshowParsedUrls.length <= 1) return;
+    const len = slideshowResolvedUrls.length;
+    untrack(() => {
+      if (slideshowIdx >= len) {
+        slideshowIdx = 0;
+      }
+    });
+  });
+
+  $effect(() => {
+    if (slideshowResolvedUrls.length <= 1) return;
     const interval = (settings.tvModeSlideshowInterval ?? 15) * 1000;
     const timer = setInterval(() => {
-      slideshowIdx = (slideshowIdx + 1) % slideshowParsedUrls.length;
+      slideshowIdx = (slideshowIdx + 1) % slideshowResolvedUrls.length;
     }, interval);
     return () => clearInterval(timer);
   });
@@ -698,6 +774,7 @@
             assetUrls={reminderAssetUrls}
             language={settings.language}
             isTvMode={true}
+            nextPrayerTime={nextPrayerTime}
           />
         </div>
       {/key}
@@ -706,7 +783,7 @@
 {/snippet}
 
 {#snippet slideshowWidget()}
-  {#if slideshowParsedUrls.length === 0}
+  {#if slideshowResolvedUrls.length === 0}
     <div class="flex-1 flex flex-col justify-center items-center text-center p-8 bg-[var(--md-sys-color-surface-container)] rounded-[36px] border border-[var(--md-sys-color-outline)]/10 h-full space-y-3">
       <Tv size={48} class="text-[var(--md-sys-color-primary)] stroke-[1.5]" />
       <h4 class="text-lg font-black text-[var(--md-sys-color-on-surface)]">
@@ -720,11 +797,11 @@
     </div>
   {:else}
     <div class="flex-1 relative rounded-[36px] overflow-hidden bg-black/40 h-full w-full">
-      {#key slideshowParsedUrls[slideshowIdx]}
+      {#key slideshowResolvedUrls[slideshowIdx]}
         <img
           in:fade={{ duration: 600 }}
           out:fade={{ duration: 600 , isExit: true}}
-          src={slideshowParsedUrls[slideshowIdx]}
+          src={slideshowResolvedUrls[slideshowIdx]}
           alt="Slide {slideshowIdx + 1}"
           class="absolute inset-0 w-full h-full object-cover"
         />

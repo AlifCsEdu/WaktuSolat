@@ -222,7 +222,9 @@
   }
 
   function handleResetToDefaults() {
-    updateSettings(DEFAULT_GENERAL_SETTINGS);
+    StorageManager.removeItem("waktu-solat-settings");
+    StorageManager.removeItem("prayer_notifications_v2");
+    appSettings.settings = { ...DEFAULT_GENERAL_SETTINGS };
     onResetPreferences();
     showResetToast = true;
     setTimeout(() => {
@@ -459,7 +461,7 @@
 {#snippet advancedGeneral()}
   <div class={cn("relative rounded-[32px] overflow-hidden transition-all duration-300 mt-4", showAdvancedGeneral ? getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface-container)] p-6 space-y-6 border border-[var(--md-sys-color-outline)]/10 shadow-sm") : getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface-container-low)] hover:bg-[var(--md-sys-color-surface-container)] p-4 sm:p-5 border border-transparent"))}>
     <md-elevation></md-elevation>
-    <button onclick={() => showAdvancedGeneral = !showAdvancedGeneral} type="button" class="relative w-full flex items-center justify-between font-bold text-left cursor-pointer focus:outline-none overflow-hidden z-10">
+    <button data-testid="advanced-general-toggle" onclick={() => showAdvancedGeneral = !showAdvancedGeneral} type="button" class="relative w-full flex items-center justify-between font-bold text-left cursor-pointer focus:outline-none overflow-hidden z-10">
       <md-ripple></md-ripple>
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-2xl bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center">
@@ -551,38 +553,52 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-3 pt-2">
-              <button disabled={isDownloading} onclick={handleSaveOffline} type="button" class={cn("flex-1 sm:flex-none px-6 py-3 rounded-full font-bold flex items-center justify-center gap-2 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[var(--md-sys-color-primary)] hover:scale-105 active:scale-95 cursor-pointer", isDownloading ? "bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-outline)] cursor-not-allowed" : "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-sm hover:opacity-95")}>
+              <md-filled-tonal-button
+                role="button"
+                tabindex={0}
+                onkeydown={handleKeyDown}
+                disabled={isDownloading ? true : undefined}
+                onclick={handleSaveOffline}
+                style="height: 48px;"
+              >
                 {#if isDownloading}
-                  <RefreshCw size={16} class="animate-spin" />
+                  <RefreshCw slot="icon" size={16} class="animate-spin" />
                   {t("syncing" as any)}
                 {:else}
-                  <Download size={16} />
+                  <Download slot="icon" size={16} />
                   {t("saveOfflineBtn" as any)}
                 {/if}
-              </button>
+              </md-filled-tonal-button>
 
               {#if settings.offlineCachedRange}
-                <button disabled={isClearing} onclick={handleClearCache} type="button" class={cn("flex-1 sm:flex-none px-5 py-3 rounded-full font-bold flex items-center justify-center gap-2 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[var(--md-sys-color-error)] hover:scale-105 active:scale-95 cursor-pointer", isClearing ? "bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-outline)] cursor-not-allowed" : "bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] shadow-sm hover:opacity-90")}>
+                <md-outlined-button
+                  role="button"
+                  tabindex={0}
+                  onkeydown={handleKeyDown}
+                  disabled={isClearing ? true : undefined}
+                  onclick={handleClearCache}
+                  style="height: 48px;"
+                >
                   {#if isClearing}
-                    <RefreshCw size={16} class="animate-spin" />
+                    <RefreshCw slot="icon" size={16} class="animate-spin" />
                     {settings.language === "ms" ? "Membersih..." : "Clearing..."}
                   {:else}
-                    <Trash2 size={16} />
+                    <Trash2 slot="icon" size={16} />
                     {settings.language === "ms" ? "Padam Cache" : "Clear Cache"}
                   {/if}
-                </button>
+                </md-outlined-button>
               {/if}
             </div>
 
             <div class="min-h-[20px]">
               {#if downloadError}
-                <span class="text-xs text-[var(--md-sys-color-error)] font-bold flex items-center gap-1"><AlertCircle size={14} />{downloadError}</span>
+                <p class="text-xs text-[var(--md-sys-color-error)] font-bold flex items-center gap-1"><AlertCircle size={14} />{downloadError}</p>
               {/if}
               {#if downloadSuccess}
-                <span class="text-xs text-[var(--md-sys-color-primary)] font-bold flex items-center gap-1"><Check size={14} class="stroke-[3]" />{t("saveOfflineSuccess" as any)}</span>
+                <p class="text-xs text-[var(--md-sys-color-primary)] font-bold flex items-center gap-1"><Check size={14} class="stroke-[3]" />{t("saveOfflineSuccess" as any)}</p>
               {/if}
               {#if clearSuccess}
-                <span class="text-xs text-[var(--md-sys-color-primary)] font-bold flex items-center gap-1"><Check size={14} class="stroke-[3]" />{settings.language === "ms" ? "Cache berjaya dipadam" : "Cache cleared successfully"}</span>
+                <p class="text-xs text-[var(--md-sys-color-primary)] font-bold flex items-center gap-1"><Check size={14} class="stroke-[3]" />{settings.language === "ms" ? "Cache berjaya dipadam" : "Cache cleared successfully"}</p>
               {/if}
             </div>
           </div>
@@ -640,8 +656,8 @@
       <span class="text-xs text-[var(--md-sys-color-on-surface-variant)] block mt-0.5">{settings.language === 'ms' ? "Aktifkan atau senyapkan semua penggera sekaligus." : "Enable or mute all prayer alerts at once."}</span>
     </div>
     <div class="flex gap-2 shrink-0 relative z-10">
-      <button onclick={() => PRAYER_KEYS.forEach(k => onUpdatePreference(k, { enabled: true }))} class="px-4 py-2 bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] rounded-full text-xs font-black transition-all hover:scale-105 active:scale-95 shadow-sm hover:opacity-95">{t("enableAllAlerts" as any)}</button>
-      <button onclick={() => PRAYER_KEYS.forEach(k => onUpdatePreference(k, { enabled: false }))} class="px-4 py-2 bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] rounded-full text-xs font-black transition-all hover:scale-105 active:scale-95 shadow-sm hover:opacity-95">{t("muteAllAlerts" as any)}</button>
+      <md-filled-tonal-button role="button" tabindex={0} onkeydown={handleKeyDown} onclick={() => PRAYER_KEYS.forEach(k => onUpdatePreference(k, { enabled: true }))} style="height: 40px;">{t("enableAllAlerts" as any)}</md-filled-tonal-button>
+      <md-outlined-button role="button" tabindex={0} onkeydown={handleKeyDown} onclick={() => PRAYER_KEYS.forEach(k => onUpdatePreference(k, { enabled: false }))} style="height: 40px;">{t("muteAllAlerts" as any)}</md-outlined-button>
     </div>
   </div>
 {/snippet}
@@ -982,10 +998,10 @@
     <div class="pt-2 border-t border-[var(--md-sys-color-outline)]/10 flex flex-wrap items-center gap-4 justify-between relative z-10">
       <p class="text-xs text-[var(--md-sys-color-on-surface-variant)] leading-relaxed max-w-sm">{settings.language === 'ms' ? "Tindakan ini akan menetapkan semula semua konfigurasi dan penggera solat serta-merta." : "This action will immediately revert all prayer offsets, sounds, and settings."}</p>
       <div class="flex items-center gap-3 w-full sm:w-auto">
-        <button onclick={handleResetToDefaults} type="button" class="px-6 py-3 w-full sm:w-auto bg-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)] rounded-full font-black text-sm transition-all shadow-sm hover:opacity-95 focus:outline-none hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
-          <RefreshCw size={16} />
+        <md-outlined-button role="button" tabindex={0} onkeydown={handleKeyDown} onclick={handleResetToDefaults} style="height: 48px;">
+          <RefreshCw slot="icon" size={16} />
           {t("resetDefault" as any)}
-        </button>
+        </md-outlined-button>
       </div>
     </div>
     {#if showResetToast}
@@ -1173,7 +1189,7 @@
             {#each tabs as tab}
               {@const Icon = tab.icon}
               {@const isActive = activeTab === tab.id}
-              <button onclick={() => activeTab = tab.id} title={sidebarCollapsed ? tab.label : undefined} class="relative group select-none flex items-center h-12 pl-4 pr-4 rounded-2xl outline-none focus:outline-none cursor-pointer w-full transition-all duration-300 overflow-hidden">
+              <button data-tab={tab.id} onclick={() => activeTab = tab.id} title={sidebarCollapsed ? tab.label : undefined} class="relative group select-none flex items-center h-12 pl-4 pr-4 rounded-2xl outline-none focus:outline-none cursor-pointer w-full transition-all duration-300 overflow-hidden">
                 {#if isActive}
                   <div class="absolute inset-0 bg-[var(--md-sys-color-secondary-container)] border border-[var(--md-sys-color-outline)]/10 shadow-sm z-0 rounded-2xl"></div>
                 {:else}
@@ -1197,7 +1213,7 @@
               {#each tabs as tab}
                 {@const Icon = tab.icon}
                 {@const isActive = activeTab === tab.id}
-                <button onclick={() => activeTab = tab.id} type="button" class={cn("flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 outline-none focus:outline-none cursor-pointer select-none", isActive ? "bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] shadow-sm border border-[var(--md-sys-color-outline)]/10" : "text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-high)]")}>
+                <button data-tab={tab.id} onclick={() => activeTab = tab.id} type="button" class={cn("flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 outline-none focus:outline-none cursor-pointer select-none", isActive ? "bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] shadow-sm border border-[var(--md-sys-color-outline)]/10" : "text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-high)]")}>
                   <Icon size={14} class="shrink-0" />
                   <span>{tab.label}</span>
                 </button>

@@ -112,11 +112,12 @@
   import type { TvModeReminder, TvModeReminderText, TvModeReminderImage } from "../types";
   import { cn } from "../lib/utils";
 
-  let { reminder, assetUrls = {}, language = 'ms', isTvMode = false } = $props<{
+  let { reminder, assetUrls = {}, language = 'ms', isTvMode = false, nextPrayerTime = null } = $props<{
     reminder: TvModeReminder;
     assetUrls?: Record<string, string>;
     language?: 'ms' | 'en';
     isTvMode?: boolean;
+    nextPrayerTime?: Date | null;
   }>();
 
   const getFontSizeClass = (size: string | undefined, isTvMode: boolean) => {
@@ -251,6 +252,24 @@
     }
   });
 
+  function getNextFridayDateTime() {
+    const now = new Date();
+    const result = new Date(now);
+    const day = now.getDay();
+    const targetHour = 13;
+    
+    let daysToAdd = (5 - day + 7) % 7;
+    if (daysToAdd === 0) {
+      if (now.getHours() >= targetHour) {
+        daysToAdd = 7;
+      }
+    }
+    
+    result.setDate(now.getDate() + daysToAdd);
+    result.setHours(targetHour, 0, 0, 0);
+    return result;
+  }
+
   $effect(() => {
     if (!reminder.countdownTarget) {
       timeLeft = null;
@@ -258,8 +277,17 @@
     }
     
     const calculateTimeLeft = () => {
-      const targetTime = new Date(reminder.countdownTarget!).getTime();
-      if (isNaN(targetTime)) return null;
+      let targetTime = 0;
+      if (reminder.countdownTarget === "next-prayer") {
+        if (!nextPrayerTime) return null;
+        targetTime = new Date(nextPrayerTime).getTime();
+      } else if (reminder.countdownTarget === "next-friday") {
+        targetTime = getNextFridayDateTime().getTime();
+      } else {
+        targetTime = new Date(reminder.countdownTarget!).getTime();
+      }
+
+      if (isNaN(targetTime) || targetTime <= 0) return null;
       
       const difference = targetTime - Date.now();
       if (difference <= 0) {
@@ -356,8 +384,9 @@
     const s: string[] = [];
     if (reminder.bgColor) s.push(`background-color: ${reminder.bgColor}`);
     if (reminder.bgGradient) s.push(`background-image: ${reminder.bgGradient}`);
+    if (reminder.borderColor) s.push(`border-color: ${reminder.borderColor}`);
     if (reminder.bgGlowColor) {
-      s.push(`box-shadow: 0 10px 40px -10px ${reminder.bgGlowColor}`);
+      s.push(`box-shadow: 0 0 25px ${reminder.bgGlowColor}`);
     } else if (reminder.type !== 'custom') {
       s.push(`box-shadow: 0 10px 40px -10px ${presets.glow}`);
     }
@@ -377,19 +406,19 @@
 
       switch (borderHighlight) {
         case 'left':
-          classes = cn("border-l-4 border-y border-r border-[var(--md-sys-color-outline)]/10", highlightColorClass);
+          classes = cn("border-l-4 border-y border-r border-[var(--md-sys-color-outline)]/10 tv-card-border-left", highlightColorClass);
           break;
         case 'top':
-          classes = cn("border-t-4 border-x border-b border-[var(--md-sys-color-outline)]/10", highlightColorClass);
+          classes = cn("border-t-4 border-x border-b border-[var(--md-sys-color-outline)]/10 tv-card-border-top", highlightColorClass);
           break;
         case 'right':
-          classes = cn("border-r-4 border-y border-l border-[var(--md-sys-color-outline)]/10", highlightColorClass);
+          classes = cn("border-r-4 border-y border-l border-[var(--md-sys-color-outline)]/10 tv-card-border-right", highlightColorClass);
           break;
         case 'bottom':
-          classes = cn("border-b-4 border-x border-t border-[var(--md-sys-color-outline)]/10", highlightColorClass);
+          classes = cn("border-b-4 border-x border-t border-[var(--md-sys-color-outline)]/10 tv-card-border-bottom", highlightColorClass);
           break;
         case 'all':
-          classes = cn("border-4 border-[var(--md-sys-color-outline)]/10", highlightColorClass);
+          classes = cn("border-4 border-[var(--md-sys-color-outline)]/10 tv-card-border-all", highlightColorClass);
           break;
       }
     }
@@ -513,7 +542,7 @@
     in:customTransitionIn={{ type: reminder.transition || 'fade', duration: 450 }}
     out:customTransitionOut={{ type: reminder.transition || 'fade', duration: 450 }}
     class={cn(
-      "flex-grow flex p-6 sm:p-10 rounded-[36px] relative overflow-hidden transition-all duration-500 select-none min-h-[140px] items-center justify-center",
+      "tv-reminder-card-container flex-grow flex p-6 sm:p-10 rounded-[36px] relative overflow-hidden transition-all duration-500 select-none min-h-[140px] items-center justify-center",
       reminder.bgColor || reminder.bgGradient ? "" : presets.bg,
       borderClasses
     )}
@@ -524,9 +553,9 @@
       <div 
         class={cn(
           "absolute inset-0 pointer-events-none z-0 transition-opacity",
-          bgPattern === 'islamic' ? "islamic-pattern-overlay" :
-          bgPattern === 'dots' ? "bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-500/10 via-transparent to-transparent bg-[size:10px_10px]" :
-          "bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:20px_20px]"
+          bgPattern === 'islamic' ? "islamic-pattern-overlay pattern-islamic" :
+          bgPattern === 'dots' ? "pattern-dots bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-500/10 via-transparent to-transparent bg-[size:10px_10px]" :
+          "pattern-grid bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:20px_20px]"
         )}
         style="opacity: {bgPatternOpacity}"
       ></div>
@@ -534,7 +563,7 @@
 
     <!-- 1b. Ambient Visual Effects -->
     {#if reminder.bgEffect === 'floating-particles'}
-      <div class="absolute inset-0 overflow-hidden pointer-events-none z-0">
+      <div class="absolute inset-0 overflow-hidden pointer-events-none z-0 effect-floating-particles">
         {#each Array.from({ length: 8 }) as _, idx}
           {@const size = 30 + (idx * 15) % 65}
           {@const left = 5 + (idx * 13) % 90}
@@ -549,7 +578,7 @@
     {/if}
 
     {#if reminder.bgEffect === 'ambient-pulses'}
-      <div class="absolute inset-0 overflow-hidden pointer-events-none z-0">
+      <div class="absolute inset-0 overflow-hidden pointer-events-none z-0 effect-ambient-pulses">
         <div 
           class="ambient-pulse-blob-1 bg-[var(--md-sys-color-primary)]"
           style={reminder.borderColor ? `background: ${reminder.borderColor}` : ""}
@@ -648,10 +677,10 @@
                   "card-marquee-container",
                   getFontSizeClass(t.size, isTvMode),
                   getFontFamilyClass(t.font),
-                  getFontWeightClass(t.weight),
                   defaultColorClass,
                   isTitle ? "tracking-wide uppercase mb-1 font-black" :
-                  isSubtitle ? "tracking-widest uppercase mb-1" : ""
+                  isSubtitle ? "tracking-widest uppercase mb-1" : "",
+                  getFontWeightClass(t.weight)
                 )}
                 style={textStyle}
               >
@@ -667,11 +696,11 @@
                 class={cn(
                   getFontSizeClass(t.size, isTvMode),
                   getFontFamilyClass(t.font),
-                  getFontWeightClass(t.weight),
                   getTextAlignClass(t.align),
                   defaultColorClass,
                   isTitle ? "tracking-wide uppercase mb-1 font-black" :
-                  isSubtitle ? "tracking-widest uppercase mb-1" : ""
+                  isSubtitle ? "tracking-widest uppercase mb-1" : "",
+                  getFontWeightClass(t.weight)
                 )}
                 style={textStyle}
               >
