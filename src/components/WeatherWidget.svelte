@@ -16,6 +16,7 @@
     WifiOff,
   } from "lucide-svelte";
   import { appSettings } from "../state/settings.svelte";
+  import { untrack } from "svelte";
   import { cn } from "../lib/utils";
   import { JAKIM_ZONES } from "../lib/zones";
   import FullWeatherModal from "./FullWeatherModal.svelte";
@@ -72,8 +73,11 @@
     const coords = userCoords ? [userCoords.lat, userCoords.lng] : (ZONE_COORDINATES[selectedZone] || [3.13, 101.68]);
     const [lat, lng] = coords;
 
-    const force = lastProvider !== null && lastProvider !== provider;
-    lastProvider = provider;
+    const force = untrack(() => {
+      const isForce = lastProvider !== null && lastProvider !== provider;
+      lastProvider = provider;
+      return isForce;
+    });
 
     let isMounted = true;
 

@@ -62,6 +62,13 @@
       checkCameraPermissionsAndLoad();
     }
   });
+
+  function handleKeyDown(e: KeyboardEvent) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      (e.currentTarget as HTMLElement).click();
+    }
+  }
 </script>
 
 <div class="border border-[var(--md-sys-color-outline)]/10 rounded-2xl overflow-hidden bg-[var(--md-sys-color-surface)] shadow-sm">
@@ -124,30 +131,34 @@
           </span>
           
           <div class="flex flex-wrap gap-2 mt-3">
-            <!-- svelte-ignore a11y_click_events_have_key_events -->
-            <!-- svelte-ignore a11y_no_static_element_interactions -->
             <md-filter-chip
+              role="button"
+              tabindex={0}
+              onkeydown={handleKeyDown}
               label={t("widgetTypeNone")}
               selected={settings.tvModeCenterWidget === "none" || !settings.tvModeCenterWidget}
               onclick={() => updateSettings({ tvModeCenterWidget: "none" })}
             ></md-filter-chip>
-            <!-- svelte-ignore a11y_click_events_have_key_events -->
-            <!-- svelte-ignore a11y_no_static_element_interactions -->
             <md-filter-chip
+              role="button"
+              tabindex={0}
+              onkeydown={handleKeyDown}
               label={t("widgetTypeReminders")}
               selected={settings.tvModeCenterWidget === "reminders"}
               onclick={() => updateSettings({ tvModeCenterWidget: "reminders" })}
             ></md-filter-chip>
-            <!-- svelte-ignore a11y_click_events_have_key_events -->
-            <!-- svelte-ignore a11y_no_static_element_interactions -->
             <md-filter-chip
+              role="button"
+              tabindex={0}
+              onkeydown={handleKeyDown}
               label={t("widgetTypeSlideshow")}
               selected={settings.tvModeCenterWidget === "slideshow"}
               onclick={() => updateSettings({ tvModeCenterWidget: "slideshow" })}
             ></md-filter-chip>
-            <!-- svelte-ignore a11y_click_events_have_key_events -->
-            <!-- svelte-ignore a11y_no_static_element_interactions -->
             <md-filter-chip
+              role="button"
+              tabindex={0}
+              onkeydown={handleKeyDown}
               label={t("widgetTypeCamera")}
               selected={settings.tvModeCenterWidget === "camera"}
               onclick={() => updateSettings({ tvModeCenterWidget: "camera" })}

@@ -68,17 +68,8 @@
     onIqamahAddMinute?: () => void;
   } = $props();
 
-  let visualStyle = $state(StorageManager.getVisualStyle() || 'default');
-  let themeShape = $state(StorageManager.getThemeShape() || 'rounded');
-  
-  onMount(() => {
-    const observer = new MutationObserver(() => {
-      visualStyle = document.documentElement.getAttribute('data-style') || 'default';
-      themeShape = document.documentElement.getAttribute('data-shape') || 'rounded';
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-style', 'data-shape'] });
-    return () => observer.disconnect();
-  });
+  let visualStyle = $derived(appSettings.settings.visualStyle);
+  let themeShape = $derived(appSettings.settings.themeShape);
 
   function playSynthesizedSound(type: 'chime' | 'tick', pitchHz?: number) {
     try {

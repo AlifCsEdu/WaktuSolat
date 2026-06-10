@@ -21,7 +21,6 @@
     Trash2
   } from "lucide-svelte";
   import { cn } from "../lib/utils";
-  import { M3_EASING } from "../lib/motion";
   import { appSettings } from "../state/settings.svelte";
   import { saveWallpaper, clearWallpaper, getWallpaperBlob } from "../lib/db";
   import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
@@ -97,11 +96,19 @@
       getWallpaperBlob().then((blob) => {
         if (blob && active) {
           const url = URL.createObjectURL(blob);
+          const oldUrl = previewWallpaperUrl;
           previewWallpaperUrl = url;
+          if (oldUrl) {
+            URL.revokeObjectURL(oldUrl);
+          }
         }
       });
     } else {
+      const oldUrl = previewWallpaperUrl;
       previewWallpaperUrl = null;
+      if (oldUrl) {
+        URL.revokeObjectURL(oldUrl);
+      }
     }
     return () => {
       active = false;
@@ -206,13 +213,17 @@
       withTransition(async () => {
         try {
           const url = await saveWallpaper(file);
+          const oldUrl = previewWallpaperUrl;
+          previewWallpaperUrl = url;
+          if (oldUrl) {
+            URL.revokeObjectURL(oldUrl);
+          }
           appSettings.updateSettings({
             wallpaperEnabled: true,
             wallpaperSource: "upload",
             wallpaperUrl: "",
             wallpaperLastUpdated: Date.now()
           });
-          previewWallpaperUrl = url;
         } catch (e) {
           console.error("Failed to save custom wallpaper to IndexedDB:", e);
         }
@@ -228,7 +239,11 @@
           wallpaperEnabled: false,
           wallpaperUrl: ""
         });
+        const oldUrl = previewWallpaperUrl;
         previewWallpaperUrl = null;
+        if (oldUrl) {
+          URL.revokeObjectURL(oldUrl);
+        }
       } catch (e) {
         console.error("Failed to clear custom wallpaper:", e);
       }

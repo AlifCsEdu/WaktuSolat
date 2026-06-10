@@ -65,6 +65,13 @@ let activeScrollState = $state<string | null>(null);
 let scrollTimeoutRef = $state<number | null>(null);
 let detectReason = $state<string | null>(null);
 
+function handleKeyDown(e: KeyboardEvent) {
+  if (e.key === "Enter" || e.key === " ") {
+    e.preventDefault();
+    (e.currentTarget as HTMLElement).click();
+  }
+}
+
 $effect(() => {
   if ('permissions' in navigator) {
     navigator.permissions.query({ name: 'geolocation' }).then(result => {
@@ -279,6 +286,9 @@ const handleScroll = (e: Event) => {
 
   <div class="shrink-0 inline-flex w-[48px] h-[48px] lg:w-[56px] lg:h-[56px] hover:scale-105 active:scale-95 transition-transform duration-200">
     <md-filled-tonal-icon-button
+      role="button"
+      tabindex={0}
+      onkeydown={handleKeyDown}
       onclick={() => isMapOpen = true}
       title={t("viewMap")}
       style="--md-filled-tonal-icon-button-container-shape: 20px; width: 100%; height: 100%;"
@@ -464,6 +474,9 @@ const handleScroll = (e: Event) => {
                 <div class="flex gap-2 overflow-x-auto no-scrollbar pb-2 pt-1 -mx-2 px-2 snap-x">
                   {#each recentFiltered as code (code)}
                     <md-filter-chip
+                      role="button"
+                      tabindex={0}
+                      onkeydown={handleKeyDown}
                       label={getZoneLabel(code)}
                       class="snap-start shrink-0"
                       onclick={() => {

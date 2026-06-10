@@ -18,24 +18,35 @@
   // We should manage the object URL correctly to prevent memory leaks
   $effect(() => {
     let active = true;
+    let localUrl = '';
     if (settings.mosqueLogoEnabled) {
       if (settings.mosqueLogoUrl) {
         previewLogoUrl = settings.mosqueLogoUrl;
       } else {
         getMosqueLogoBlob().then((blob) => {
           if (blob && active) {
-            previewLogoUrl = URL.createObjectURL(blob);
+            localUrl = URL.createObjectURL(blob);
+            const oldUrl = previewLogoUrl;
+            previewLogoUrl = localUrl;
+            if (oldUrl && oldUrl.startsWith('blob:')) {
+              URL.revokeObjectURL(oldUrl);
+            }
           }
         });
       }
     } else {
+      const oldUrl = previewLogoUrl;
       previewLogoUrl = null;
+      if (oldUrl && oldUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(oldUrl);
+      }
     }
     
     return () => {
       active = false;
-      // Ideally we would revoke object URLs, but we don't have the original reference reliably here.
-      // Svelte 5 will clean up the effect if we manage the URL cleanly.
+      if (localUrl) {
+        URL.revokeObjectURL(localUrl);
+      }
     };
   });
 
@@ -45,12 +56,16 @@
     if (file) {
       try {
         const url = await saveMosqueLogo(file);
+        const oldUrl = previewLogoUrl;
+        previewLogoUrl = url;
+        if (oldUrl && oldUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(oldUrl);
+        }
         updateSettings({
           mosqueLogoEnabled: true,
           mosqueLogoUrl: "", // Reset URL if uploaded to IndexedDB
           mosqueLogoLastUpdated: Date.now()
         });
-        previewLogoUrl = url;
       } catch (e) {
         console.error("Failed to save custom logo to IndexedDB:", e);
       }
@@ -64,7 +79,11 @@
         mosqueLogoEnabled: false,
         mosqueLogoUrl: ""
       });
+      const oldUrl = previewLogoUrl;
       previewLogoUrl = null;
+      if (oldUrl && oldUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(oldUrl);
+      }
     } catch (e) {
       console.error("Failed to clear mosque logo:", e);
     }

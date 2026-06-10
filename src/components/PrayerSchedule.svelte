@@ -80,6 +80,13 @@
 
   let filter = $state<"all" | "fardu" | "sunnah">("fardu");
 
+  function handleKeyDown(e: KeyboardEvent) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      (e.currentTarget as HTMLElement).click();
+    }
+  }
+
   type PrayerKey =
     | "imsak"
     | "fajr"
@@ -235,6 +242,9 @@
       <div class="flex items-center gap-1">
         <div class="inline-flex mt-1 w-10 h-10 lg:w-[44px] lg:h-[44px] hover:scale-105 active:scale-95 transition-transform">
           <md-icon-button
+            role="button"
+            tabindex={0}
+            onkeydown={handleKeyDown}
             onclick={onShareClick}
             title={t("share" as any) || "Share"}
             style="width: 100%; height: 100%;"
@@ -249,6 +259,9 @@
         </div>
         <div class="inline-flex rotate-3 mt-1 w-10 h-10 lg:w-[48px] lg:h-[48px] hover:scale-105 active:scale-95 transition-transform">
           <md-filled-tonal-icon-button
+            role="button"
+            tabindex={0}
+            onkeydown={handleKeyDown}
             onclick={onSettingsClick}
             title={t("settings")}
             style="--md-filled-tonal-icon-button-container-shape: 20px; width: 100%; height: 100%;"
@@ -269,6 +282,9 @@
         {@const isSelected = filter === f}
         <div class="inline-flex shrink-0 hover:scale-[1.04] active:scale-[0.96] transition-transform">
           <md-filter-chip
+            role="button"
+            tabindex={0}
+            onkeydown={handleKeyDown}
             selected={isSelected ? true : undefined}
             label={
               f === "all"
@@ -430,6 +446,9 @@
             </div>
 
             <md-icon-button
+              role="button"
+              tabindex={0}
+              onkeydown={handleKeyDown}
               onclick={() => onTogglePreference(key as any)}
               class={cn(
                 "flex items-center justify-center shrink-0",

@@ -1,22 +1,14 @@
 <script lang="ts">
   import { cn } from "../../lib/utils";
   import "@material/web/elevation/elevation.js";
+  import { appSettings } from "../../state/settings.svelte";
 
   let { movement = 'sweep' }: { movement?: 'tick' | 'sweep' } = $props();
 
-  let visualStyle = $state('default');
+  let visualStyle = $derived(appSettings.settings.visualStyle);
   let time = $state(new Date());
 
   $effect(() => {
-    // Style Observer
-    const current = document.documentElement.getAttribute('data-style');
-    if (current) visualStyle = current;
-    const observer = new MutationObserver(() => {
-      const currentAttr = document.documentElement.getAttribute('data-style');
-      if (currentAttr && currentAttr !== visualStyle) visualStyle = currentAttr;
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-style'] });
-    
     // Time Updater
     let req: number;
     let interval: ReturnType<typeof setInterval>;
@@ -37,7 +29,6 @@
     }
 
     return () => {
-      observer.disconnect();
       if (req) cancelAnimationFrame(req);
       if (interval) clearInterval(interval);
     };

@@ -1,9 +1,8 @@
 <script lang="ts">
-  import { onMount } from "svelte";
   import { BellRing, Check, X } from "lucide-svelte";
   import { cn } from "../lib/utils";
   import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
-  import { StorageManager } from "../lib/StorageManager";
+  import { appSettings } from "../state/settings.svelte";
 
   let {
     isOpen,
@@ -17,26 +16,7 @@
     language: "ms" | "en";
   } = $props();
 
-  let visualStyle = $state<string>("default");
-
-  onMount(() => {
-    const stored = StorageManager.getVisualStyle();
-    if (stored) visualStyle = stored;
-
-    const observer = new MutationObserver(() => {
-      const current = document.documentElement.getAttribute("data-style") as string | null;
-      if (current && current !== visualStyle) {
-        visualStyle = current;
-      }
-    });
-
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["data-style"]
-    });
-
-    return () => observer.disconnect();
-  });
+  let visualStyle = $derived(appSettings.settings.visualStyle);
 
   let titleText = $derived(language === "ms" ? "Aktifkan Notifikasi Waktu Solat" : "Enable Prayer Notifications");
   let descText = $derived(language === "ms" 

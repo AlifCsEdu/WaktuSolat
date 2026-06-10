@@ -30,11 +30,16 @@
   let view = $state<"daily" | "weekly" | "monthly">("monthly");
   let currentDate = $state<Date>(new Date());
   
-  let dataCache = $state<Record<string, PrayerData[]>>(
-    initialMonthData && initialMonthData.length >= 28
-      ? { [format(new Date(), "yyyy-MM")]: initialMonthData }
-      : {}
-  );
+  let dataCache = $state<Record<string, PrayerData[]>>({});
+  
+  $effect(() => {
+    if (initialMonthData && initialMonthData.length >= 28) {
+      const key = format(new Date(), "yyyy-MM");
+      if (!dataCache[key]) {
+        dataCache[key] = initialMonthData;
+      }
+    }
+  });
   
   let isLoading = $state(false);
   let showLoadingState = $state(false);
@@ -130,6 +135,13 @@
     if (activeTab === "list" && view === "daily") currentDate = addDays(currentDate, 1);
     else if (activeTab === "list" && view === "weekly") currentDate = addDays(currentDate, 7);
     else currentDate = addMonths(startOfMonth(currentDate), 1);
+  };
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      (e.currentTarget as HTMLElement).click();
+    }
   };
 
   let allAvailableData = $derived.by(() => {
@@ -237,6 +249,9 @@
           </div>
 
           <md-filled-tonal-icon-button
+            role="button"
+            tabindex={0}
+            onkeydown={handleKeyDown}
             onclick={onClose}
             class="cursor-pointer"
           >
@@ -307,6 +322,9 @@
               {#if activeTab === 'list'}
                 <div class="shrink-0 sm:mr-1">
                   <md-filled-tonal-button
+                    role="button"
+                    tabindex={0}
+                    onkeydown={handleKeyDown}
                     onclick={handleCopy}
                     disabled={uniqueDisplayData.length === 0}
                     title={t("copySchedule")}
@@ -348,7 +366,10 @@
                 visualStyle === "retro" && "rounded-none",
                 visualStyle === "soft" && "shadow-[var(--soft-shadow-light)] border-[var(--md-sys-color-outline)]/10"
               )}>
-                <md-filled-icon-button 
+                 <md-filled-icon-button 
+                  role="button"
+                  tabindex={0}
+                  onkeydown={handleKeyDown}
                   onclick={handlePrev}
                   disabled={isLoading}
                   class="cursor-pointer"
@@ -379,6 +400,9 @@
                 </div>
 
                 <md-filled-icon-button 
+                  role="button"
+                  tabindex={0}
+                  onkeydown={handleKeyDown}
                   onclick={handleNext}
                   disabled={isLoading}
                   class="cursor-pointer"

@@ -1,3 +1,5 @@
+import { appSettings } from "../../state/settings.svelte";
+
 export function createTime(getMovement: () => 'tick' | 'sweep' = () => 'sweep') {
     let time = $state(new Date());
 
@@ -34,27 +36,7 @@ export function createTime(getMovement: () => 'tick' | 'sweep' = () => 'sweep') 
 }
 
 export function createVisualStyle() {
-    let style = $state<'default' | 'retro' | 'glass' | 'soft'>('default');
-
-    $effect(() => {
-        const getStoredStyle = () => {
-            const current = document.documentElement.getAttribute('data-style') as 'default' | 'retro' | 'glass' | 'soft' | null;
-            if (current) style = current;
-        };
-        
-        getStoredStyle();
-
-        const observer = new MutationObserver(() => {
-            const current = document.documentElement.getAttribute('data-style') as 'default' | 'retro' | 'glass' | 'soft' | null;
-            if (current && current !== style) style = current;
-        });
-
-        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-style'] });
-        
-        return () => observer.disconnect();
-    });
-
     return {
-        get value() { return style; }
+        get value() { return appSettings.settings.visualStyle; }
     };
 }

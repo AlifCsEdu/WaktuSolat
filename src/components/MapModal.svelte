@@ -7,6 +7,7 @@
   // @ts-ignore
   import "leaflet/dist/leaflet.css";
   import { appSettings } from "../state/settings.svelte";
+  import { themeState } from "../state/theme.svelte";
   import { JAKIM_ZONES } from "../lib/zones";
   import { ZONE_COORDINATES } from "../lib/zoneCoordinates";
   import "@material/web/iconbutton/icon-button.js";
@@ -34,7 +35,7 @@
   let markerLayer: L.Marker | null = null;
 
   let geoData = $state<FeatureCollection | null>(null);
-  let isDark = $state(false);
+  let isDark = $derived(themeState.activeDark);
 
   let zoneLabel = $derived.by(() => {
     for (const state of JAKIM_ZONES) {
@@ -46,16 +47,7 @@
     return "";
   });
 
-  $effect(() => {
-    if (isOpen) {
-      isDark = document.documentElement.classList.contains('dark');
-      const observer = new MutationObserver(() => {
-        isDark = document.documentElement.classList.contains('dark');
-      });
-      observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-      return () => observer.disconnect();
-    }
-  });
+
 
   $effect(() => {
     if (isOpen && map) {

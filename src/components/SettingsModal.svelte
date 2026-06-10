@@ -83,16 +83,7 @@
   let settings = $derived(appSettings.settings);
   const updateSettings = (u: any) => appSettings.updateSettings(u);
   
-  let visualStyle = $state(StorageManager.getVisualStyle() || 'default');
-  $effect(() => {
-    visualStyle = StorageManager.getVisualStyle() || 'default';
-    const observer = new MutationObserver(() => {
-      const current = document.documentElement.getAttribute('data-style');
-      if (current && current !== visualStyle) visualStyle = current as any;
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-style'] });
-    return () => observer.disconnect();
-  });
+  let visualStyle = $derived(appSettings.settings.visualStyle);
   
   let activeTab = $state("general");
   let showAdvancedGeneral = $state(false);
@@ -112,7 +103,7 @@
   
   let searchQuery = $state("");
   let searchInputRef = $state<HTMLInputElement | null>(null);
-  let prevVolumeRef = $state<number>(settings.soundVolume ?? 80);
+  let prevVolumeRef = $state<number>(80);
 
   let previewingPrayer = $state<string | null>(null);
   let previewTimeoutRef = $state<ReturnType<typeof setTimeout> | null>(null);
@@ -319,28 +310,34 @@
   let currentVol = $derived(settings.soundVolume ?? 80);
   let isMuted = $derived(currentVol === 0);
 
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      (e.currentTarget as HTMLElement).click();
+    }
+  };
 </script>
 
 {#snippet languageTime()}
   <div class={cn("relative rounded-[32px] p-6 space-y-6 overflow-hidden", getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface-container)] border border-[var(--md-sys-color-outline)]/5 shadow-sm"))}>
     <md-elevation></md-elevation>
     <div class="space-y-3 relative z-10">
-      <label class="md3-title-medium font-bold text-[var(--md-sys-color-primary)] flex items-center gap-2">
+      <span class="md3-title-medium font-bold text-[var(--md-sys-color-primary)] flex items-center gap-2">
         {t("language")}
-      </label>
+      </span>
       <div class="flex flex-wrap gap-3">
-        <md-filter-chip label={t("malay")} selected={settings.language === "ms"} onclick={() => updateSettings({ language: "ms" })}></md-filter-chip>
-        <md-filter-chip label={t("english")} selected={settings.language === "en"} onclick={() => updateSettings({ language: "en" })}></md-filter-chip>
+        <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={t("malay")} selected={settings.language === "ms"} onclick={() => updateSettings({ language: "ms" })}></md-filter-chip>
+        <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={t("english")} selected={settings.language === "en"} onclick={() => updateSettings({ language: "en" })}></md-filter-chip>
       </div>
     </div>
 
     <div class="space-y-3 relative z-10">
-      <label class="md3-title-medium font-bold text-[var(--md-sys-color-primary)] flex items-center gap-2">
+      <span class="md3-title-medium font-bold text-[var(--md-sys-color-primary)] flex items-center gap-2">
         {t("timeFormat")}
-      </label>
+      </span>
       <div class="flex flex-wrap gap-3">
-        <md-filter-chip label={t("hour12")} selected={settings.timeFormat === "12h"} onclick={() => updateSettings({ timeFormat: "12h" })}></md-filter-chip>
-        <md-filter-chip label={t("hour24")} selected={settings.timeFormat === "24h"} onclick={() => updateSettings({ timeFormat: "24h" })}></md-filter-chip>
+        <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={t("hour12")} selected={settings.timeFormat === "12h"} onclick={() => updateSettings({ timeFormat: "12h" })}></md-filter-chip>
+        <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={t("hour24")} selected={settings.timeFormat === "24h"} onclick={() => updateSettings({ timeFormat: "24h" })}></md-filter-chip>
       </div>
     </div>
   </div>
@@ -350,12 +347,12 @@
   <div class={cn("relative rounded-[32px] p-6 space-y-6 overflow-hidden", getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface-container)] border border-[var(--md-sys-color-outline)]/5 shadow-sm"))}>
     <md-elevation></md-elevation>
     <div class="space-y-3 relative z-10">
-      <label class="md3-title-medium font-bold text-[var(--md-sys-color-primary)] flex items-center gap-2">
+      <span class="md3-title-medium font-bold text-[var(--md-sys-color-primary)] flex items-center gap-2">
         {t("mazhab")}
-      </label>
+      </span>
       <div class="flex flex-wrap gap-3">
-        <md-filter-chip label={t("mazhabShafii" as any)} selected={settings.mazhab !== "hanafi"} onclick={() => updateSettings({ mazhab: "shafii" })}></md-filter-chip>
-        <md-filter-chip label={t("mazhabHanafi" as any)} selected={settings.mazhab === "hanafi"} onclick={() => updateSettings({ mazhab: "hanafi" })}></md-filter-chip>
+        <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={t("mazhabShafii" as any)} selected={settings.mazhab !== "hanafi"} onclick={() => updateSettings({ mazhab: "shafii" })}></md-filter-chip>
+        <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={t("mazhabHanafi" as any)} selected={settings.mazhab === "hanafi"} onclick={() => updateSettings({ mazhab: "hanafi" })}></md-filter-chip>
       </div>
       {#if settings.mazhab === "hanafi"}
         <p class="text-sm text-[var(--md-sys-color-error)] mt-2 italic font-bold">
@@ -365,13 +362,13 @@
     </div>
 
     <div class="space-y-3 relative z-10">
-      <label class="md3-title-medium font-bold text-[var(--md-sys-color-primary)] flex items-center gap-2">
+      <span class="md3-title-medium font-bold text-[var(--md-sys-color-primary)] flex items-center gap-2">
         {t("hijriFormat")}
-      </label>
+      </span>
       <div class="flex flex-wrap gap-3">
-        <md-filter-chip label={t("hijriBoth")} selected={!settings.hijriFormat || settings.hijriFormat === "both"} onclick={() => updateSettings({ hijriFormat: "both" })}></md-filter-chip>
-        <md-filter-chip label={t("hijriText")} selected={settings.hijriFormat === "text"} onclick={() => updateSettings({ hijriFormat: "text" })}></md-filter-chip>
-        <md-filter-chip label={t("hijriNumber")} selected={settings.hijriFormat === "number"} onclick={() => updateSettings({ hijriFormat: "number" })}></md-filter-chip>
+        <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={t("hijriBoth")} selected={!settings.hijriFormat || settings.hijriFormat === "both"} onclick={() => updateSettings({ hijriFormat: "both" })}></md-filter-chip>
+        <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={t("hijriText")} selected={settings.hijriFormat === "text"} onclick={() => updateSettings({ hijriFormat: "text" })}></md-filter-chip>
+        <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={t("hijriNumber")} selected={settings.hijriFormat === "number"} onclick={() => updateSettings({ hijriFormat: "number" })}></md-filter-chip>
       </div>
     </div>
   </div>
@@ -381,9 +378,9 @@
   <div class={cn("relative rounded-[32px] p-6 space-y-4 overflow-hidden", getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface-container)] border border-[var(--md-sys-color-outline)]/5 shadow-sm"))}>
     <md-elevation></md-elevation>
     <div class="space-y-1 relative z-10">
-      <label class="md3-title-medium font-bold text-[var(--md-sys-color-primary)] flex items-center gap-2">
+      <span class="md3-title-medium font-bold text-[var(--md-sys-color-primary)] flex items-center gap-2">
         {t("contrastLevelLabel" as any) || "Tahap Kontras"}
-      </label>
+      </span>
       <p class="text-xs text-[var(--md-sys-color-on-surface-variant)] leading-relaxed">
         {settings.language === "ms" ? "Tingkatkan kontras warna teks untuk keterbacaan yang lebih baik." : "Increase text contrast for better legibility."}
       </p>
@@ -394,7 +391,7 @@
         { label: t("contrastMedium" as any) || "Sederhana", value: 0.5 },
         { label: t("contrastHigh" as any) || "Tinggi", value: 1.0 }
       ] as c}
-        <md-filter-chip label={c.label} selected={(settings.themeContrast ?? 0) === c.value} onclick={() => updateSettings({ themeContrast: c.value })}></md-filter-chip>
+        <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={c.label} selected={(settings.themeContrast ?? 0) === c.value} onclick={() => updateSettings({ themeContrast: c.value })}></md-filter-chip>
       {/each}
     </div>
   </div>
@@ -404,14 +401,17 @@
   <div class={cn("relative rounded-[32px] overflow-hidden flex flex-col", getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface-container)] border border-[var(--md-sys-color-outline)]/5 shadow-sm"))}>
     <md-elevation></md-elevation>
     <div class="p-6 pb-4 bg-[var(--md-sys-color-surface-container-high)] relative z-10">
-      <label class="md3-title-medium font-bold text-[var(--md-sys-color-primary)] flex items-center gap-2">
+      <span class="md3-title-medium font-bold text-[var(--md-sys-color-primary)] flex items-center gap-2">
         {t("clockStyle" as any)}
-      </label>
+      </span>
     </div>
     <div class="flex flex-wrap gap-2.5 p-6 bg-[var(--md-sys-color-surface-container)] relative z-10">
       {#each ["digital", "analog", "analog-numeric", "analog-roman", "analog-arabic", "anadigi", "chronograph", "flip", "word", "minimal", "orbit", "typographic", "prayer-ring", "dashboard", "abstract", "swiss-station", "bauhaus", "layered"] as style}
         <div class="shrink-0">
           <md-filter-chip
+            role="button"
+            tabindex={0}
+            onkeydown={handleKeyDown}
             label={style === "digital" ? t("clockStyleDigital" as any) : style === "analog" ? t("clockStyleAnalog" as any) : style === "analog-numeric" ? t("clockStyleAnalogNumeric" as any) : style === "analog-roman" ? t("clockStyleAnalogRoman" as any) : style === "analog-arabic" ? t("clockStyleAnalogArabic" as any) : style === "anadigi" ? t("clockStyleAnaDigi" as any) : style === "chronograph" ? t("clockStyleChronograph" as any) : style === "flip" ? t("clockStyleFlip" as any) : style === "word" ? t("clockStyleWord" as any) : style === "minimal" ? t("clockStyleMinimal" as any) : style === "orbit" ? t("clockStyleOrbit" as any) : style === "typographic" ? t("clockStyleTypographic" as any) : style === "prayer-ring" ? t("clockStylePrayerRing" as any) : style === "dashboard" ? t("clockStyleDashboard" as any) : style === "swiss-station" ? t("clockStyleSwissStation" as any) : style === "bauhaus" ? t("clockStyleBauhaus" as any) : style === "layered" ? t("clockStyleLayered" as any) : t("clockStyleAbstract" as any)}
             selected={settings.clockFace === style || (!settings.clockFace && style === "digital")}
             onclick={() => updateSettings({ clockFace: style })}
@@ -422,12 +422,15 @@
 
     {#if settings.clockFace !== "digital"}
       <div class="p-5 pt-0 border-t border-[var(--md-sys-color-outline)]/5 mt-2 bg-[var(--md-sys-color-surface-container)] relative z-10">
-        <label class="md3-label-large font-bold text-[var(--md-sys-color-primary)] flex items-center gap-2 mb-3 mt-4">
+        <span class="md3-label-large font-bold text-[var(--md-sys-color-primary)] flex items-center gap-2 mb-3 mt-4">
           {t("clockMovement" as any)}
-        </label>
+        </span>
         <div class="flex flex-wrap gap-2">
           {#each ["sweep", "tick"] as movement}
             <md-filter-chip
+              role="button"
+              tabindex={0}
+              onkeydown={handleKeyDown}
               label={movement === "sweep" ? t("clockMovementSweep" as any) : t("clockMovementTick" as any)}
               selected={settings.clockMovement === movement || (!settings.clockMovement && movement === "sweep")}
               onclick={() => updateSettings({ clockMovement: movement })}
@@ -480,7 +483,7 @@
       <div transition:slide={{ duration: 250 }} class="overflow-hidden space-y-6 pt-4 border-t border-[var(--md-sys-color-outline)]/10 relative z-10">
         <div class="flex items-center justify-between p-4 rounded-3xl bg-[var(--md-sys-color-surface)] ring-1 ring-[var(--md-sys-color-outline)]/5 shadow-sm mt-4">
           <div>
-            <label class="md3-label-large font-bold text-[var(--md-sys-color-on-surface)] block mb-0.5">{t("showIqamah" as any)}</label>
+            <span class="md3-label-large font-bold text-[var(--md-sys-color-on-surface)] block mb-0.5">{t("showIqamah" as any)}</span>
             <p class="md3-body-small text-[var(--md-sys-color-on-surface-variant)] leading-relaxed max-w-[200px] sm:max-w-xs">{t("iqamahDesc" as any)}</p>
           </div>
           <md-switch selected={!!settings.showIqamah} onchange={(e: any) => updateSettings({ showIqamah: e.target.selected })} icons></md-switch>
@@ -488,7 +491,7 @@
 
         <div class="flex items-center justify-between p-4 rounded-3xl bg-[var(--md-sys-color-surface)] ring-1 ring-[var(--md-sys-color-outline)]/5 shadow-sm mt-2">
           <div>
-            <label class="md3-label-large font-bold text-[var(--md-sys-color-on-surface)] block mb-0.5">{t("trackImsak" as any) || "Track Imsak"}</label>
+            <span class="md3-label-large font-bold text-[var(--md-sys-color-on-surface)] block mb-0.5">{t("trackImsak" as any) || "Track Imsak"}</span>
             <p class="md3-body-small text-[var(--md-sys-color-on-surface-variant)] leading-relaxed max-w-[200px] sm:max-w-xs">{t("trackImsakDesc" as any) || "Show Imsak as the next time after Isha"}</p>
           </div>
           <md-switch selected={!!settings.trackImsak} onchange={(e: any) => updateSettings({ trackImsak: e.target.selected })} icons></md-switch>
@@ -496,7 +499,7 @@
 
         <div class="flex items-center justify-between p-4 rounded-3xl bg-[var(--md-sys-color-surface)] ring-1 ring-[var(--md-sys-color-outline)]/5 shadow-sm mt-2">
           <div>
-            <label class="md3-label-large font-bold text-[var(--md-sys-color-on-surface)] block mb-0.5">{t("showJumaat" as any) || "Show Jumu'ah"}</label>
+            <span class="md3-label-large font-bold text-[var(--md-sys-color-on-surface)] block mb-0.5">{t("showJumaat" as any) || "Show Jumu'ah"}</span>
             <p class="md3-body-small text-[var(--md-sys-color-on-surface-variant)] leading-relaxed max-w-[200px] sm:max-w-xs">{t("showJumaatDesc" as any) || "Replace Dhuhr with Jumu'ah on Fridays"}</p>
           </div>
           <md-switch selected={settings.showJumaat !== false} onchange={(e: any) => updateSettings({ showJumaat: e.target.selected })} icons></md-switch>
@@ -539,10 +542,10 @@
             </div>
 
             <div class="space-y-2">
-              <label class="md3-label-large font-bold text-[var(--md-sys-color-on-surface)] block">{t("offlineDuration" as any)}</label>
+              <span class="md3-label-large font-bold text-[var(--md-sys-color-on-surface)] block">{t("offlineDuration" as any)}</span>
               <div class="flex flex-wrap gap-2 mt-1">
                 {#each ["week", "month", "year"] as range}
-                  <md-filter-chip label={t(`offline${range.charAt(0).toUpperCase() + range.slice(1)}` as any)} selected={downloadRange === range} onclick={() => downloadRange = range as any}></md-filter-chip>
+                  <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={t(`offline${range.charAt(0).toUpperCase() + range.slice(1)}` as any)} selected={downloadRange === range} onclick={() => downloadRange = range as any}></md-filter-chip>
                 {/each}
               </div>
             </div>
@@ -586,7 +589,7 @@
 
           <div class="flex items-center justify-between p-4 rounded-3xl bg-[var(--md-sys-color-surface)] ring-1 ring-[var(--md-sys-color-outline)]/5 shadow-sm">
             <div class="pr-4">
-              <label class="md3-label-large font-bold text-[var(--md-sys-color-on-surface)] block mb-0.5">{t("autoSyncOffline" as any)}</label>
+              <span class="md3-label-large font-bold text-[var(--md-sys-color-on-surface)] block mb-0.5">{t("autoSyncOffline" as any)}</span>
               <p class="md3-body-small text-[var(--md-sys-color-on-surface-variant)] leading-relaxed max-w-[200px] sm:max-w-xs">{t("autoSyncOfflineDesc" as any)}</p>
             </div>
             <md-switch selected={!!settings.autoSyncOffline} onchange={(e: any) => updateSettings({ autoSyncOffline: e.target.selected })} icons></md-switch>
@@ -657,10 +660,10 @@
     </div>
     <div class="space-y-4 pt-2 border-t border-[var(--md-sys-color-outline)]/10 relative z-10">
       <div class="space-y-2">
-        <label class="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1">{t("azanAlertStyle" as any)}</label>
+        <span class="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1 block">{t("azanAlertStyle" as any)}</span>
         <div class="flex flex-wrap gap-2">
           {#each ["dramatic", "standard", "modern", "subtle", "minimal", "none"] as style}
-            <md-filter-chip label={style === "dramatic" ? t("styleDramatic" as any) : style === "standard" ? t("styleStandard" as any) : style === "modern" ? t("styleModern" as any) : style === "subtle" ? t("styleSubtle" as any) : style === "minimal" ? t("styleMinimal" as any) : t("none")} selected={settings.azanAlertStyle === style || (!settings.azanAlertStyle && style === "standard")} onclick={() => updateSettings({ azanAlertStyle: style })}></md-filter-chip>
+            <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={style === "dramatic" ? t("styleDramatic" as any) : style === "standard" ? t("styleStandard" as any) : style === "modern" ? t("styleModern" as any) : style === "subtle" ? t("styleSubtle" as any) : style === "minimal" ? t("styleMinimal" as any) : t("none")} selected={settings.azanAlertStyle === style || (!settings.azanAlertStyle && style === "standard")} onclick={() => updateSettings({ azanAlertStyle: style })}></md-filter-chip>
           {/each}
         </div>
       </div>
@@ -723,10 +726,10 @@
         </div>
         <div class={cn("flex flex-col gap-4 mt-2 transition-opacity duration-300 relative z-10", !pref.enabled && "opacity-50 pointer-events-none")}>
           <div class="space-y-2">
-            <label class="text-[11px] font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1">{t("sound")}</label>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1 block">{t("sound")}</span>
             <div class="flex flex-wrap gap-2">
               {#each SOUND_OPTIONS as opt}
-                <md-filter-chip label={opt.label} selected={pref.sound === opt.value} onclick={() => {
+                <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={opt.label} selected={pref.sound === opt.value} onclick={() => {
                   onUpdatePreference(key, { sound: opt.value as any });
                   triggerTestSound(opt.value as any, `${t("testSoundBody" as any)} ${t(key as any)}`, key);
                 }}>
@@ -745,10 +748,10 @@
             </div>
           </div>
           <div class="space-y-2">
-            <label class="text-[11px] font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1">{t("preAlert")}</label>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1 block">{t("preAlert")}</span>
             <div class="flex flex-wrap gap-2">
               {#each PRE_ALERT_OPTIONS as opt}
-                <md-filter-chip label={opt.label} selected={pref.preAlert === opt.value} onclick={() => onUpdatePreference(key, { preAlert: opt.value as any })}></md-filter-chip>
+                <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={opt.label} selected={pref.preAlert === opt.value} onclick={() => onUpdatePreference(key, { preAlert: opt.value as any })}></md-filter-chip>
               {/each}
             </div>
           </div>
@@ -877,33 +880,33 @@
     {#if showAdvancedCalculations}
       <div transition:slide={{ duration: 250 }} class="overflow-hidden space-y-6 pt-4 border-t border-[var(--md-sys-color-outline)]/10 relative z-10">
         <div class="space-y-2">
-          <label class="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1">{t("suhoorOffset" as any)}</label>
+          <span class="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1 block">{t("suhoorOffset" as any)}</span>
           <div class="flex flex-wrap gap-2">
             {#each [15, 30, 45, 60] as mins}
-              <md-filter-chip label={`${mins} min`} selected={settings.suhoorOffset === mins || (!settings.suhoorOffset && mins === 30)} onclick={() => updateSettings({ suhoorOffset: mins })}></md-filter-chip>
+              <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={`${mins} min`} selected={settings.suhoorOffset === mins || (!settings.suhoorOffset && mins === 30)} onclick={() => updateSettings({ suhoorOffset: mins })}></md-filter-chip>
             {/each}
           </div>
         </div>
         <div class="space-y-2">
-          <label class="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1">{t("imsakOffset" as any)}</label>
+          <span class="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1 block">{t("imsakOffset" as any)}</span>
           <div class="flex flex-wrap gap-2">
             {#each [2, 5, 10, 15] as mins}
-              <md-filter-chip label={`${mins} min`} selected={settings.imsakOffset === mins || (!settings.imsakOffset && mins === 10)} onclick={() => updateSettings({ imsakOffset: mins })}></md-filter-chip>
+              <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={`${mins} min`} selected={settings.imsakOffset === mins || (!settings.imsakOffset && mins === 10)} onclick={() => updateSettings({ imsakOffset: mins })}></md-filter-chip>
             {/each}
           </div>
         </div>
         <div class="space-y-2">
-          <label class="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1">{t("midnightMethod" as any)}</label>
+          <span class="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1 block">{t("midnightMethod" as any)}</span>
           <div class="flex flex-wrap gap-2">
-            <md-filter-chip label={t("midnightFajr" as any)} selected={!settings.midnightMethod || settings.midnightMethod === "fajr"} onclick={() => updateSettings({ midnightMethod: "fajr" })}></md-filter-chip>
-            <md-filter-chip label={t("midnightSunrise" as any)} selected={settings.midnightMethod === "sunrise"} onclick={() => updateSettings({ midnightMethod: "sunrise" })}></md-filter-chip>
+            <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={t("midnightFajr" as any)} selected={!settings.midnightMethod || settings.midnightMethod === "fajr"} onclick={() => updateSettings({ midnightMethod: "fajr" })}></md-filter-chip>
+            <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={t("midnightSunrise" as any)} selected={settings.midnightMethod === "sunrise"} onclick={() => updateSettings({ midnightMethod: "sunrise" })}></md-filter-chip>
           </div>
         </div>
         <div class="space-y-2">
-          <label class="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1">{t("asrEnds" as any)}</label>
+          <span class="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1 block">{t("asrEnds" as any)}</span>
           <div class="flex flex-wrap gap-2">
-            <md-filter-chip label={t("asrEndsMaghrib" as any)} selected={!settings.asrEnds || settings.asrEnds === "maghrib"} onclick={() => updateSettings({ asrEnds: "maghrib" })}></md-filter-chip>
-            <md-filter-chip label={t("asrEndsSunset" as any)} selected={settings.asrEnds === "sunset"} onclick={() => updateSettings({ asrEnds: "sunset" })}></md-filter-chip>
+            <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={t("asrEndsMaghrib" as any)} selected={!settings.asrEnds || settings.asrEnds === "maghrib"} onclick={() => updateSettings({ asrEnds: "maghrib" })}></md-filter-chip>
+            <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={t("asrEndsSunset" as any)} selected={settings.asrEnds === "sunset"} onclick={() => updateSettings({ asrEnds: "sunset" })}></md-filter-chip>
           </div>
         </div>
       </div>
@@ -932,11 +935,11 @@
     {#if showHijriEngine}
       <div transition:slide={{ duration: 250 }} class="overflow-hidden space-y-6 pt-4 border-t border-[var(--md-sys-color-outline)]/10 relative z-10">
         <div class="space-y-2">
-          <label class="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1">{t("hijriMethod" as any)}</label>
+          <span class="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1 block">{t("hijriMethod" as any)}</span>
           <div class="w-full">
             <md-outlined-select value={settings.hijriMethod || "jakim"} onchange={(e: any) => updateSettings({ hijriMethod: e.target.value })} style="width: 100%">
               {#each ["jakim", "umalqura", "tbla", "civil", "islamic"] as method}
-                <md-select-option value={method} onclick={() => updateSettings({ hijriMethod: method })}>
+                <md-select-option role="option" tabindex={0} aria-selected={(settings.hijriMethod || "jakim") === method} onkeydown={handleKeyDown} value={method} onclick={() => updateSettings({ hijriMethod: method })}>
                   <div slot="headline">{t(`method${method.charAt(0).toUpperCase() + method.slice(1)}` as any)}</div>
                 </md-select-option>
               {/each}
@@ -1012,10 +1015,10 @@
     </div>
     <div class="space-y-4 pt-2 border-t border-[var(--md-sys-color-outline)]/10 relative z-10">
       <div class="space-y-2">
-        <label class="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1">{t("iqamahCountdownSound" as any)}</label>
+        <span class="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1 block">{t("iqamahCountdownSound" as any)}</span>
         <div class="flex flex-wrap gap-2">
           {#each ["chime", "tick", "none"] as sound}
-            <md-filter-chip label={sound === "chime" ? t("chime" as any) : sound === "tick" ? t("clockMovementTick" as any) : t("none")} selected={settings.iqamahCountdownSound === sound || (!settings.iqamahCountdownSound && sound === "chime")} onclick={() => updateSettings({ iqamahCountdownSound: sound })}></md-filter-chip>
+            <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={sound === "chime" ? t("chime" as any) : sound === "tick" ? t("clockMovementTick" as any) : t("none")} selected={settings.iqamahCountdownSound === sound || (!settings.iqamahCountdownSound && sound === "chime")} onclick={() => updateSettings({ iqamahCountdownSound: sound })}></md-filter-chip>
           {/each}
         </div>
       </div>

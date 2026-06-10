@@ -23,10 +23,10 @@ export default defineConfig(({mode}) => {
               if (id.includes('@material/web')) {
                 return 'vendor-material';
               }
-              if (id.includes('leaflet') || id.includes('react-leaflet')) {
+              if (id.includes('leaflet')) {
                 return 'vendor-map';
               }
-              if (id.includes('motion') || id.includes('framer-motion')) {
+              if (id.includes('motion')) {
                 return 'vendor-motion';
               }
             }

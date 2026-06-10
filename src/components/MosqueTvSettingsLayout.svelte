@@ -8,6 +8,12 @@
   const settings = $derived(appSettings.settings);
   const updateSettings = (updates: any) => appSettings.updateSettings(updates);
   const t = (key: any, params?: any) => appSettings.t(key, params);
+  function handleKeyDown(e: KeyboardEvent) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      (e.currentTarget as HTMLElement).click();
+    }
+  }
 </script>
 
 <div class="border border-[var(--md-sys-color-outline)]/10 rounded-2xl overflow-hidden bg-[var(--md-sys-color-surface)] shadow-sm">
@@ -128,23 +134,26 @@
             {t("tvModeTickerSpeedDesc")}
           </span>
           <div class="flex flex-wrap gap-2 mt-3">
-            <!-- svelte-ignore a11y_click_events_have_key_events -->
-            <!-- svelte-ignore a11y_no_static_element_interactions -->
             <md-filter-chip
+              role="button"
+              tabindex={0}
+              onkeydown={handleKeyDown}
               label={t("tickerSpeedSlow")}
               selected={settings.tvModeTickerSpeed === "slow"}
               onclick={() => updateSettings({ tvModeTickerSpeed: "slow" })}
             ></md-filter-chip>
-            <!-- svelte-ignore a11y_click_events_have_key_events -->
-            <!-- svelte-ignore a11y_no_static_element_interactions -->
             <md-filter-chip
+              role="button"
+              tabindex={0}
+              onkeydown={handleKeyDown}
               label={t("tickerSpeedMedium")}
               selected={settings.tvModeTickerSpeed === "medium" || !settings.tvModeTickerSpeed}
               onclick={() => updateSettings({ tvModeTickerSpeed: "medium" })}
             ></md-filter-chip>
-            <!-- svelte-ignore a11y_click_events_have_key_events -->
-            <!-- svelte-ignore a11y_no_static_element_interactions -->
             <md-filter-chip
+              role="button"
+              tabindex={0}
+              onkeydown={handleKeyDown}
               label={t("tickerSpeedFast")}
               selected={settings.tvModeTickerSpeed === "fast"}
               onclick={() => updateSettings({ tvModeTickerSpeed: "fast" })}

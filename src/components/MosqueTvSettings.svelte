@@ -20,17 +20,7 @@
   const settings = $derived(appSettings.settings);
   const t = (key: any, params?: any) => appSettings.t(key, params);
   
-  let visualStyle = $state<any>('default');
-
-  $effect(() => {
-    visualStyle = StorageManager.getVisualStyle() || 'default';
-    const observer = new MutationObserver(() => {
-      const current = document.documentElement.getAttribute('data-style');
-      if (current && current !== visualStyle) visualStyle = current;
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-style'] });
-    return () => observer.disconnect();
-  });
+  let visualStyle = $derived(appSettings.settings.visualStyle);
 
   let openAccordions = $state({
     basic: true,

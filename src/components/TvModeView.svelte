@@ -109,22 +109,34 @@
 
   $effect(() => {
     let active = true;
+    let localUrl = '';
     if (settings.mosqueLogoEnabled) {
       if (settings.mosqueLogoUrl) {
         logoUrl = settings.mosqueLogoUrl;
       } else {
         getMosqueLogoBlob().then((blob) => {
           if (blob && active) {
-            const url = URL.createObjectURL(blob);
-            logoUrl = url;
+            localUrl = URL.createObjectURL(blob);
+            const oldUrl = logoUrl;
+            logoUrl = localUrl;
+            if (oldUrl && oldUrl.startsWith('blob:')) {
+              URL.revokeObjectURL(oldUrl);
+            }
           }
         });
       }
     } else {
+      const oldUrl = logoUrl;
       logoUrl = null;
+      if (oldUrl && oldUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(oldUrl);
+      }
     }
     return () => {
       active = false;
+      if (localUrl) {
+        URL.revokeObjectURL(localUrl);
+      }
     };
   });
 
@@ -466,6 +478,10 @@
           try { URL.revokeObjectURL(url); } catch (e) {}
         });
         reminderAssetUrls = urls;
+      } else {
+        Object.values(urls).forEach(url => {
+          try { URL.revokeObjectURL(url); } catch (e) {}
+        });
       }
     };
     loadAssets();
