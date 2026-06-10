@@ -164,3 +164,24 @@ Integrity mode: development
 - [ ] Toggling notification alerts in Settings successfully updates localStorage and local notification registrations.
 - [ ] Background alerts trigger at the exact scheduled prayer times, showing the prayer name and a helpful message.
 
+## Follow-up — 2026-06-11T00:37:47+08:00
+
+Fix the Waktu Solat Expressive calendar page so that it is readable and clickable, resolving the overlay/blur bug.
+
+Working directory: c:\Users\alif325\Documents\WIndsurf projeks\waktu-solat-expressive
+
+## Requirements
+
+### R1. Resolve Calendar Click & Blur Bug
+- Fix the issue in the calendar section where navigation to the calendar route (`/calendar`) renders a blurry overlay that blocks pointer events and click interactions.
+- Ensure the calendar grid, tabs, and daily/weekly/monthly prayer list views are fully readable and clickable.
+
+### R2. Core Calendar Features Retained
+- Maintain full functionality of the calendar: month caching, tab switching, copy schedule, timezone matching, and opening individual prayer detail modals.
+
+## Acceptance Criteria
+
+### Interaction & Readability
+- [ ] Navigating to `/calendar` renders the calendar clearly without any empty blurry overlays on top.
+- [ ] Users can click on calendar grid days, tabs (grid, list, holidays), and nav buttons.
+- [ ] Closing the calendar navigates back to the homepage (`/`) successfully.

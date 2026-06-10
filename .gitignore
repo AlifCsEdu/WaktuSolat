@@ -13,3 +13,5 @@ test-results/
 
 # Playwright test screenshots
 tests/e2e/screenshots/
+
+.wrangler/
