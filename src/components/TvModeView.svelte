@@ -1,6 +1,6 @@
 <script lang="ts">
   import { format, differenceInSeconds } from "date-fns";
-  import { fade, fly } from "svelte/transition";
+  import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
   import {
     Tv, 
     MapPin, 
@@ -676,7 +676,7 @@
   {#if activeReminders.length > 0}
     <div class="flex-1 flex flex-col h-full min-h-0 relative">
       {#key activeReminders[reminderIdx]?.id}
-        <div class="absolute inset-0" in:fade={{ duration: 300 }} out:fade={{ duration: 300 }}>
+        <div class="absolute inset-0" in:fade={{ duration: 300 }} out:fade={{ duration: 300 , isExit: true}}>
           <TvModeReminderCard
             reminder={activeReminders[reminderIdx] || activeReminders[0]}
             assetUrls={reminderAssetUrls}
@@ -707,7 +707,7 @@
       {#key slideshowParsedUrls[slideshowIdx]}
         <img
           in:fade={{ duration: 600 }}
-          out:fade={{ duration: 600 }}
+          out:fade={{ duration: 600 , isExit: true}}
           src={slideshowParsedUrls[slideshowIdx]}
           alt="Slide {slideshowIdx + 1}"
           class="absolute inset-0 w-full h-full object-cover"
@@ -807,7 +807,7 @@
     {#if showEscToast}
       <div
         in:fly={{ y: 30, duration: 300 }}
-        out:fly={{ y: 30, duration: 300 }}
+        out:fly={{ y: 30, duration: 300 , isExit: true}}
         class="fixed bottom-12 left-1/2 -translate-x-1/2 z-[10000] px-6 py-3 rounded-full bg-[var(--md-sys-color-inverse-surface)] text-[var(--md-sys-color-inverse-on-surface)] text-xs font-black shadow-2xl border border-[var(--md-sys-color-outline-variant)]/20 tracking-widest uppercase text-center cursor-default"
       >
         {isMalay ? "Tekan ESC untuk keluar" : "Press ESC to exit TV mode"}
@@ -967,7 +967,7 @@
           {#if iqamahCountdownActive}
             <div
               in:fly={{ y: 15, duration: 300 }}
-              out:fly={{ y: 10, duration: 300 }}
+              out:fly={{ y: 10, duration: 300 , isExit: true}}
               class="w-full max-w-xs mx-auto"
             >
               {@render iqamahCountdownSnippet()}
@@ -1114,7 +1114,7 @@
             {#if iqamahCountdownActive}
               <div
                 in:fly={{ y: 20, duration: 300 }}
-                out:fly={{ y: 15, duration: 300 }}
+                out:fly={{ y: 15, duration: 300 , isExit: true}}
                 class="shrink-0"
               >
                 {@render iqamahCountdownSnippet()}
@@ -1257,7 +1257,7 @@
           {#if !showCenterWidget && iqamahCountdownActive}
             <div
               in:fly={{ y: 30, duration: 300 }}
-              out:fly={{ y: 20, duration: 300 }}
+              out:fly={{ y: 20, duration: 300 , isExit: true}}
               class="w-full flex justify-center shrink-0"
             >
               {@render iqamahCountdownSnippet()}
@@ -1292,7 +1292,7 @@
             {#if iqamahCountdownActive}
               <div
                 in:fly={{ y: 15, duration: 300 }}
-                out:fly={{ y: 10, duration: 300 }}
+                out:fly={{ y: 10, duration: 300 , isExit: true}}
                 class="w-full flex justify-center shrink-0"
               >
                 {@render iqamahCountdownSnippet()}
@@ -1355,7 +1355,7 @@
     {#if hudMessage}
       <div
         in:fly={{ y: -30, duration: 300 }}
-        out:fly={{ y: -20, duration: 200 }}
+        out:fly={{ y: -20, duration: 200 , isExit: true}}
         class="fixed top-28 left-1/2 -translate-x-1/2 z-[10000] flex items-center gap-3 bg-[var(--md-sys-color-surface-container-highest)]/80 text-[var(--md-sys-color-on-surface)] backdrop-blur-xl rounded-full px-6 py-3 border border-[var(--md-sys-color-outline-variant)]/40 shadow-xl pointer-events-none"
       >
         {#if hudIcon === 'play'}

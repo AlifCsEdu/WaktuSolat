@@ -20,7 +20,7 @@
   import "@material/web/icon/icon.js";
   import "@material/web/textfield/filled-text-field.js";
   import "@material/web/ripple/ripple.js";
-  import { fade, fly, scale } from "svelte/transition";
+  import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
 
   let { onComplete, language } = $props<{
     onComplete: (zone: string) => void;
@@ -244,7 +244,7 @@
       {#if currentStep === 0}
         <div
           in:fly={{ y: 40, duration: 400, delay: 300 }}
-          out:fly={{ y: -20, duration: 300 }}
+          out:fly={{ y: -20, duration: 300 , isExit: true}}
           class="col-start-1 row-start-1 flex flex-col items-start justify-center h-full space-y-10"
         >
           <div in:scale={{ delay: 400, duration: 400 }} class="w-28 h-28 rounded-[40px] bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] flex items-center justify-center shadow-xl">
@@ -272,7 +272,7 @@
       {:else if currentStep === 1}
         <div
           in:fly={{ y: 40, duration: 400, delay: 300 }}
-          out:fly={{ y: -20, duration: 300 }}
+          out:fly={{ y: -20, duration: 300 , isExit: true}}
           class="col-start-1 row-start-1 flex flex-col h-full space-y-6 overflow-hidden"
         >
           <div in:fly={{ y: 20, delay: 400, duration: 400 }} class="space-y-2">
@@ -337,7 +337,7 @@
       {:else if currentStep === 2}
         <div
           in:fly={{ y: 40, duration: 400, delay: 300 }}
-          out:fly={{ y: -20, duration: 300 }}
+          out:fly={{ y: -20, duration: 300 , isExit: true}}
           class="col-start-1 row-start-1 flex flex-col items-start justify-center h-full space-y-8"
         >
           <div in:scale={{ delay: 400, duration: 400 }} class="w-24 h-24 rounded-[36px] bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)] flex items-center justify-center">
@@ -376,7 +376,7 @@
       {:else if currentStep === 3}
         <div
           in:fly={{ y: 40, duration: 400, delay: 300 }}
-          out:fly={{ y: -20, duration: 300 }}
+          out:fly={{ y: -20, duration: 300 , isExit: true}}
           class="col-start-1 row-start-1 flex flex-col h-full space-y-6"
         >
           <div in:fly={{ y: 20, delay: 400, duration: 400 }} class="space-y-2">
@@ -435,7 +435,7 @@
     {#if currentStep > 0 && currentStep < stepsCount - 1}
       <div 
         in:fly={{ y: 20, duration: 300, delay: 200 }}
-        out:fly={{ y: 20, duration: 200 }}
+        out:fly={{ y: 20, duration: 200 , isExit: true}}
         class="absolute bottom-6 left-6 right-6 flex items-center justify-between"
       >
         <!-- svelte-ignore a11y_click_events_have_key_events -->

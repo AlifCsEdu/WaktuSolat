@@ -14,7 +14,7 @@
   import { getAllEventsForDay } from "../../lib/holidays";
   import { cn } from "../../lib/utils";
   import { appSettings } from "../../state/settings.svelte";
-  import { fade, fly } from "svelte/transition";
+  import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../../lib/transitions";
   import { cubicOut } from "svelte/easing";
 
   let {

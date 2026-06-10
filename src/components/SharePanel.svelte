@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { fade, fly } from 'svelte/transition';
+  import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
   import {
     X, Copy, Check, Share2, MessageCircle, Send, ChevronDown, ChevronLeft,
     ChevronRight, Link2, ExternalLink, Search, Download, QrCode, Sparkles,
@@ -541,7 +541,7 @@
 {#if isOpen}
   <div
     in:fade={{ duration: 200 }}
-    out:fade={{ duration: 200 }}
+    out:fade={{ duration: 200 , isExit: true}}
     class="fixed inset-0 z-[110] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto"
     style="isolation: isolate"
   >
@@ -553,7 +553,7 @@
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
       in:fly={{ y: 80, duration: 220, opacity: 0 }}
-      out:fly={{ y: 60, duration: 220, opacity: 0 }}
+      out:fly={{ y: 60, duration: 220, opacity: 0 , isExit: true}}
       onclick={(e) => e.stopPropagation()}
       class={cn(
         "relative bg-[var(--md-sys-color-surface-container)] w-full sm:max-w-xl rounded-t-[32px] sm:rounded-[32px] overflow-hidden shadow-2xl shadow-black/60 flex flex-col max-h-[96vh] sm:max-h-[88vh] transition-all",
@@ -629,7 +629,7 @@
         {#if showZonePicker}
           <div
             in:fly={{ y: -10, duration: 160, opacity: 0 }}
-            out:fly={{ y: -10, duration: 160, opacity: 0 }}
+            out:fly={{ y: -10, duration: 160, opacity: 0 , isExit: true}}
             class="overflow-hidden origin-top"
           >
             <div class="max-h-[250px] sm:max-h-[220px] flex flex-col mt-1.5 rounded-2xl bg-[var(--md-sys-color-surface)] ring-1 ring-[var(--md-sys-color-outline)]/12 shadow-xl overflow-hidden">
@@ -713,7 +713,7 @@
         </div>
 
         {#if activeTab === "link"}
-          <div in:fly={{ y: 8, duration: 200 }} out:fly={{ y: -8, duration: 200 }} class="space-y-3">
+          <div in:fly={{ y: 8, duration: 200 }} out:fly={{ y: -8, duration: 200 , isExit: true}} class="space-y-3">
             <div class="bg-[var(--md-sys-color-primary)]/8 border border-[var(--md-sys-color-primary)]/15 rounded-2xl p-3.5 flex gap-3 text-xs text-[var(--md-sys-color-on-surface-variant)]">
               <Sparkles size={15} class="text-[var(--md-sys-color-primary)] shrink-0 mt-0.5" />
               <p class="leading-relaxed text-[11px]">
@@ -785,7 +785,7 @@
             </div>
           </div>
         {:else if activeTab === "image"}
-          <div in:fly={{ y: 8, duration: 200 }} out:fly={{ y: -8, duration: 200 }} class="space-y-3">
+          <div in:fly={{ y: 8, duration: 200 }} out:fly={{ y: -8, duration: 200 , isExit: true}} class="space-y-3">
             <div class="space-y-1">
               <div class="flex items-center justify-between px-1">
                 <span class="text-[9px] font-black uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)]">
@@ -959,7 +959,7 @@
             </div>
           </div>
         {:else if activeTab === "qr"}
-          <div in:fly={{ y: 8, duration: 200 }} out:fly={{ y: -8, duration: 200 }} class="space-y-3 flex flex-col items-center text-center">
+          <div in:fly={{ y: 8, duration: 200 }} out:fly={{ y: -8, duration: 200 , isExit: true}} class="space-y-3 flex flex-col items-center text-center">
             <div class="bg-[var(--md-sys-color-primary)]/8 border border-[var(--md-sys-color-primary)]/15 rounded-2xl p-3.5 text-xs text-[var(--md-sys-color-on-surface-variant)] text-left w-full">
               <p class="leading-relaxed text-[11px]">
                 {t("qrInfoDesc")}

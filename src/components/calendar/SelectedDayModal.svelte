@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { fade, fly } from 'svelte/transition';
+  import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../../lib/transitions";
   import { X, CalendarDays, Share2, Check, Clock, Moon, Sunrise, Sun, SunMedium, SunDim, Sunset } from "lucide-svelte";
   import type { PrayerData } from "../../types";
   import { getAllEventsForDay, getHijriFormatted } from "../../lib/holidays";
@@ -118,7 +118,7 @@
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div 
     in:fade={{ duration: 200 }} 
-    out:fade={{ duration: 200 }}
+    out:fade={{ duration: 200 , isExit: true}}
     class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/85 backdrop-blur-sm sm:overflow-y-auto"
     onclick={onClose}
   >
@@ -126,7 +126,7 @@
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div 
       in:fly={{ y: 200, duration: 400, opacity: 0 }}
-      out:fly={{ y: 200, duration: 300, opacity: 0 }}
+      out:fly={{ y: 200, duration: 300, opacity: 0 , isExit: true}}
       class={cn(
         "bg-[var(--md-sys-color-surface)] w-full max-h-[92dvh] md:max-h-[80dvh] overflow-y-auto md:overflow-hidden custom-scrollbar max-w-lg md:max-w-3xl rounded-t-[40px] sm:rounded-[40px] md:rounded-[40px] shadow-2xl flex flex-col md:flex-row transition-all duration-300 relative",
         visualStyle === "retro" && "border-[4px] border-[var(--md-sys-color-on-surface)] rounded-none shadow-[12px_12px_0px_0px_var(--md-sys-color-on-surface)]",

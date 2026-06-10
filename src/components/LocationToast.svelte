@@ -1,5 +1,5 @@
 <script lang="ts">
-import { slide, fade, fly } from 'svelte/transition';
+import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
 import { MapPin, Check, X } from "lucide-svelte";
 import { JAKIM_ZONES } from "../lib/zones";
 import "@material/web/button/filled-button.js";

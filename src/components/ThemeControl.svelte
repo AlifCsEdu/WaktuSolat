@@ -24,7 +24,7 @@
   import { M3_EASING } from "../lib/motion";
   import { appSettings } from "../state/settings.svelte";
   import { saveWallpaper, clearWallpaper, getWallpaperBlob } from "../lib/db";
-  import { fade, slide, fly } from "svelte/transition";
+  import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
   
   import "@material/web/slider/slider.js";
   import "@material/web/switch/switch.js";

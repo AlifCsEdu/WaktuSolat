@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { fade, fly, scale } from "svelte/transition";
+  import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
   import { Compass, X, Clock } from "lucide-svelte";
   import { format } from "date-fns";
   import { appSettings } from "../state/settings.svelte";
@@ -114,7 +114,7 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
   in:fade={{ duration: 300 }}
-  out:fade={{ duration: 300 }}
+  out:fade={{ duration: 300 , isExit: true}}
   onclick={handleContainerClick}
   class={cn(
     "fixed inset-0 bg-[var(--md-sys-color-surface)] text-[var(--md-sys-color-on-surface)] flex flex-col items-center justify-between cursor-pointer select-none overflow-hidden",
@@ -163,7 +163,7 @@
     {#if !isDuaStage}
       <div
         in:fly={{ y: 10, duration: 800, delay: 800 }}
-        out:fly={{ y: -10, duration: 800 }}
+        out:fly={{ y: -10, duration: 800 , isExit: true}}
         class={cn(
           "col-start-1 row-start-1 flex flex-col items-center justify-center text-center",
           isTvMode ? "gap-10" : "gap-6"
@@ -207,7 +207,7 @@
     {:else}
       <div
         in:fly={{ y: 10, duration: 800, delay: 800 }}
-        out:fly={{ y: -10, duration: 800 }}
+        out:fly={{ y: -10, duration: 800 , isExit: true}}
         class={cn(
           "col-start-1 row-start-1 flex flex-col items-center justify-center text-center",
           isTvMode ? "gap-10" : "gap-8"
@@ -299,7 +299,7 @@
   {#if showExitButton}
     <div
       in:fly={{ y: 20, duration: 300 }}
-      out:fly={{ y: 10, duration: 300 }}
+      out:fly={{ y: 10, duration: 300 , isExit: true}}
       class="absolute bottom-24 inset-x-0 mx-auto w-fit z-20 flex flex-col items-center gap-2"
     >
       <md-filled-tonal-button
@@ -329,7 +329,7 @@
     >
       <div
         in:fly={{ y: 15, duration: 400 }}
-        out:fly={{ y: 15, duration: 300 }}
+        out:fly={{ y: 15, duration: 300 , isExit: true}}
         class="space-y-6 max-w-3xl flex flex-col items-center"
       >
         <div

@@ -11,7 +11,7 @@
   import PrayerTimesListView from "./calendar/PrayerTimesListView.svelte";
   import EventsListView from "./calendar/EventsListView.svelte";
   import SelectedDayModal from "./calendar/SelectedDayModal.svelte";
-  import { fade, fly, scale } from "svelte/transition";
+  import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
 
   let { 
     isOpen, 

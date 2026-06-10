@@ -1,6 +1,6 @@
 <script lang="ts">
   import { X, Navigation, MapPin } from "lucide-svelte";
-  import { fade, fly } from "svelte/transition";
+  import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
   import L from "leaflet";
   import type { FeatureCollection, Geometry, Feature } from "geojson";
   // @ts-ignore
@@ -277,7 +277,7 @@
           {#key selectedZone}
             <div
               in:fly={{ y: 20, duration: 400 }}
-              out:fly={{ y: -20, duration: 300 }}
+              out:fly={{ y: -20, duration: 300 , isExit: true}}
               class="bg-[var(--md-sys-color-primary)] shadow-[0_16px_32px_rgba(0,0,0,0.3)] rounded-3xl p-5 flex flex-col items-center justify-center text-center overflow-hidden"
             >
               <span class="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-[var(--md-sys-color-on-primary)] opacity-90 mb-1">

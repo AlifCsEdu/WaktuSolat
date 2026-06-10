@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Megaphone, ChevronDown, Plus, Trash2, GripVertical, Image as ImageIcon, Type, Palette, Settings, Upload, ImagePlus, Volume2, Play, Layout, Clock } from "lucide-svelte";
-  import { slide } from "svelte/transition";
+  import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
   import { cn } from "../lib/utils";
   import { appSettings } from "../state/settings.svelte.ts";
   import { playSynthesizedChime } from "./TvModeReminderCard.svelte";

@@ -2,7 +2,7 @@
   import { parse, isSameWeek, format } from "date-fns";
   import { ms, enUS } from "date-fns/locale";
   import { CalendarDays, Info, Copy, Check, Clock, Moon, Sunrise, Sun, SunMedium, SunDim, Sunset } from "lucide-svelte";
-  import { fly } from "svelte/transition";
+  import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../../lib/transitions";
 
   import { getIslamicEvent, getHijriFormatted } from "../../lib/holidays";
   import { cn } from "../../lib/utils";

@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import { BellRing, Check, X } from "lucide-svelte";
   import { cn } from "../lib/utils";
-  import { fade, fly } from "svelte/transition";
+  import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
   import { StorageManager } from "../lib/StorageManager";
 
   let {

@@ -32,7 +32,7 @@
 
 <script lang="ts">
   import { cn } from "../lib/utils";
-  import { fly, fade } from "svelte/transition";
+  import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
   import "@material/web/iconbutton/icon-button.js";
   import "@material/web/iconbutton/filled-tonal-icon-button.js";
   import "@material/web/chips/filter-chip.js";

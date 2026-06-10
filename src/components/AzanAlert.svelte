@@ -2,7 +2,7 @@
   import { Volume2, X, Bell } from "lucide-svelte";
   import { appSettings } from "../state/settings.svelte.ts";
   import { format } from "date-fns";
-  import { fade, fly } from "svelte/transition";
+  import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
   import { backOut, cubicOut } from "svelte/easing";
 
   let {
@@ -54,7 +54,7 @@
 {#if style === "subtle"}
   <div
     in:fly={{ y: 35, duration: 400, easing: backOut }}
-    out:fly={{ y: 20, duration: 300, easing: cubicOut }}
+    out:fly={{ y: 20, duration: 300, easing: cubicOut , isExit: true}}
     class="fixed bottom-6 right-6 z-[300] w-[90%] max-w-sm"
   >
     <div class="bg-[var(--md-sys-color-surface-container-highest)]/85 backdrop-blur-2xl border border-[var(--md-sys-color-primary)]/20 shadow-[0_20px_50px_rgba(0,0,0,0.35)] rounded-[28px] p-5 flex items-center justify-between gap-4 relative overflow-hidden ring-1 ring-black/5">
@@ -98,7 +98,7 @@
 {:else if style === "modern"}
   <div
     in:fly={{ y: -60, duration: 400, easing: backOut }}
-    out:fly={{ y: -30, duration: 300, easing: cubicOut }}
+    out:fly={{ y: -30, duration: 300, easing: cubicOut , isExit: true}}
     class="fixed top-6 left-1/2 -translate-x-1/2 z-[300] w-[92%] max-w-md"
   >
     <div class="bg-[var(--md-sys-color-surface-container-highest)]/90 backdrop-blur-3xl border border-[var(--md-sys-color-primary)]/30 shadow-[0_24px_50px_rgba(0,0,0,0.45)] rounded-[30px] p-4 pl-5 flex items-center justify-between gap-4 ring-1 ring-black/5 relative overflow-hidden">
@@ -152,7 +152,7 @@
 {:else if style === "minimal"}
   <div
     in:fly={{ y: -30, duration: 400, easing: backOut }}
-    out:fly={{ y: -20, duration: 300, easing: cubicOut }}
+    out:fly={{ y: -20, duration: 300, easing: cubicOut , isExit: true}}
     class="fixed top-6 right-6 z-[300]"
   >
     <div class="bg-[var(--md-sys-color-inverse-surface)] text-[var(--md-sys-color-inverse-on-surface)] backdrop-blur-xl border border-[var(--md-sys-color-outline)]/20 shadow-2xl rounded-full px-5 py-2.5 flex items-center gap-3.5 select-none ring-1 ring-black/10">
@@ -181,7 +181,7 @@
 {:else if style === "standard"}
   <div
     in:fly={{ y: -100, duration: 400, easing: backOut }}
-    out:fly={{ y: -50, duration: 300, easing: cubicOut }}
+    out:fly={{ y: -50, duration: 300, easing: cubicOut , isExit: true}}
     class="fixed top-0 inset-x-0 z-[300] w-full p-4 sm:p-6"
   >
     <div class="max-w-4xl mx-auto bg-gradient-to-r from-[var(--md-sys-color-surface-container-highest)]/90 via-[var(--md-sys-color-surface-container-highest)]/95 to-[var(--md-sys-color-surface-container-high)]/90 border border-[var(--md-sys-color-primary)]/20 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.55)] rounded-[32px] p-6 sm:p-7 relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-6 backdrop-blur-3xl ring-1 ring-black/5">
@@ -229,7 +229,7 @@
 {:else if style === "dramatic"}
   <div
     in:fade={{ duration: 300 }}
-    out:fade={{ duration: 300 }}
+    out:fade={{ duration: 300 , isExit: true}}
     class="fixed inset-0 z-[400] bg-gradient-to-br from-[var(--md-sys-color-background)] via-[var(--md-sys-color-surface-container-highest)] to-[var(--md-sys-color-primary-container)]/30 flex flex-col items-center justify-between p-8 sm:p-12 text-[var(--md-sys-color-on-background)] overflow-hidden select-none"
   >
     <!-- Calm ambient organic breathing backdrop blobs -->
@@ -304,7 +304,7 @@
       {#if dismissTapCount > 0}
         <span 
           in:fly={{ y: 5, duration: 300, easing: backOut }}
-          out:fade={{ duration: 200 }}
+          out:fade={{ duration: 200 , isExit: true}}
           class="text-[var(--md-sys-color-primary)] text-xs font-black bg-[var(--md-sys-color-primary-container)] border border-[var(--md-sys-color-primary)]/15 px-4 py-1.5 rounded-full shadow-md"
         >
           {t("doubleTapExit")}

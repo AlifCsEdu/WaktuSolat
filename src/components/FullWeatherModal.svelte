@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { fade, fly } from 'svelte/transition';
+  import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
   import { 
     X, 
     Droplets, 
@@ -101,7 +101,7 @@
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
     in:fade={{ duration: 200 }}
-    out:fade={{ duration: 200 }}
+    out:fade={{ duration: 200 , isExit: true}}
     class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 sm:overflow-y-auto"
     onclick={onClose}
   >
@@ -109,7 +109,7 @@
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
       in:fly={{ y: 200, duration: 400 }}
-      out:fly={{ y: 200, duration: 300 }}
+      out:fly={{ y: 200, duration: 300 , isExit: true}}
       onclick={(e) => e.stopPropagation()}
       class="bg-[var(--md-sys-color-surface)] w-full max-w-4xl h-[90vh] sm:h-[85vh] max-h-[900px] flex flex-col rounded-t-[2rem] sm:rounded-[2rem] overflow-hidden shadow-2xl sm:my-auto text-[var(--md-sys-color-on-surface)]"
     >

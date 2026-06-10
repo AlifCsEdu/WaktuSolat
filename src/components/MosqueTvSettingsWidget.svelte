@@ -1,6 +1,6 @@
 <script lang="ts">
   import { BookOpen, ChevronDown, AlertCircle } from "lucide-svelte";
-  import { slide } from "svelte/transition";
+  import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
   import { cn } from "../lib/utils";
   import { appSettings } from "../state/settings.svelte.ts";
   import { onMount, onDestroy } from "svelte";

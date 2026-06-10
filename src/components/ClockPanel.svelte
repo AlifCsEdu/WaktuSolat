@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
-  import { scale, slide, fly } from "svelte/transition";
+  import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
   import { format, differenceInSeconds } from "date-fns";
   import { ms as msLocale, enUS } from "date-fns/locale";
   import { Compass, Sunrise, Moon, Calendar, Play, Pause, Plus } from "lucide-svelte";
@@ -325,7 +325,7 @@
     {#if nextPrayerName}
       <div
         in:fly={{ y: 15, duration: 300 }}
-        out:fly={{ duration: 300 }}
+        out:fly={{ duration: 300 , isExit: true}}
         class={cn(
           "relative w-full mb-1.5 lg:mb-2 rounded-[28px] lg:rounded-[32px] overflow-hidden flex flex-col gap-1 sm:gap-0 bg-[var(--md-sys-color-surface-container-highest)]/30",
           visualStyle === 'retro' && "border-2 border-[var(--md-sys-color-on-surface)] shadow-[6px_6px_0px_0px_var(--md-sys-color-on-surface)] rounded-none",

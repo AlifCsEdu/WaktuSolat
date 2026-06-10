@@ -2,7 +2,7 @@
 import { JAKIM_ZONES } from "../lib/zones";
 import { Search, MapPin, X, Crosshair, Map as MapIcon, CheckCircle2 } from "lucide-svelte";
 import { cn } from "../lib/utils";
-import { fade, fly, slide } from "svelte/transition";
+import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
 import "@material/web/iconbutton/filled-icon-button.js";
 import "@material/web/iconbutton/icon-button.js";
 import "@material/web/button/filled-tonal-button.js";
@@ -223,7 +223,7 @@ const handleScroll = (e: Event) => {
 {#if detectReason}
   <div
     in:fly={{ y: -50, duration: 300 }}
-    out:fly={{ y: -20, duration: 300 }}
+    out:fly={{ y: -20, duration: 300 , isExit: true}}
     class="fixed top-20 left-1/2 -translate-x-1/2 z-[200] max-w-[90vw] w-max bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] px-6 py-4 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-[var(--md-sys-color-primary)]/20 flex items-center gap-3 font-semibold text-sm"
   >
     <MapPin
@@ -316,7 +316,7 @@ const handleScroll = (e: Event) => {
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
       in:fly={{ y: 200, duration: 400 }}
-      out:fly={{ y: 200, duration: 300 }}
+      out:fly={{ y: 200, duration: 300 , isExit: true}}
       onclick={(e) => e.stopPropagation()}
       class="bg-[var(--md-sys-color-surface)] w-full max-w-4xl h-[85vh] sm:h-[85vh] max-h-[800px] flex flex-col rounded-[var(--md-sys-shape-corner-extra-large)] overflow-hidden shadow-[0_32px_64px_rgba(0,0,0,0.3)] sm:my-auto border border-[var(--md-sys-color-outline)]/10"
     >
@@ -360,7 +360,7 @@ const handleScroll = (e: Event) => {
         {#if locationPermission === 'denied'}
           <div
             in:slide={{ duration: 180 }}
-            out:slide={{ duration: 180 }}
+            out:slide={{ duration: 180 , isExit: true}}
             class="bg-[var(--md-sys-color-error-container)]/80 text-[var(--md-sys-color-on-error-container)] px-5 py-4 rounded-2xl mb-2 text-sm shadow-sm"
           >
             <h4 class="font-bold mb-1">Akses Lokasi Ditolak</h4>
@@ -371,7 +371,7 @@ const handleScroll = (e: Event) => {
         {#if appSettings.settings.locationMode !== 'auto'}
           <div 
             in:slide={{ duration: 180 }}
-            out:slide={{ duration: 180 }}
+            out:slide={{ duration: 180 , isExit: true}}
             class="flex flex-col gap-4"
           >
             <div class="relative group w-full mb-2">
@@ -509,10 +509,10 @@ const handleScroll = (e: Event) => {
               </div>
             {:else}
               <div class="pb-16 px-4 md:px-6">
-                <md-list class="bg-transparent p-0">
+                <div class="flex flex-col gap-8">
                   {#each filteredZones as state (state.state)}
-                    <div class="mb-6 state-group-marker relative" data-state={state.state}>
-                      <div class="flex items-center gap-3 sm:gap-4 sticky top-0 z-20 bg-[var(--md-sys-color-surface)]/95 backdrop-blur-2xl py-3 px-2 shadow-sm border-b border-[var(--md-sys-color-outline)]/10">
+                    <div class="state-group-marker relative" data-state={state.state}>
+                      <div class="flex items-center gap-3 sm:gap-4 sticky top-0 z-20 bg-[var(--md-sys-color-surface)]/90 backdrop-blur-3xl py-3 px-2 mb-3 shadow-sm border-b border-[var(--md-sys-color-outline)]/10 rounded-b-xl">
                         <div class="flex items-center justify-center w-[28px] h-[18px] sm:w-[32px] sm:h-[22px] bg-white overflow-hidden shadow-sm shrink-0 rounded-[3px]">
                           {#if STATE_FLAGS[state.state]}
                             <img
@@ -528,41 +528,47 @@ const handleScroll = (e: Event) => {
                           {state.state}
                         </h3>
                       </div>
-                      <div class="flex flex-col mt-2">
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {#each state.zones as zone (zone.v)}
                           {@const isSelected = selectedZone === zone.v}
-                          <md-list-item
+                          <button
                             type="button"
                             onclick={() => {
                               onZoneSelect(zone.v);
                               isOpen = false;
                             }}
-                            class="my-0.5 block w-full outline-none"
-                            style="--md-list-item-container-shape: 16px; --md-list-item-container-color: {isSelected ? 'var(--md-sys-color-primary-container)' : 'transparent'}; --md-list-item-label-text-color: {isSelected ? 'var(--md-sys-color-on-primary-container)' : 'var(--md-sys-color-on-surface)'}; --md-list-item-supporting-text-color: {isSelected ? 'var(--md-sys-color-primary)' : 'var(--md-sys-color-on-surface-variant)'}; --md-list-item-hover-state-layer-color: var(--md-sys-color-on-surface); --md-list-item-hover-state-layer-opacity: 0.08;"
+                            class={cn(
+                              "relative overflow-hidden text-left px-4 py-3 sm:py-4 rounded-[20px] flex items-center justify-between group transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-sys-color-primary)]",
+                              isSelected 
+                                ? "bg-[var(--md-sys-color-primary-container)] shadow-sm scale-[1.02] sm:scale-100" 
+                                : "hover:bg-[var(--md-sys-color-surface-container-high)] bg-[var(--md-sys-color-surface-container-low)] hover:scale-[1.02] active:scale-[0.98]"
+                            )}
                           >
-                            <div slot="headline" class={cn(
-                              "font-bold text-[15px] leading-tight transition-colors",
-                              isSelected ? "text-[var(--md-sys-color-on-primary-container)]" : "text-[var(--md-sys-color-on-surface)]"
-                            )}>
-                              {zone.l}
-                            </div>
-                            <div slot="supporting-text" class={cn(
-                              "text-xs font-sans font-bold tracking-wider mt-0.5 transition-colors",
-                              isSelected ? "text-[var(--md-sys-color-primary)]" : "text-[var(--md-sys-color-on-surface-variant)]"
-                            )}>
-                              {zone.v}
+                            <div class="flex flex-col flex-1 min-w-0 pr-3">
+                              <span class={cn(
+                                "font-bold text-[14px] sm:text-[15px] leading-tight transition-colors truncate",
+                                isSelected ? "text-[var(--md-sys-color-on-primary-container)]" : "text-[var(--md-sys-color-on-surface)] group-hover:text-[var(--md-sys-color-primary)]"
+                              )}>
+                                {zone.l}
+                              </span>
+                              <span class={cn(
+                                "text-[11px] font-sans font-bold tracking-widest mt-1 transition-colors",
+                                isSelected ? "text-[var(--md-sys-color-primary)]" : "text-[var(--md-sys-color-on-surface-variant)]"
+                              )}>
+                                {zone.v}
+                              </span>
                             </div>
                             {#if isSelected}
-                              <div slot="end" class="text-[var(--md-sys-color-primary)] flex items-center justify-center w-8 h-8 rounded-full bg-[var(--md-sys-color-on-primary)] shadow-sm shrink-0">
+                              <div class="text-[var(--md-sys-color-primary)] flex items-center justify-center w-8 h-8 rounded-full bg-[var(--md-sys-color-on-primary)] shadow-sm shrink-0 transition-transform animate-in zoom-in duration-300">
                                 <CheckCircle2 size={18} strokeWidth={3} />
                               </div>
                             {/if}
-                          </md-list-item>
+                          </button>
                         {/each}
                       </div>
                     </div>
                   {/each}
-                </md-list>
+                </div>
               </div>
             {/if}
           </div>

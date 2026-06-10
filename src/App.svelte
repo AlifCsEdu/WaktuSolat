@@ -1,7 +1,7 @@
 <script lang="ts">
   import "@material/web/button/filled-tonal-button.js";
   import { onMount } from "svelte";
-  import { fade, fly } from "svelte/transition";
+  import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "./lib/transitions";
   import { CalendarRange, Wifi, RefreshCw, Tv } from "lucide-svelte";
   
   import ZoneSelector from "./components/ZoneSelector.svelte";
@@ -371,7 +371,7 @@
     {#if prayerTimesState.showOnlineSyncToast}
       <div
         in:fly={{ y: 50, duration: 300 }}
-        out:fly={{ y: 20, duration: 200 }}
+        out:fly={{ y: 20, duration: 200 , isExit: true}}
         class={cn(
           "fixed bottom-6 left-6 right-6 sm:left-auto sm:right-6 sm:max-w-md z-[80] flex items-center justify-between gap-4 p-5 rounded-3xl shadow-xl border cursor-default bg-[var(--md-sys-color-surface-container-high)] border-[var(--md-sys-color-outline)]/20 shadow-black/30",
           visualStyle === 'retro' && "border-2 border-[var(--md-sys-color-on-surface)] shadow-[4px_4px_0px_0px_var(--md-sys-color-on-surface)]",
