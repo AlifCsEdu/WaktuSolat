@@ -255,7 +255,16 @@
   </div>
 {:else if weather}
   <button
-    onclick={() => isModalOpen = true}
+    onclick={() => {
+      if (document.startViewTransition) {
+        document.startViewTransition(() => {
+          isModalOpen = true;
+        });
+      } else {
+        isModalOpen = true;
+      }
+    }}
+    style="view-transition-name: weather-transition;"
     class={cn(
       "flex w-full items-center justify-between text-[var(--md-sys-color-on-surface)] rounded-[var(--md-sys-shape-corner-extra-large)] p-3 sm:p-4 lg:p-3 xl:p-4 relative overflow-hidden shrink-0 cursor-pointer text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-sys-color-primary)] transition-transform hover:-translate-y-0.5 active:scale-[0.98]",
       widgetBgClass,
@@ -344,7 +353,15 @@
 
   <FullWeatherModal
     isOpen={isModalOpen}
-    onClose={() => isModalOpen = false}
+    onClose={() => {
+      if (document.startViewTransition) {
+        document.startViewTransition(() => {
+          isModalOpen = false;
+        });
+      } else {
+        isModalOpen = false;
+      }
+    }}
     {weather}
     {locationName}
     onRefresh={handleRefresh}

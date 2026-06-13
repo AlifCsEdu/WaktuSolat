@@ -52,13 +52,24 @@
   $effect(() => {
     if (isOpen && map) {
       map.invalidateSize();
-      const t1 = setTimeout(() => map?.invalidateSize(), 100);
-      const t2 = setTimeout(() => map?.invalidateSize(), 350);
-      const t3 = setTimeout(() => map?.invalidateSize(), 700);
+      const t1 = setTimeout(() => map?.invalidateSize(), 50);
+      const t2 = setTimeout(() => map?.invalidateSize(), 150);
+      const t3 = setTimeout(() => map?.invalidateSize(), 350);
+      const t4 = setTimeout(() => map?.invalidateSize(), 700);
+
+      const handleTransition = () => {
+        if (map) map.invalidateSize();
+      };
+      window.addEventListener('transitionend', handleTransition);
+      window.addEventListener('animationend', handleTransition);
+
       return () => {
         clearTimeout(t1);
         clearTimeout(t2);
         clearTimeout(t3);
+        clearTimeout(t4);
+        window.removeEventListener('transitionend', handleTransition);
+        window.removeEventListener('animationend', handleTransition);
       };
     }
   });
@@ -245,6 +256,7 @@
       transition:fly={{ y: 50, duration: 400 }}
       class="w-full max-w-6xl bg-[var(--md-sys-color-surface)] rounded-[var(--md-sys-shape-corner-extra-large)] shadow-2xl overflow-hidden flex flex-col h-[90dvh] sm:my-auto"
       onintroend={() => window.dispatchEvent(new Event('resize'))}
+      style:view-transition-name="map-transition"
     >
       <div class="flex flex-col sm:flex-row sm:items-center justify-between p-6 md:p-8 border-b border-[var(--md-sys-color-outline)]/10 shrink-0 gap-4 bg-[var(--md-sys-color-surface)]">
         <div>

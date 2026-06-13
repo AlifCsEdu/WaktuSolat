@@ -114,6 +114,7 @@
       out:fly={{ y: 200, duration: 300 , isExit: true}}
       onclick={(e) => e.stopPropagation()}
       class="bg-[var(--md-sys-color-surface)] w-full max-w-4xl h-[90vh] sm:h-[85vh] max-h-[900px] flex flex-col rounded-t-[2rem] sm:rounded-[2rem] overflow-hidden shadow-2xl sm:my-auto text-[var(--md-sys-color-on-surface)]"
+      style:view-transition-name="weather-transition"
     >
       <div class="relative p-5 sm:p-6 md:p-10 shrink-0 bg-gradient-to-br from-[var(--md-sys-color-primary-container)] to-[var(--md-sys-color-surface-variant)] flex flex-col items-center justify-center text-center overflow-hidden">
         {#if onRefresh}

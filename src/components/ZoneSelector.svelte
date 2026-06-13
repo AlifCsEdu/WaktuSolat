@@ -284,12 +284,20 @@ const handleScroll = (e: Event) => {
     </div>
   </button>
 
-  <div class="shrink-0 inline-flex w-[48px] h-[48px] lg:w-[56px] lg:h-[56px] hover:scale-105 active:scale-95 transition-transform duration-200">
+  <div class="shrink-0 inline-flex w-[48px] h-[48px] lg:w-[56px] lg:h-[56px] hover:scale-105 active:scale-95 transition-transform duration-200" style="view-transition-name: map-transition;">
     <md-filled-tonal-icon-button
       role="button"
       tabindex={0}
       onkeydown={handleKeyDown}
-      onclick={() => isMapOpen = true}
+      onclick={() => {
+        if (document.startViewTransition) {
+          document.startViewTransition(() => {
+            isMapOpen = true;
+          });
+        } else {
+          isMapOpen = true;
+        }
+      }}
       title={t("viewMap")}
       style="--md-filled-tonal-icon-button-container-shape: 20px; width: 100%; height: 100%;"
     >
@@ -305,12 +313,26 @@ const handleScroll = (e: Event) => {
 
 <MapModal
   isOpen={isMapOpen}
-  onClose={() => isMapOpen = false}
+  onClose={() => {
+    if (document.startViewTransition) {
+      document.startViewTransition(() => {
+        isMapOpen = false;
+      });
+    } else {
+      isMapOpen = false;
+    }
+  }}
   {selectedZone}
   userLocation={userCoords}
   onZoneSelect={(zone: string) => {
     onZoneSelect(zone);
-    isMapOpen = false;
+    if (document.startViewTransition) {
+      document.startViewTransition(() => {
+        isMapOpen = false;
+      });
+    } else {
+      isMapOpen = false;
+    }
   }}
 />
 

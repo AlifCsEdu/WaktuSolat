@@ -166,6 +166,7 @@
         {/if}
         <div
           class="ml-auto sm:ml-2 shrink-0 inline-flex w-12 h-12 lg:w-[48px] lg:h-[48px] transition-transform hover:scale-105 active:scale-95"
+          style="view-transition-name: calendar-transition;"
         >
           <!-- svelte-ignore a11y_consider_explicit_label -->
           <!-- svelte-ignore a11y_click_events_have_key_events -->

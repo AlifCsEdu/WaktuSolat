@@ -1,5 +1,15 @@
 <script lang="ts">
 import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
+import { onMount } from "svelte";
+import GooeyBackground from "./GooeyBackground.svelte";
+
+let isMorphing = $state(false);
+onMount(() => {
+  const timer = setTimeout(() => {
+    isMorphing = true;
+  }, 450);
+  return () => clearTimeout(timer);
+});
 import { MapPin, Check, X } from "lucide-svelte";
 import { JAKIM_ZONES } from "../lib/zones";
 import "@material/web/button/filled-button.js";
@@ -36,7 +46,8 @@ const t = (key: any, params?: any) => appSettings.t(key, params);
 
 {#if promptZone || autoUpdatedZone}
   <div transition:fly={{ y: 50, duration: 300 }} class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] w-[90%] max-w-sm">
-    <div class="bg-[var(--md-sys-color-surface-container-highest)] border border-[var(--md-sys-color-outline)]/20 shadow-2xl rounded-[28px] p-5 flex flex-col gap-3 backdrop-blur-xl">
+    <div class="bg-[var(--md-sys-color-surface-container-highest)] border border-[var(--md-sys-color-outline)]/20 shadow-2xl rounded-[28px] p-5 flex flex-col gap-3 backdrop-blur-xl relative overflow-hidden">
+      <GooeyBackground isMorphing={isMorphing} />
       <div class="flex items-start gap-4">
         <div class="w-12 h-12 rounded-full flex items-center justify-center shrink-0 {
           autoUpdatedZone 
@@ -69,7 +80,7 @@ const t = (key: any, params?: any) => appSettings.t(key, params);
             <!-- @ts-ignore -->
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <!-- svelte-ignore a11y_no_static_element_interactions -->
-            <md-outlined-button onclick={onclose}>
+            <md-outlined-button onclick={onDismiss}>
               {t("ignore" as any)}
             </md-outlined-button>
           </div>
@@ -77,7 +88,7 @@ const t = (key: any, params?: any) => appSettings.t(key, params);
             <!-- @ts-ignore -->
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <!-- svelte-ignore a11y_no_static_element_interactions -->
-            <md-filled-button onclick={onclose}>
+            <md-filled-button onclick={onAccept}>
               {t("changeZone" as any)}
             </md-filled-button>
           </div>

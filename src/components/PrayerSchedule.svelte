@@ -257,7 +257,7 @@
             )} />
           </md-icon-button>
         </div>
-        <div class="inline-flex rotate-3 mt-1 w-10 h-10 lg:w-[48px] lg:h-[48px] hover:scale-105 active:scale-95 transition-transform">
+        <div class="inline-flex rotate-3 mt-1 w-10 h-10 lg:w-[48px] lg:h-[48px] hover:scale-105 active:scale-95 transition-transform" style="view-transition-name: settings-transition;">
           <md-filled-tonal-icon-button
             role="button"
             tabindex={0}

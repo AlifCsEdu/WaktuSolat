@@ -4,6 +4,16 @@
   import { format } from "date-fns";
   import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
   import { backOut, cubicOut } from "svelte/easing";
+  import { onMount } from "svelte";
+  import GooeyBackground from "./GooeyBackground.svelte";
+
+  let isMorphing = $state(false);
+  onMount(() => {
+    const timer = setTimeout(() => {
+      isMorphing = true;
+    }, 450);
+    return () => clearTimeout(timer);
+  });
 
   let {
     prayerName,
@@ -58,6 +68,7 @@
     class="fixed bottom-6 right-6 z-[300] w-[90%] max-w-sm"
   >
     <div class="bg-[var(--md-sys-color-surface-container-highest)]/85 backdrop-blur-2xl border border-[var(--md-sys-color-primary)]/20 shadow-[0_20px_50px_rgba(0,0,0,0.35)] rounded-[28px] p-5 flex items-center justify-between gap-4 relative overflow-hidden ring-1 ring-black/5">
+      <GooeyBackground isMorphing={isMorphing} />
       <div class="flex items-center gap-4 relative z-10">
         <!-- Pulsing visualizer bell icon -->
         <div class="relative shrink-0 flex items-center justify-center">
@@ -102,6 +113,7 @@
     class="fixed top-6 left-1/2 -translate-x-1/2 z-[300] w-[92%] max-w-md"
   >
     <div class="bg-[var(--md-sys-color-surface-container-highest)]/90 backdrop-blur-3xl border border-[var(--md-sys-color-primary)]/30 shadow-[0_24px_50px_rgba(0,0,0,0.45)] rounded-[30px] p-4 pl-5 flex items-center justify-between gap-4 ring-1 ring-black/5 relative overflow-hidden">
+      <GooeyBackground isMorphing={isMorphing} />
       <!-- Subtle slow pulsing glow inside background -->
       <div class="absolute inset-0 bg-gradient-to-r from-[var(--md-sys-color-primary)]/5 via-transparent to-[var(--md-sys-color-primary)]/5 animate-pulse"></div>
       
@@ -185,6 +197,7 @@
     class="fixed top-0 inset-x-0 z-[300] w-full p-4 sm:p-6"
   >
     <div class="max-w-4xl mx-auto bg-gradient-to-r from-[var(--md-sys-color-surface-container-highest)]/90 via-[var(--md-sys-color-surface-container-highest)]/95 to-[var(--md-sys-color-surface-container-high)]/90 border border-[var(--md-sys-color-primary)]/20 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.55)] rounded-[32px] p-6 sm:p-7 relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-6 backdrop-blur-3xl ring-1 ring-black/5">
+      <GooeyBackground isMorphing={isMorphing} />
       <!-- Animated decorative concentric ring halos -->
       <div class="absolute -left-10 -bottom-10 w-40 h-40 rounded-full border-[6px] border-[var(--md-sys-color-primary)]/8 animate-ping pointer-events-none"></div>
       <div class="absolute right-10 -top-10 w-32 h-32 rounded-full border-2 border-[var(--md-sys-color-primary)]/8 animate-pulse pointer-events-none"></div>
@@ -233,6 +246,7 @@
     class="fixed inset-0 z-[400] bg-gradient-to-br from-[var(--md-sys-color-background)] via-[var(--md-sys-color-surface-container-highest)] to-[var(--md-sys-color-primary-container)]/30 flex flex-col items-center justify-between p-8 sm:p-12 text-[var(--md-sys-color-on-background)] overflow-hidden select-none"
   >
     <!-- Calm ambient organic breathing backdrop blobs -->
+      <GooeyBackground isMorphing={isMorphing} class="opacity-40" />
     <div class="absolute w-[95vw] h-[95vw] sm:w-[65vw] sm:h-[65vw] rounded-full bg-[var(--md-sys-color-primary)]/20 blur-[130px] pointer-events-none top-1/4 left-1/4 animate-blob-1"></div>
     <div class="absolute w-[80vw] h-[80vw] sm:w-[50vw] sm:h-[50vw] rounded-full bg-[var(--md-sys-color-secondary)]/15 blur-[110px] pointer-events-none bottom-1/4 right-1/4 animate-blob-2"></div>
 

@@ -1,5 +1,6 @@
 import { cubicOut, cubicIn, quintOut, quintIn, expoOut, expoIn, backOut, backIn } from "svelte/easing";
-import { fade as svelteFade, fly as svelteFly, slide as svelteSlide, scale as svelteScale } from "svelte/transition";
+import { fade as svelteFade, fly as svelteFly, slide as svelteSlide, scale as svelteScale, crossfade } from "svelte/transition";
+
 // Material 3 / Apple approximations using Svelte's built-in easings
 export const emphasizedEntrance = quintOut; // Smooth, long tail deceleration
 export const emphasizedExit = quintIn;      // Sharp acceleration
@@ -14,12 +15,25 @@ export const expressiveExit = expoIn;
 const DEFAULT_ENTER_DURATION = 400;
 const DEFAULT_EXIT_DURATION = 250;
 
+const isNativeSupported = () => typeof document !== 'undefined' && !!document.startViewTransition;
+const isReducedMotion = () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 /**
  * Antigravity Custom Fly Transition
  * Uses emphasized deceleration for entry (smooth slide in)
  * and sharp acceleration for exit (quick slide out).
  */
 export function m3Fly(node: Element, params: any = {}) {
+  if (isReducedMotion()) {
+    return svelteFade(node, {
+      duration: params.duration ?? 200,
+      easing: cubicOut,
+      delay: params.delay ?? 0,
+    });
+  }
+  if (isNativeSupported() && !params.force) {
+    return { duration: 0 };
+  }
   const isExit = params.isExit || false;
   return svelteFly(node, {
     y: params.y ?? 20,
@@ -34,6 +48,16 @@ export function m3Fly(node: Element, params: any = {}) {
  * Antigravity Custom Fade Transition
  */
 export function m3Fade(node: Element, params: any = {}) {
+  if (isReducedMotion()) {
+    return svelteFade(node, {
+      duration: params.duration ?? 200,
+      easing: cubicOut,
+      delay: params.delay ?? 0,
+    });
+  }
+  if (isNativeSupported() && !params.force) {
+    return { duration: 0 };
+  }
   const isExit = params.isExit || false;
   return svelteFade(node, {
     duration: params.duration ?? (isExit ? DEFAULT_EXIT_DURATION : DEFAULT_ENTER_DURATION),
@@ -46,11 +70,22 @@ export function m3Fade(node: Element, params: any = {}) {
  * Antigravity Custom Slide Transition
  */
 export function m3Slide(node: Element, params: any = {}) {
+  if (isReducedMotion()) {
+    return svelteFade(node, {
+      duration: params.duration ?? 200,
+      easing: cubicOut,
+      delay: params.delay ?? 0,
+    });
+  }
+  if (isNativeSupported() && !params.force) {
+    return { duration: 0 };
+  }
   const isExit = params.isExit || false;
   return svelteSlide(node, {
     duration: params.duration ?? (isExit ? DEFAULT_EXIT_DURATION : DEFAULT_ENTER_DURATION),
     easing: params.easing ?? (isExit ? emphasizedExit : emphasizedEntrance),
     delay: params.delay ?? 0,
+    axis: params.axis ?? 'y',
   });
 }
 
@@ -58,6 +93,16 @@ export function m3Slide(node: Element, params: any = {}) {
  * Antigravity Custom Scale Transition
  */
 export function m3Scale(node: Element, params: any = {}) {
+  if (isReducedMotion()) {
+    return svelteFade(node, {
+      duration: params.duration ?? 200,
+      easing: cubicOut,
+      delay: params.delay ?? 0,
+    });
+  }
+  if (isNativeSupported() && !params.force) {
+    return { duration: 0 };
+  }
   const isExit = params.isExit || false;
   return svelteScale(node, {
     duration: params.duration ?? (isExit ? DEFAULT_EXIT_DURATION : DEFAULT_ENTER_DURATION),
@@ -66,4 +111,26 @@ export function m3Scale(node: Element, params: any = {}) {
     start: params.start ?? 0,
     opacity: params.opacity ?? 0,
   });
+}
+
+// Crossfade for FLIP transitions with prefers-reduced-motion safety
+const [rawSend, rawReceive] = crossfade({
+  duration: 300,
+  fallback(node, params) {
+    return svelteScale(node, { duration: 200, start: 0.95 });
+  }
+});
+
+export function send(node: Element, params: any) {
+  if (isReducedMotion()) {
+    return svelteFade(node, { duration: 150 });
+  }
+  return rawSend(node, params);
+}
+
+export function receive(node: Element, params: any) {
+  if (isReducedMotion()) {
+    return svelteFade(node, { duration: 150 });
+  }
+  return rawReceive(node, params);
 }

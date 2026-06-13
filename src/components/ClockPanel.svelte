@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
+  import { spring } from "svelte/motion";
   import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
   import { format, differenceInSeconds } from "date-fns";
   import { ms as msLocale, enUS } from "date-fns/locale";
@@ -103,6 +104,31 @@
 
   let countdownParts = $state({ h: 0, m: 0, s: 0, active: false });
   let progress = $state(0);
+
+  const countdownWidthSpring = spring(0, {
+    stiffness: 0.1,
+    damping: 0.8
+  });
+
+  $effect(() => {
+    const reduced = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) {
+      countdownWidthSpring.stiffness = 1.0;
+      countdownWidthSpring.damping = 1.0;
+    } else {
+      countdownWidthSpring.stiffness = 0.1;
+      countdownWidthSpring.damping = 0.8;
+    }
+  });
+
+  $effect(() => {
+    if (iqamahCountdownActive && iqamahRemainingSeconds > 0) {
+      const pct = (iqamahRemainingSeconds / (iqamahTotalSeconds || 600)) * 100;
+      countdownWidthSpring.set(pct);
+    } else {
+      countdownWidthSpring.set(0);
+    }
+  });
 
   $effect(() => {
     if (!nextPrayerTime) {
@@ -585,131 +611,123 @@
   </div>
 
   <div class="flex flex-row gap-2 lg:gap-3 mt-auto w-full shrink-0">
-    {#if !iqamahCountdownActive}
-      <div
-        in:scale={{ duration: 200, start: 0.95 }}
-        out:scale={{ duration: 200, start: 0.95 }}
-        class={cn(
-          "bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)] p-2 sm:p-2.5 rounded-[var(--md-sys-shape-corner-extra-large)] flex-1 relative overflow-hidden cursor-default min-h-[56px] sm:min-h-[64px] lg:min-h-[68px] flex flex-col justify-between group hover:scale-[1.02] hover:-rotate-1 hover:-translate-y-1 active:scale-[0.98] transition-all",
-          visualStyle === 'retro' && "border-2 border-[var(--md-sys-color-on-surface)] shadow-[4px_4px_0px_0px_var(--md-sys-color-on-surface)] rounded-none",
-          visualStyle === 'glass' && "bg-[var(--glass-bg)] backdrop-blur-[var(--glass-blur)] border border-[var(--glass-border)]",
-          visualStyle === 'soft' && "shadow-[var(--soft-shadow-light)]"
-        )}
-      >
-        <md-ripple></md-ripple>
-        <div class="absolute -right-2 -bottom-2 w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 text-[var(--md-sys-color-tertiary)]/10 pointer-events-none transition-all duration-300 group-hover:-rotate-12 group-hover:opacity-20">
-          <Compass class="w-full h-full" />
-        </div>
+    <div
+      class={cn(
+        "relative overflow-hidden rounded-[var(--md-sys-shape-corner-extra-large)] flex-1 min-h-[56px] sm:min-h-[64px] lg:min-h-[68px] flex flex-col justify-between transition-all duration-500 ease-out cursor-default group",
+        !iqamahCountdownActive 
+          ? "bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)] hover:scale-[1.02] hover:-rotate-1 hover:-translate-y-1 active:scale-[0.98]" 
+          : (iqamahRemainingSeconds <= 10 
+              ? "bg-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)] border-2 border-[var(--md-sys-color-error)] shadow-md animate-pulse" 
+              : iqamahRemainingSeconds <= 30
+                ? "bg-[var(--md-sys-color-tertiary)] text-[var(--md-sys-color-on-tertiary)] border-2 border-[var(--md-sys-color-tertiary)] shadow-sm"
+                : "bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] border border-[var(--md-sys-color-error)]/30"),
+        visualStyle === 'retro' && "border-2 border-[var(--md-sys-color-on-surface)] shadow-[4px_4px_0px_0px_var(--md-sys-color-on-surface)] rounded-none",
+        visualStyle === 'glass' && "bg-[var(--glass-bg)] backdrop-blur-[var(--glass-blur)] border border-[var(--glass-border)] text-[var(--md-sys-color-on-surface)]",
+        visualStyle === 'soft' && "shadow-[var(--soft-shadow-light)]"
+      )}
+    >
+      {#if !iqamahCountdownActive}
+        <div in:fade={{ duration: 300 }} out:fade={{ duration: 200 }} class="absolute inset-0 p-2 sm:p-2.5 flex flex-col justify-between h-full w-full">
+          <md-ripple></md-ripple>
+          <div class="absolute -right-2 -bottom-2 w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 text-[var(--md-sys-color-tertiary)]/10 pointer-events-none transition-all duration-300 group-hover:-rotate-12 group-hover:opacity-20">
+            <Compass class="w-full h-full" />
+          </div>
 
-        <div class="relative z-10 flex flex-col h-full justify-between gap-1">
-          <h3 class="md3-label-small text-[var(--md-sys-color-on-tertiary-container)]/80 font-black uppercase tracking-widest">
-            {appSettings.t("qibla")}
-          </h3>
-          <div>
-            <p class="text-lg sm:text-xl lg:text-2xl font-black font-sans tracking-tighter leading-none">
-              292.41°
-            </p>
-            <p class="text-[9px] sm:text-[10px] opacity-80 font-bold mt-1 tracking-wide">
-              {appSettings.t("fromTrueNorth")}
-            </p>
+          <div class="relative z-10 flex flex-col h-full justify-between gap-1">
+            <h3 class="md3-label-small text-[var(--md-sys-color-on-tertiary-container)]/80 font-black uppercase tracking-widest">
+              {appSettings.t("qibla")}
+            </h3>
+            <div>
+              <p class="text-lg sm:text-xl lg:text-2xl font-black font-sans tracking-tighter leading-none">
+                292.41°
+              </p>
+              <p class="text-[9px] sm:text-[10px] opacity-80 font-bold mt-1 tracking-wide">
+                {appSettings.t("fromTrueNorth")}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
-    {:else}
-      <div
-        in:scale={{ duration: 200, start: 0.95 }}
-        out:scale={{ duration: 200, start: 0.95 }}
-        class={cn(
-          "p-2 sm:p-2.5 rounded-[var(--md-sys-shape-corner-extra-large)] flex-1 relative overflow-hidden min-h-[56px] sm:min-h-[64px] lg:min-h-[68px] flex flex-col justify-between select-none transition-all duration-300 group cursor-default",
-          iqamahRemainingSeconds <= 10 
-            ? "bg-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)] border-2 border-[var(--md-sys-color-error)] shadow-md animate-pulse" 
-            : iqamahRemainingSeconds <= 30
-              ? "bg-[var(--md-sys-color-tertiary)] text-[var(--md-sys-color-on-tertiary)] border-2 border-[var(--md-sys-color-tertiary)] shadow-sm"
-              : "bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] border border-[var(--md-sys-color-error)]/30",
-          visualStyle === 'retro' && "border-2 border-[var(--md-sys-color-on-surface)] shadow-[4px_4px_0px_0px_var(--md-sys-color-on-surface)] rounded-none",
-          visualStyle === 'glass' && "bg-[var(--glass-bg)] backdrop-blur-[var(--glass-blur)] border border-[var(--glass-border)] text-[var(--md-sys-color-on-surface)]",
-          visualStyle === 'soft' && "shadow-[var(--soft-shadow-light)] border border-white/20"
-        )}
-      >
-        <div 
-          class="absolute inset-y-0 left-0 bg-[var(--md-sys-color-error)]/10 dark:bg-white/10 transition-all duration-1000 ease-linear pointer-events-none"
-          style="width: {(iqamahRemainingSeconds / (iqamahTotalSeconds || 600)) * 100}%; display: {iqamahRemainingSeconds <= 5 ? 'none' : 'block'};"
-        ></div>
-        
-        <div class="relative z-10 flex flex-col h-full justify-between gap-1 w-full text-center">
-          {#if iqamahRemainingSeconds <= 5}
-            <div class="flex flex-col items-center justify-center h-full w-full py-1">
-              <span class="text-[10px] font-black uppercase tracking-widest text-[var(--md-sys-color-on-error)] animate-bounce leading-none mb-1">
-                {currentPrayerNameForIqamah || "IQAMAH"}
-              </span>
-              {#key iqamahRemainingSeconds}
-                <span 
-                  in:scale={{ start: 0.5, duration: 800, easing: (t) => Math.min(1, t * 1.5) }} 
-                  class="text-4xl sm:text-5xl lg:text-6xl font-black font-sans tracking-tight leading-none text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.4)]"
-                >
-                  {iqamahRemainingSeconds}
+      {:else}
+        <div in:fade={{ duration: 300 }} out:fade={{ duration: 200 }} class="absolute inset-0 p-2 sm:p-2.5 flex flex-col justify-between h-full w-full">
+          <div 
+            class="absolute inset-y-0 left-0 bg-[var(--md-sys-color-error)]/10 dark:bg-white/10 pointer-events-none"
+            style="width: {$countdownWidthSpring}%; display: {iqamahRemainingSeconds <= 5 ? 'none' : 'block'};"
+          ></div>
+          
+          <div class="relative z-10 flex flex-col h-full justify-between gap-1 w-full text-center">
+            {#if iqamahRemainingSeconds <= 5}
+              <div class="flex flex-col items-center justify-center h-full w-full py-1">
+                <span class="text-[10px] font-black uppercase tracking-widest text-[var(--md-sys-color-on-error)] animate-bounce leading-none mb-1">
+                  {currentPrayerNameForIqamah || "IQAMAH"}
                 </span>
-              {/key}
-            </div>
-          {:else}
-            <h3 class={cn(
-              "md3-label-small font-black uppercase tracking-widest text-center",
-              iqamahRemainingSeconds <= 10 ? "text-[var(--md-sys-color-on-error)]" : iqamahRemainingSeconds <= 30 ? "text-[var(--md-sys-color-on-tertiary)]" : "text-[var(--md-sys-color-on-error-container)]/80"
-            )}>
-              IQAMAH {currentPrayerNameForIqamah ? `• ${currentPrayerNameForIqamah}` : ''} {iqamahPaused ? " (PAUSED)" : ""}
-            </h3>
-            <div class="flex flex-col items-center">
-              <p class={cn(
-                "font-black font-sans tracking-tighter leading-none text-center transition-all duration-300",
-                iqamahRemainingSeconds <= 10 ? "text-3xl sm:text-4xl lg:text-5xl text-white" : iqamahRemainingSeconds <= 30 ? "text-2.5xl sm:text-3xl lg:text-4xl text-white" : "text-xl sm:text-2xl lg:text-3xl"
+                {#key iqamahRemainingSeconds}
+                  <span 
+                    class="text-4xl sm:text-5xl lg:text-6xl font-black font-sans tracking-tight leading-none text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.4)]"
+                  >
+                    {iqamahRemainingSeconds}
+                  </span>
+                {/key}
+              </div>
+            {:else}
+              <h3 class={cn(
+                "md3-label-small font-black uppercase tracking-widest text-center",
+                iqamahRemainingSeconds <= 10 ? "text-[var(--md-sys-color-on-error)]" : iqamahRemainingSeconds <= 30 ? "text-[var(--md-sys-color-on-tertiary)]" : "text-[var(--md-sys-color-on-error-container)]/80"
               )}>
-                {Math.floor(iqamahRemainingSeconds / 60)}:
-                {String(iqamahRemainingSeconds % 60).padStart(2, '0')}
-              </p>
-              <p class={cn(
-                "text-[9px] sm:text-[10px] font-bold mt-1 tracking-wide text-center",
-                iqamahRemainingSeconds <= 10 ? "text-[var(--md-sys-color-on-error)]" : iqamahRemainingSeconds <= 30 ? "text-[var(--md-sys-color-on-tertiary)]" : "opacity-80"
-              )}>
-                {iqamahRemainingSeconds <= 10 ? "SEDIA BERSOLAT" : iqamahRemainingSeconds <= 30 ? "SAK SAF RAPAT & LURUS" : "Sila bersedia untuk solat berjemaah"}
-              </p>
+                IQAMAH {currentPrayerNameForIqamah ? `• ${currentPrayerNameForIqamah}` : ''} {iqamahPaused ? " (PAUSED)" : ""}
+              </h3>
+              <div class="flex flex-col items-center">
+                <p class={cn(
+                  "font-black font-sans tracking-tighter leading-none text-center transition-all duration-300",
+                  iqamahRemainingSeconds <= 10 ? "text-3xl sm:text-4xl lg:text-5xl text-white" : iqamahRemainingSeconds <= 30 ? "text-2.5xl sm:text-3xl lg:text-4xl text-white" : "text-xl sm:text-2xl lg:text-3xl"
+                )}>
+                  {Math.floor(iqamahRemainingSeconds / 60)}:
+                  {String(iqamahRemainingSeconds % 60).padStart(2, '0')}
+                </p>
+                <p class={cn(
+                  "text-[9px] sm:text-[10px] font-bold mt-1 tracking-wide text-center",
+                  iqamahRemainingSeconds <= 10 ? "text-[var(--md-sys-color-on-error)]" : iqamahRemainingSeconds <= 30 ? "text-[var(--md-sys-color-on-tertiary)]" : "opacity-80"
+                )}>
+                  {iqamahRemainingSeconds <= 10 ? "SEDIA BERSOLAT" : iqamahRemainingSeconds <= 30 ? "SAK SAF RAPAT & LURUS" : "Sila bersedia untuk solat berjemaah"}
+                </p>
+              </div>
+            {/if}
+          </div>
+
+          {#if onIqamahTogglePause && onIqamahAddMinute && iqamahRemainingSeconds > 5}
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
+            <div class="absolute inset-0 bg-black/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-3 z-20">
+              <!-- svelte-ignore a11y_click_events_have_key_events -->
+              <!-- svelte-ignore a11y_no_static_element_interactions -->
+              <md-icon-button onclick={(e: any) => {
+                  e.stopPropagation();
+                  onIqamahTogglePause?.();
+                }}
+                style="--md-icon-button-state-layer-color: white; --md-icon-button-icon-color: white;"
+                title={iqamahPaused ? "Mula" : "Jeda"}
+              >
+                {#if iqamahPaused}
+                  <Play class="fill-white stroke-[2.5]" />
+                {:else}
+                  <Pause class="fill-white stroke-[2.5]" />
+                {/if}
+              </md-icon-button>
+              <md-filled-tonal-button
+                onclick={(e: Event) => {
+                  e.stopPropagation();
+                  onIqamahAddMinute?.();
+                }}
+                title="Tambah 1 minit"
+                style="--md-sys-color-secondary-container: rgba(255,255,255,0.2); --md-sys-color-on-secondary-container: white;"
+              >
+                <span slot="icon" class="flex items-center justify-center"><Plus size={18} /></span>
+                +1m
+              </md-filled-tonal-button>
             </div>
           {/if}
         </div>
-
-        {#if onIqamahTogglePause && onIqamahAddMinute && iqamahRemainingSeconds > 5}
-          <!-- svelte-ignore a11y_click_events_have_key_events -->
-          <!-- svelte-ignore a11y_no_static_element_interactions -->
-          <div class="absolute inset-0 bg-black/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-3 z-20">
-            <!-- svelte-ignore a11y_click_events_have_key_events -->
-            <!-- svelte-ignore a11y_no_static_element_interactions -->
-            <md-icon-button onclick={(e: any) => {
-                e.stopPropagation();
-                onIqamahTogglePause?.();
-              }}
-              style="--md-icon-button-state-layer-color: white; --md-icon-button-icon-color: white;"
-              title={iqamahPaused ? "Mula" : "Jeda"}
-            >
-              {#if iqamahPaused}
-                <Play class="fill-white stroke-[2.5]" />
-              {:else}
-                <Pause class="fill-white stroke-[2.5]" />
-              {/if}
-            </md-icon-button>
-            <md-filled-tonal-button
-              onclick={(e: Event) => {
-                e.stopPropagation();
-                onIqamahAddMinute?.();
-              }}
-              title="Tambah 1 minit"
-              style="--md-sys-color-secondary-container: rgba(255,255,255,0.2); --md-sys-color-on-secondary-container: white;"
-            >
-              <span slot="icon" class="flex items-center justify-center"><Plus size={18} /></span>
-              +1m
-            </md-filled-tonal-button>
-          </div>
-        {/if}
-      </div>
-    {/if}
+      {/if}
+    </div>
 
     <div
       class={cn(

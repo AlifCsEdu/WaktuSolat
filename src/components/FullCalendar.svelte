@@ -11,7 +11,7 @@
   import PrayerTimesListView from "./calendar/PrayerTimesListView.svelte";
   import EventsListView from "./calendar/EventsListView.svelte";
   import SelectedDayModal from "./calendar/SelectedDayModal.svelte";
-  import { m3Fade as fade, m3Fly as fly, m3Slide as slide, m3Scale as scale } from "../lib/transitions";
+  import { m3Fade as fade, m3Fly as fly, m3Slide as slide, m3Scale as scale, send, receive } from "../lib/transitions";
   import { portal } from "../lib/portal";
 
   let { 
@@ -29,6 +29,19 @@
   let activeTab = $state<"grid" | "list" | "public_holidays" | "islamic_events">("grid");
   let view = $state<"daily" | "weekly" | "monthly">("monthly");
   let currentDate = $state<Date>(new Date());
+
+  let prevTab = $state<string>("grid");
+  let slideDirection = $state<number>(0);
+
+  $effect(() => {
+    const tabOrder = ["grid", "list", "public_holidays", "islamic_events"];
+    const prevIndex = tabOrder.indexOf(prevTab);
+    const currIndex = tabOrder.indexOf(activeTab);
+    if (currIndex !== prevIndex) {
+      slideDirection = currIndex > prevIndex ? 1 : -1;
+      prevTab = activeTab;
+    }
+  });
   
   let dataCache = $state<Record<string, PrayerData[]>>({});
   
@@ -225,6 +238,7 @@
     <div
       transition:fly={{ y: 20, duration: 300 }}
       class="relative z-10 w-full h-full flex flex-col font-sans text-[var(--md-sys-color-on-background)]"
+      style:view-transition-name="calendar-transition"
     >
       <!-- STICKY HEADER ZONE -->
       <div class={cn(
@@ -285,7 +299,8 @@
                 <md-ripple></md-ripple>
                 {#if isActive}
                   <div
-                    transition:scale={{ duration: 200, start: 0.95 }}
+                    in:receive={{ key: 'active-calendar-tab' }}
+                    out:send={{ key: 'active-calendar-tab' }}
                     class="absolute inset-0 bg-[var(--md-sys-color-primary)] rounded-xl sm:rounded-full shadow-md z-[-1]"
                   ></div>
                 {/if}
@@ -448,34 +463,42 @@
         {/if}
 
         <!-- Main Tab Render Switcher -->
-        <div class={cn(
-          "flex-1 min-h-0 w-full duration-200",
-          activeTab === "grid" && "flex flex-col"
-        )}>
-          {#if activeTab === "grid"}
-            <div class={cn(
-              "bg-[var(--md-sys-color-surface-container-low)] shadow-sm rounded-[32px] border border-[var(--md-sys-color-outline)]/10 p-2.5 sm:p-4 lg:p-5 flex-1 flex flex-col min-h-0 transition-all duration-300",
-              visualStyle === 'glass' && "bg-[var(--glass-bg)]/40 backdrop-blur-md border-[var(--glass-border)] shadow-inner"
-            )}>
-              <CalendarGridView 
-                {currentDate}
-                monthData={uniqueDisplayData} 
-                isLoading={showLoadingState}
-                onSelectDay={(day) => selectedDayData = day}
-              />
+        <div class="flex-1 min-h-0 w-full relative">
+          {#key activeTab}
+            <div
+              in:fly={{ x: slideDirection * 120, duration: 350, delay: 80, force: true }}
+              out:fly={{ x: -slideDirection * 120, duration: 250, force: true }}
+              class={cn(
+                "w-full h-full",
+                activeTab === "grid" && "flex flex-col flex-1 min-h-0"
+              )}
+            >
+              {#if activeTab === "grid"}
+                <div class={cn(
+                  "bg-[var(--md-sys-color-surface-container-low)] shadow-sm rounded-[32px] border border-[var(--md-sys-color-outline)]/10 p-2.5 sm:p-4 lg:p-5 flex-1 flex flex-col min-h-0 transition-all duration-300",
+                  visualStyle === 'glass' && "bg-[var(--glass-bg)]/40 backdrop-blur-md border-[var(--glass-border)] shadow-inner"
+                )}>
+                  <CalendarGridView 
+                    {currentDate}
+                    monthData={uniqueDisplayData} 
+                    isLoading={showLoadingState}
+                    onSelectDay={(day) => selectedDayData = day}
+                  />
+                </div>
+              {:else if activeTab === "list"}
+                <PrayerTimesListView 
+                  data={uniqueDisplayData} 
+                  {view}
+                  isLoading={showLoadingState}
+                  onPrayerSelect={(p) => selectedPrayer = p}
+                />
+              {:else if activeTab === "public_holidays"}
+                <EventsListView {currentDate} type="public" />
+              {:else if activeTab === "islamic_events"}
+                <EventsListView {currentDate} type="islamic" />
+              {/if}
             </div>
-          {:else if activeTab === "list"}
-            <PrayerTimesListView 
-              data={uniqueDisplayData} 
-              {view}
-              isLoading={showLoadingState}
-              onPrayerSelect={(p) => selectedPrayer = p}
-            />
-          {:else if activeTab === "public_holidays"}
-            <EventsListView {currentDate} type="public" />
-          {:else if activeTab === "islamic_events"}
-            <EventsListView {currentDate} type="islamic" />
-          {/if}
+          {/key}
         </div>
       </div>
     </div>

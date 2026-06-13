@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, setContext } from 'svelte';
   import { page } from '$app/stores';
-  import { goto } from '$app/navigation';
+  import { goto, onNavigate } from '$app/navigation';
   import '../index.css';
   import '../m3e-layout.css';
   
@@ -11,6 +11,8 @@
 
   // Transitions
   import { m3Fade as fade, m3Fly as fly } from '../lib/transitions';
+
+  import { overlayManager } from '../state/overlay.svelte';
 
   // Global State Singletons
   import { appSettings } from '../state/settings.svelte';
@@ -103,9 +105,38 @@
     pendingPermissionAction = null;
   };
 
+  onNavigate((navigation) => {
+    if (!document.startViewTransition) return;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
+
+    return new Promise((resolve) => {
+      document.startViewTransition(async () => {
+        resolve();
+        await navigation.complete;
+      });
+    });
+  });
+
+  $effect(() => {
+    overlayManager.register('solat-mode', !!(mosque.solatModeActive && mosque.solatPrayerName));
+  });
+  $effect(() => {
+    overlayManager.register('azan-alert', !!((mosque.azanAlertActive || mosqueState.mockAzanAlert) && (mosque.azanAlertPrayerName || mosqueState.mockAzanAlert?.prayerName)));
+  });
+  $effect(() => {
+    overlayManager.register('location-toast', !!(locationState.promptZone || locationState.autoUpdatedZone));
+  });
+  $effect(() => {
+    overlayManager.register('update-toast', showUpdateToast);
+  });
+
   onMount(() => {
     if (typeof window !== 'undefined') {
       (window as any).appSettings = appSettings;
+      (window as any).mosqueState = mosqueState;
+      (window as any).locationState = locationState;
+      (window as any).overlayManager = overlayManager;
     }
     initState();
     hasCompletedOnboarding = StorageManager.getHasCompletedOnboarding();
@@ -192,7 +223,7 @@
     </div>
   {/if}
 
-  {#if (mosque.azanAlertActive || mosqueState.mockAzanAlert) && (mosque.azanAlertPrayerName || mosqueState.mockAzanAlert?.prayerName)}
+  {#if overlayManager.shouldRender('azan-alert')}
     <AzanAlert
       prayerName={mosqueState.mockAzanAlert ? mosqueState.mockAzanAlert.prayerName : (mosque.azanAlertPrayerName || "")}
       prayerTime={mosqueState.mockAzanAlert ? new Date() : (computedPrayers.prevPrayerTime || new Date())}
@@ -208,7 +239,7 @@
     />
   {/if}
 
-  {#if mosque.solatModeActive && mosque.solatPrayerName}
+  {#if overlayManager.shouldRender('solat-mode')}
     <SolatMode
       prayerName={mosque.solatPrayerName}
       remainingSeconds={mosque.solatRemainingSeconds}
@@ -222,21 +253,34 @@
     />
   {/if}
 
-  <LocationToast 
-    promptZone={locationState.promptZone}
-    promptLocationName={locationState.promptLocationName}
-    autoUpdatedZone={locationState.autoUpdatedZone}
-    autoUpdatedLocationName={locationState.autoUpdatedLocationName}
-    onAccept={() => locationState.acceptPrompt()}
-    onDismiss={() => locationState.dismissPrompt()}
-  />
+  {#if overlayManager.shouldRender('location-toast')}
+    <LocationToast 
+      promptZone={locationState.promptZone}
+      promptLocationName={locationState.promptLocationName}
+      autoUpdatedZone={locationState.autoUpdatedZone}
+      autoUpdatedLocationName={locationState.autoUpdatedLocationName}
+      onAccept={() => locationState.acceptPrompt()}
+      onDismiss={() => locationState.dismissPrompt()}
+    />
+  {/if}
 
-  {#if showUpdateToast}
+  {#if overlayManager.shouldRender('update-toast')}
     <UpdateToast
       onAccept={acceptUpdate}
       onDismiss={dismissUpdate}
     />
   {/if}
+
+  <!-- Global SVG gooey morph filter definition -->
+  <svg style="visibility: hidden; position: absolute; width: 0; height: 0;" xmlns="http://www.w3.org/2000/svg" version="1.1">
+    <defs>
+      <filter id="app-gooey-morph">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="12" result="blur" />
+        <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9" result="goo" />
+        <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+      </filter>
+    </defs>
+  </svg>
 
   <!-- SvelteKit Page Outlet -->
   {@render children()}

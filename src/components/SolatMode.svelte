@@ -1,6 +1,15 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
+  import GooeyBackground from "./GooeyBackground.svelte";
+
+  let isMorphing = $state(false);
+  onMount(() => {
+    const timer = setTimeout(() => {
+      isMorphing = true;
+    }, 450);
+    return () => clearTimeout(timer);
+  });
   import { Compass, X, Clock } from "lucide-svelte";
   import { format } from "date-fns";
   import { appSettings } from "../state/settings.svelte";
@@ -122,6 +131,7 @@
   )}
 >
   <!-- Calm ambient breathing backdrop -->
+  <GooeyBackground isMorphing={isMorphing} class="opacity-45 scale-110" />
   <div class="absolute inset-0 bg-black/40 dark:bg-black/60 pointer-events-none"></div>
 
   <!-- Repeating Islamic geometric pattern background -->

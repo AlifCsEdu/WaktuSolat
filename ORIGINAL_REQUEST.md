@@ -185,3 +185,35 @@ Working directory: c:\Users\alif325\Documents\WIndsurf projeks\waktu-solat-expre
 - [ ] Navigating to `/calendar` renders the calendar clearly without any empty blurry overlays on top.
 - [ ] Users can click on calendar grid days, tabs (grid, list, holidays), and nav buttons.
 - [ ] Closing the calendar navigates back to the homepage (`/`) successfully.
+
+## Follow-up — 2026-06-13T14:32:11+08:00
+
+Improve and implement native-level, extremely smooth animations and transitions throughout the Waktu Solat SvelteKit web application.
+
+Working directory: c:/Users/alif325/Documents/WIndsurf projeks/waktu-solat-expressive
+Integrity mode: development
+
+## Requirements
+
+### R1. Advanced Animations & Transitions
+Implement native-level smooth animations across the application, fitting the following categories:
+- **Shared Element Transitions (Hero Animations)**: Smoothly transition elements (like cards or widgets) into full-screen modals or views when opened (e.g., clicking on a dashboard widget like Calendar, Settings, Weather, or Map transitions it smoothly into a modal/expanded page).
+- **FLIP Technique Transitions**: Use the FLIP (First, Last, Invert, Play) animation technique for layout changes, such as switching between grid/list views in the Calendar or reordering layout elements on settings updates.
+- **Expandable Bento Box Widgets**: Implement expanding card layouts (Bento Box expansions) for dashboard widgets like Weather, Mosque Info, and Next Prayer cards, making their expansion feel fluid and physical.
+- **Morphing / Liquid UI**: Implement morphing visual effects on temporary alerts and toasts, such as the Azan Alert, Solat Mode overlay, and Location Toast, to make them transition organically.
+
+### R2. Performance & Technologies
+- Leverage native CSS transition/animation features and Svelte 5 built-in transition helpers (like `fade`, `fly`, `slide`, `scale`, or spring/tweened stores) for maximum performance.
+- Avoid introducing heavy external libraries unless strictly required and performant (e.g., lightweight easing libraries are acceptable).
+- Ensure animations adapt to user preferences by respecting `prefers-reduced-motion` media queries.
+
+## Acceptance Criteria
+
+### Performance & Quality
+- [ ] Animations run smoothly at high frame rates (~60fps) with minimal layout shifts (CLS) on both mobile and desktop viewports.
+- [ ] Elements remain fully interactive (e.g., buttons are clickable) immediately after transitions finish, with no leftover transform/pointer-event locks.
+- [ ] Transition states do not cause visual glitches, flickering, or text rendering blur.
+
+### Verification Plan
+- [ ] Build verification: `npm run build` succeeds without compilation errors.
+- [ ] Automated verification: A verification script is written to simulate opening the calendar/modals and switching views, confirming no uncaught JS errors occur in the console.
