@@ -202,25 +202,35 @@
 {#if isOpen}
   <div
     use:portal
-    transition:fly={{ y: 20, duration: 300 }}
-    class={cn(
-      "fixed inset-0 z-40 w-full h-full flex flex-col font-sans text-[var(--md-sys-color-on-background)] overflow-hidden transition-all duration-300 select-none",
-      isWallpaperActive
-        ? "bg-black/60 backdrop-blur-3xl"
-        : visualStyle === 'glass'
-          ? "bg-[var(--glass-bg)]/85 backdrop-blur-[28px] border border-[var(--glass-border)]"
-          : "bg-[var(--md-sys-color-background)]",
-      visualStyle === 'soft' && "shadow-[var(--soft-shadow-heavy)] bg-[var(--md-sys-color-background)]",
-      visualStyle === 'retro' && "border-[4px] border-[var(--md-sys-color-on-surface)] rounded-none"
-    )}
-    style:background-image={!isWallpaperActive && visualStyle !== 'glass' ? "radial-gradient(var(--md-sys-color-outline-variant) 1px, transparent 1px)" : undefined}
-    style:background-size="24px 24px"
+    class="fixed inset-0 z-[9000] w-full h-full overflow-hidden select-none"
   >
-    <!-- STICKY HEADER ZONE -->
-    <div class={cn(
-      "sticky top-0 z-50 border-b border-[var(--md-sys-color-outline)]/12 shadow-sm shrink-0 transition-all duration-300",
-      isWallpaperActive ? "bg-black/20 backdrop-blur-md" : visualStyle === 'glass' ? "bg-white/5 backdrop-blur-md" : "bg-[var(--md-sys-color-surface)]/90 backdrop-blur-2xl"
-    )}>
+    <!-- Backdrop -->
+    <div
+      transition:fade={{ duration: 300 }}
+      class={cn(
+        "absolute inset-0 transition-all duration-300",
+        isWallpaperActive
+          ? "bg-black/60 backdrop-blur-3xl"
+          : visualStyle === 'glass'
+            ? "bg-[var(--glass-bg)]/85 backdrop-blur-[28px] border border-[var(--glass-border)]"
+            : "bg-[var(--md-sys-color-background)]",
+        visualStyle === 'soft' && "shadow-[var(--soft-shadow-heavy)] bg-[var(--md-sys-color-background)]",
+        visualStyle === 'retro' && "border-[4px] border-[var(--md-sys-color-on-surface)] rounded-none bg-[var(--md-sys-color-background)]"
+      )}
+      style:background-image={!isWallpaperActive && visualStyle !== 'glass' ? "radial-gradient(var(--md-sys-color-outline-variant) 1px, transparent 1px)" : undefined}
+      style:background-size="24px 24px"
+    ></div>
+
+    <!-- Content Wrapper -->
+    <div
+      transition:fly={{ y: 20, duration: 300 }}
+      class="relative z-10 w-full h-full flex flex-col font-sans text-[var(--md-sys-color-on-background)]"
+    >
+      <!-- STICKY HEADER ZONE -->
+      <div class={cn(
+        "sticky top-0 z-50 border-b border-[var(--md-sys-color-outline)]/12 shadow-sm shrink-0 transition-all duration-300",
+        isWallpaperActive ? "bg-black/20 backdrop-blur-md" : visualStyle === 'glass' ? "bg-white/5 backdrop-blur-md" : "bg-[var(--md-sys-color-surface)]/90 backdrop-blur-2xl"
+      )}>
       <div class="max-w-7xl mx-auto w-full p-3 sm:p-4 lg:py-4 lg:px-6 flex flex-col gap-2.5 sm:gap-3.5">
         
         <!-- Top Title & Close Button -->
@@ -470,6 +480,7 @@
       </div>
     </div>
   </div>
+</div>
 {/if}
 
 <SelectedDayModal 
