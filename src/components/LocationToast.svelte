@@ -45,7 +45,7 @@ const t = (key: any, params?: any) => appSettings.t(key, params);
 </script>
 
 {#if promptZone || autoUpdatedZone}
-  <div transition:fly={{ y: 50, duration: 300 }} class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] w-[90%] max-w-sm">
+  <div transition:fly={{ y: 50, duration: 300 }} onoutrostart={() => isMorphing = false} class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] w-[90%] max-w-sm">
     <div class="bg-[var(--md-sys-color-surface-container-highest)] border border-[var(--md-sys-color-outline)]/20 shadow-2xl rounded-[28px] p-5 flex flex-col gap-3 backdrop-blur-xl relative overflow-hidden">
       <GooeyBackground isMorphing={isMorphing} />
       <div class="flex items-start gap-4">

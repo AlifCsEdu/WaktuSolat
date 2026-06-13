@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build",
+    "build": "npm run clean && vite build",
     "preview": "vite preview",
-    "clean": "rm -rf .svelte-kit dist",
+    "clean": "npx rimraf .svelte-kit dist",
     "lint": "tsc --noEmit",
     "test": "vitest run"
   },

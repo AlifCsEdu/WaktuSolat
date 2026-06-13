@@ -1095,8 +1095,21 @@ html[data-style="retro"] md-list-item {
     animation: tv-colon-blink 1s ease-in-out infinite;
 }
 
-.tv-badge-enter {
-    animation: tv-badge-enter 0.35s var(--ease-m3-emphasized-decelerate) both;
+@keyframes tv-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .tv-badge-enter {
+        animation: tv-badge-enter 0.35s var(--ease-m3-emphasized-decelerate) both;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tv-badge-enter {
+        animation: tv-fade-in 0.1s ease both;
+    }
 }
 
 .tv-shimmer-overlay {

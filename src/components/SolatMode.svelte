@@ -8,7 +8,13 @@
     const timer = setTimeout(() => {
       isMorphing = true;
     }, 450);
-    return () => clearTimeout(timer);
+    const disableTimer = setTimeout(() => {
+      isMorphing = false;
+    }, 20000);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(disableTimer);
+    };
   });
   import { Compass, X, Clock } from "lucide-svelte";
   import { format } from "date-fns";
@@ -124,6 +130,7 @@
 <div
   in:fade={{ duration: 300 }}
   out:fade={{ duration: 300 , isExit: true}}
+  onoutrostart={() => isMorphing = false}
   onclick={handleContainerClick}
   class={cn(
     "fixed inset-0 bg-[var(--md-sys-color-surface)] text-[var(--md-sys-color-on-surface)] flex flex-col items-center justify-between cursor-pointer select-none overflow-hidden",

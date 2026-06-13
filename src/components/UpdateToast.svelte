@@ -25,6 +25,7 @@
 
 <div 
   transition:fly={{ y: 50, duration: 400 }} 
+  onoutrostart={() => isMorphing = false}
   class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[250] w-[90%] max-w-md"
 >
   <div class="bg-[var(--md-sys-color-surface-container-highest)]/85 border border-[var(--md-sys-color-outline)]/20 shadow-2xl rounded-[28px] p-5 flex flex-col gap-4 backdrop-blur-xl transition-all duration-300 relative overflow-hidden">

@@ -137,6 +137,9 @@
       (window as any).mosqueState = mosqueState;
       (window as any).locationState = locationState;
       (window as any).overlayManager = overlayManager;
+      (window as any).setUpdateToast = (val: boolean) => {
+        showUpdateToast = val;
+      };
     }
     initState();
     hasCompletedOnboarding = StorageManager.getHasCompletedOnboarding();
