@@ -217,3 +217,35 @@ Implement native-level smooth animations across the application, fitting the fol
 ### Verification Plan
 - [ ] Build verification: `npm run build` succeeds without compilation errors.
 - [ ] Automated verification: A verification script is written to simulate opening the calendar/modals and switching views, confirming no uncaught JS errors occur in the console.
+
+## Follow-up — 2026-06-13T15:14:02+08:00
+
+Investigate and fix the issue where multiple interactive elements (such as the Map widget, Weather card, and potentially the Settings page button) play click animations but their click handlers do not register or open the target view.
+
+Working directory: c:/Users/alif325/Documents/WIndsurf projeks/waktu-solat-expressive
+Integrity mode: development
+
+## Requirements
+
+### R1. Resolve Duplicate View-Transition-Name Errors
+The main cause of the broken click events is duplicate `view-transition-name` definitions coexisting in the DOM simultaneously. Fix this by making the transition names conditional:
+- **Map Modal (`map-transition`)**: Make the `view-transition-name` style conditional. The button trigger in `ZoneSelector.svelte` should only have `view-transition-name: map-transition` when the map is closed. The modal in `MapModal.svelte` should only have `view-transition-name: map-transition` when the map is open.
+- **Weather Modal (`weather-transition`)**: Make the `view-transition-name` style conditional. The weather card trigger in `WeatherWidget.svelte` should only have `view-transition-name: weather-transition` when the modal is closed. The modal in `FullWeatherModal.svelte` should only have `view-transition-name: weather-transition` when the modal is open.
+- **Settings Modal (`settings-transition`)**: Verify the Settings transition between `PrayerSchedule.svelte` and `SettingsModal.svelte` operates cleanly without duplicate name conflicts during navigation.
+
+### R2. Performant & Error-Free View Transitions
+Ensure that Svelte DOM updates are properly synchronized with `document.startViewTransition`. 
+- Since Svelte updates state asynchronously, use Svelte's `tick()` inside the `startViewTransition` callback (e.g. `document.startViewTransition(async () => { isModalOpen = true; await tick(); })`) so that the browser correctly captures the DOM changes.
+- Handle any rejection or failure of `startViewTransition` gracefully so it doesn't crash Svelte's render cycle.
+
+## Acceptance Criteria
+
+### Click Functionality & Transitions
+- [ ] Clicking the Map button successfully opens the MapModal with transition, and closing it transitions back.
+- [ ] Clicking the Weather card successfully opens the FullWeatherModal, and closing it transitions back.
+- [ ] Clicking the Settings button successfully navigates to settings, and closing it returns to the homepage.
+- [ ] No `Unexpected duplicate view-transition-name` errors are thrown in the browser console.
+
+### Verification Plan
+- [ ] Build verification: `npm run build` succeeds without compilation errors.
+- [ ] Playwright E2E verification: Run Playwright tests that click through Map, Weather, and Settings triggers, confirming that they open without console errors or exceptions.

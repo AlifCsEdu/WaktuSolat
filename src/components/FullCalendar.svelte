@@ -238,7 +238,7 @@
     <div
       transition:fly={{ y: 20, duration: 300 }}
       class="relative z-10 w-full h-full flex flex-col font-sans text-[var(--md-sys-color-on-background)]"
-      style:view-transition-name="calendar-transition"
+      style:view-transition-name={isOpen ? 'calendar-transition' : 'none'}
     >
       <!-- STICKY HEADER ZONE -->
       <div class={cn(

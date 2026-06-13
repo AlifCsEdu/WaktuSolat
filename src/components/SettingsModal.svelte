@@ -1145,7 +1145,7 @@
 
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div in:fly={{ y: 20, duration: 300 }} out:fly={{ y: 20, duration: 200 , isExit: true}} onclick={(e) => e.stopPropagation()} class={cn("relative w-full max-w-4xl max-h-[90dvh] flex flex-col rounded-[var(--md-sys-shape-corner-extra-large)] overflow-hidden shadow-2xl border border-[var(--md-sys-color-outline)]/20 shadow-black/50 transition-colors duration-300", getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface-container)]"), visualStyle === "glass" && "settings-glass-modal")} style:view-transition-name="settings-transition">
+    <div in:fly={{ y: 20, duration: 300 }} out:fly={{ y: 20, duration: 200 , isExit: true}} onclick={(e) => e.stopPropagation()} class={cn("relative w-full max-w-4xl max-h-[90dvh] flex flex-col rounded-[var(--md-sys-shape-corner-extra-large)] overflow-hidden shadow-2xl border border-[var(--md-sys-color-outline)]/20 shadow-black/50 transition-colors duration-300", getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface-container)]"), visualStyle === "glass" && "settings-glass-modal")} style:view-transition-name={isOpen ? 'settings-transition' : 'none'}>
       <div class="flex flex-col sm:flex-row sm:items-center justify-between p-6 sm:px-8 sm:pt-8 sm:pb-4 border-b border-[var(--md-sys-color-outline)]/10 gap-4 shrink-0 bg-[var(--md-sys-color-surface)]">
         <div>
           <h2 class="md3-headline-small font-bold text-[var(--md-sys-color-on-surface)]">{t("settings")}</h2>

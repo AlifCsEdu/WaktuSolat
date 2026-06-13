@@ -256,7 +256,7 @@
       transition:fly={{ y: 50, duration: 400 }}
       class="w-full max-w-6xl bg-[var(--md-sys-color-surface)] rounded-[var(--md-sys-shape-corner-extra-large)] shadow-2xl overflow-hidden flex flex-col h-[90dvh] sm:my-auto"
       onintroend={() => window.dispatchEvent(new Event('resize'))}
-      style:view-transition-name="map-transition"
+      style:view-transition-name={isOpen ? 'map-transition' : 'none'}
     >
       <div class="flex flex-col sm:flex-row sm:items-center justify-between p-6 md:p-8 border-b border-[var(--md-sys-color-outline)]/10 shrink-0 gap-4 bg-[var(--md-sys-color-surface)]">
         <div>

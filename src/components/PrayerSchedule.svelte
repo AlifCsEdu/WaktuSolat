@@ -31,6 +31,7 @@
 </script>
 
 <script lang="ts">
+  import { page } from "$app/stores";
   import { cn } from "../lib/utils";
   import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
   import "@material/web/iconbutton/icon-button.js";
@@ -77,6 +78,7 @@
   let settings = $derived(appSettings.settings);
   let t = $derived((key: any, params?: any) => appSettings.t(key, params));
   let visualStyle = $derived(appSettings.settings.visualStyle);
+  const isSettingsOpen = $derived($page.url.pathname === '/settings');
 
   let filter = $state<"all" | "fardu" | "sunnah">("fardu");
 
@@ -257,7 +259,7 @@
             )} />
           </md-icon-button>
         </div>
-        <div class="inline-flex rotate-3 mt-1 w-10 h-10 lg:w-[48px] lg:h-[48px] hover:scale-105 active:scale-95 transition-transform" style="view-transition-name: settings-transition;">
+        <div class="inline-flex rotate-3 mt-1 w-10 h-10 lg:w-[48px] lg:h-[48px] hover:scale-105 active:scale-95 transition-transform" style:view-transition-name={!isSettingsOpen ? 'settings-transition' : 'none'}>
           <md-filled-tonal-icon-button
             role="button"
             tabindex={0}

@@ -1,4 +1,5 @@
 <script lang="ts">
+import { tick } from 'svelte';
 import { JAKIM_ZONES } from "../lib/zones";
 import { Search, MapPin, X, Crosshair, Map as MapIcon, CheckCircle2 } from "lucide-svelte";
 import { cn } from "../lib/utils";
@@ -284,15 +285,16 @@ const handleScroll = (e: Event) => {
     </div>
   </button>
 
-  <div class="shrink-0 inline-flex w-[48px] h-[48px] lg:w-[56px] lg:h-[56px] hover:scale-105 active:scale-95 transition-transform duration-200" style="view-transition-name: map-transition;">
+  <div class="shrink-0 inline-flex w-[48px] h-[48px] lg:w-[56px] lg:h-[56px] hover:scale-105 active:scale-95 transition-transform duration-200" style:view-transition-name={!isMapOpen ? 'map-transition' : 'none'}>
     <md-filled-tonal-icon-button
       role="button"
       tabindex={0}
       onkeydown={handleKeyDown}
       onclick={() => {
         if (document.startViewTransition) {
-          document.startViewTransition(() => {
+          document.startViewTransition(async () => {
             isMapOpen = true;
+            await tick();
           });
         } else {
           isMapOpen = true;
@@ -315,8 +317,9 @@ const handleScroll = (e: Event) => {
   isOpen={isMapOpen}
   onClose={() => {
     if (document.startViewTransition) {
-      document.startViewTransition(() => {
+      document.startViewTransition(async () => {
         isMapOpen = false;
+        await tick();
       });
     } else {
       isMapOpen = false;
@@ -327,8 +330,9 @@ const handleScroll = (e: Event) => {
   onZoneSelect={(zone: string) => {
     onZoneSelect(zone);
     if (document.startViewTransition) {
-      document.startViewTransition(() => {
+      document.startViewTransition(async () => {
         isMapOpen = false;
+        await tick();
       });
     } else {
       isMapOpen = false;

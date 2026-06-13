@@ -2,10 +2,11 @@
   import MapModal from '../../components/MapModal.svelte';
   import { StorageManager } from '../../lib/StorageManager';
   import { goto } from '$app/navigation';
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
 
   let selectedZone = $state('');
   let userLocation = $state<{ lat: number; lng: number } | null>(null);
+  let isOpen = $state(true);
 
   onMount(() => {
     selectedZone = StorageManager.getZone() || 'WLY01';
@@ -24,9 +25,16 @@
     }
   });
 
-  function handleZoneSelect(zone: string) {
+  async function handleZoneSelect(zone: string) {
     StorageManager.saveZone(zone);
-    // Let the app know the zone changed (StorageManager handles localStorage write)
+    isOpen = false;
+    await tick();
+    goto('/');
+  }
+
+  async function handleClose() {
+    isOpen = false;
+    await tick();
     goto('/');
   }
 </script>
@@ -34,11 +42,11 @@
 <div class="fixed inset-0 z-50 flex items-center justify-center p-0 m-0 bg-[var(--md-sys-color-scrim)]/30 backdrop-blur-md">
   {#if selectedZone}
     <MapModal
-      isOpen={true}
+      isOpen={isOpen}
       selectedZone={selectedZone}
       userLocation={userLocation}
       onZoneSelect={handleZoneSelect}
-      onClose={() => goto('/')}
+      onClose={handleClose}
     />
   {/if}
 </div>

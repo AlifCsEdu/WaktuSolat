@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, setContext } from 'svelte';
+  import { onMount, setContext, tick } from 'svelte';
   import { page } from '$app/stores';
   import { goto, onNavigate } from '$app/navigation';
   import '../index.css';
@@ -114,6 +114,7 @@
       document.startViewTransition(async () => {
         resolve();
         await navigation.complete;
+        await tick();
       });
     });
   });

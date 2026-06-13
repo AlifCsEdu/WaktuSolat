@@ -16,7 +16,7 @@
     WifiOff,
   } from "lucide-svelte";
   import { appSettings } from "../state/settings.svelte";
-  import { untrack } from "svelte";
+  import { untrack, tick } from "svelte";
   import { cn } from "../lib/utils";
   import { JAKIM_ZONES } from "../lib/zones";
   import FullWeatherModal from "./FullWeatherModal.svelte";
@@ -257,14 +257,15 @@
   <button
     onclick={() => {
       if (document.startViewTransition) {
-        document.startViewTransition(() => {
+        document.startViewTransition(async () => {
           isModalOpen = true;
+          await tick();
         });
       } else {
         isModalOpen = true;
       }
     }}
-    style="view-transition-name: weather-transition;"
+    style:view-transition-name={!isModalOpen ? 'weather-transition' : 'none'}
     class={cn(
       "flex w-full items-center justify-between text-[var(--md-sys-color-on-surface)] rounded-[var(--md-sys-shape-corner-extra-large)] p-3 sm:p-4 lg:p-3 xl:p-4 relative overflow-hidden shrink-0 cursor-pointer text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-sys-color-primary)] transition-transform hover:-translate-y-0.5 active:scale-[0.98]",
       widgetBgClass,
@@ -355,8 +356,9 @@
     isOpen={isModalOpen}
     onClose={() => {
       if (document.startViewTransition) {
-        document.startViewTransition(() => {
+        document.startViewTransition(async () => {
           isModalOpen = false;
+          await tick();
         });
       } else {
         isModalOpen = false;
