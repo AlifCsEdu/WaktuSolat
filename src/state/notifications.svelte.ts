@@ -3,6 +3,7 @@ import { appSettings } from './settings.svelte';
 import { StorageManager } from '../lib/StorageManager';
 import { activePrayerState } from './activePrayer.svelte';
 import { currentTimeState } from './time.svelte';
+import { audioSynthesizer } from '../lib/audio';
 
 const DEFAULT_PREFS: Preferences = {
   imsak: { enabled: false, sound: 'default', preAlert: 0, offset: 0, iqamahOffset: 10 },
@@ -88,7 +89,7 @@ class NotificationsState {
     const volumeMultiplier = (appSettings.settings.soundVolume ?? 80) / 100;
     
     if (sound === 'voice') {
-      if ('speechSynthesis' in window) {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(message);
         utterance.lang = appSettings.t("language") === "ms" ? 'ms-MY' : 'en-US';
@@ -98,75 +99,19 @@ class NotificationsState {
       return;
     } 
     
-    try {
-      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const startTime = ctx.currentTime;
-      
-      const playTone = (freq: number, type: OscillatorType, delay: number, dur: number, vol = 0.1) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, startTime + delay);
-        
-        gain.gain.setValueAtTime(0, startTime + delay);
-        gain.gain.linearRampToValueAtTime(vol * volumeMultiplier, startTime + delay + Math.min(0.05, dur * 0.1));
-        gain.gain.exponentialRampToValueAtTime(0.00001, startTime + delay + dur);
-        
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(startTime + delay);
-        osc.stop(startTime + delay + dur);
-      };
-
-      if (sound === 'beep') {
-        playTone(880, 'sine', 0, 0.5, 0.1);
-        playTone(880, 'sine', 0.6, 0.5, 0.1);
-      } else if (sound === 'chime') {
-        playTone(523.25, 'sine', 0, 1.2, 0.15); 
-        playTone(659.25, 'sine', 0.15, 1.2, 0.15); 
-        playTone(783.99, 'sine', 0.3, 2.0, 0.15); 
-        playTone(1046.50, 'sine', 0.45, 2.5, 0.2); 
-      } else if (sound === 'soft-chime') {
-        playTone(440, 'triangle', 0, 1.5, 0.08); 
-        playTone(329.63, 'triangle', 0.4, 2.0, 0.08); 
-        playTone(440, 'triangle', 0.8, 1.5, 0.05); 
-      } else if (sound === 'bell-echo') {
-        playTone(659.25, 'sine', 0, 2.0, 0.15); 
-        playTone(830.61, 'sine', 0.15, 2.0, 0.1); 
-        playTone(987.77, 'sine', 0.3, 2.5, 0.1); 
-        playTone(1318.51, 'sine', 0.45, 3.0, 0.15); 
-        playTone(659.25, 'sine', 0.8, 1.5, 0.04);
-        playTone(1318.51, 'sine', 1.2, 1.5, 0.03);
-      } else if (sound === 'ambient-gong') {
-        playTone(110.00, 'triangle', 0, 3.5, 0.25); 
-        playTone(220.00, 'sine', 0.05, 3.0, 0.15); 
-        playTone(329.63, 'sine', 0.1, 2.5, 0.1); 
-        playTone(440.00, 'sine', 0.15, 2.0, 0.08); 
-      } else if (sound === 'digital-sweep') {
-        playTone(523.25, 'sine', 0, 0.25, 0.08); 
-        playTone(587.33, 'sine', 0.08, 0.25, 0.08); 
-        playTone(659.25, 'sine', 0.16, 0.25, 0.08); 
-        playTone(783.99, 'sine', 0.24, 0.5, 0.12); 
-        playTone(1046.50, 'sine', 0.32, 1.0, 0.15); 
-      } else if (sound === 'azan1' || sound === 'azan2') {
+    if (sound === 'azan1' || sound === 'azan2') {
+      if (typeof window !== 'undefined') {
         const file = sound === 'azan1' ? '/audio/azan-makkah.mp3' : '/audio/azan-madinah.mp3';
         const audio = new Audio(file);
         audio.volume = volumeMultiplier * 0.5;
-        audio.play().catch(err => {
-          if (sound === 'azan1') {
-            playTone(392.00, 'sine', 0, 1.2, 0.2); 
-            playTone(392.00, 'sine', 1.2, 2.0, 0.2); 
-            playTone(349.23, 'sine', 3.4, 0.8, 0.2); 
-            playTone(392.00, 'sine', 4.2, 2.5, 0.2); 
-          } else {
-            playTone(440.00, 'sine', 0, 1.2, 0.2); 
-            playTone(440.00, 'sine', 1.4, 1.5, 0.2); 
-            playTone(493.88, 'sine', 3.0, 1.0, 0.2); 
-            playTone(440.00, 'sine', 4.2, 2.5, 0.2); 
-          }
+        audio.play().catch(() => {
+          audioSynthesizer.play(sound === 'azan1' ? 'chime' : 'soft-chime', volumeMultiplier);
         });
       }
-    } catch (e) {}
+      return;
+    }
+
+    audioSynthesizer.play(sound, volumeMultiplier);
   }
 
   private checkNotifications(currentTime: Date, todayData: PrayerData | null) {

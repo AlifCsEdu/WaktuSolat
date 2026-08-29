@@ -7,12 +7,8 @@
   } from "lucide-svelte";
   import { cn } from "../lib/utils";
   import { JAKIM_ZONES } from "../lib/zones";
-  import "@material/web/iconbutton/icon-button.js";
-  import "@material/web/icon/icon.js";
-  import "@material/web/textfield/outlined-text-field.js";
-  import "@material/web/button/text-button.js";
-  import "@material/web/tabs/tabs.js";
-  import "@material/web/tabs/primary-tab.js";
+  import { IconButton, Button } from "$lib/components/ui";
+  import { ripple } from "$lib/actions/ripple";
   import { appSettings } from "../state/settings.svelte";
   import { getHijriFormatted } from "../lib/holidays";
   import { QRCode } from "../lib/qr";
@@ -582,9 +578,11 @@
             </p>
           </div>
         </div>
-        <md-icon-button onclick={onClose}>
-          <md-icon>close</md-icon>
-        </md-icon-button>
+        <IconButton onclick={onClose} ariaLabel="Close">
+          {#snippet children()}
+            <X size={20} />
+          {/snippet}
+        </IconButton>
       </div>
 
       <div class="px-5 py-2.5 sm:px-6 border-b border-[var(--md-sys-color-outline)]/8 bg-[var(--md-sys-color-surface-container-low)] shrink-0">
@@ -594,9 +592,9 @@
             {t("selectShareZone")}
           </span>
           {#if shareZone !== currentZone}
-            <md-text-button onclick={() => (shareZone = currentZone)}>
+            <Button variant="text" size="sm" onclick={() => (shareZone = currentZone)}>
               {t("resetDefault")}
-            </md-text-button>
+            </Button>
           {/if}
         </div>
 
@@ -634,22 +632,25 @@
           >
             <div class="max-h-[250px] sm:max-h-[220px] flex flex-col mt-1.5 rounded-2xl bg-[var(--md-sys-color-surface)] ring-1 ring-[var(--md-sys-color-outline)]/12 shadow-xl overflow-hidden">
               <div class="px-3 py-2 border-b border-[var(--md-sys-color-outline)]/10 bg-[var(--md-sys-color-surface-container-low)]">
-                <md-outlined-text-field
-                  value={searchQuery}
-                  oninput={(e: any) => (searchQuery = sanitizeInput(e.target.value))}
-                  placeholder={t("searchZonePlaceholder")}
-                  class="w-full"
-                  style="--md-outlined-text-field-container-shape: 28px; --md-sys-color-surface-variant: var(--md-sys-color-surface-container-high);"
-                >
-                  <div slot="leading-icon"><md-icon>search</md-icon></div>
+                <div class="relative flex items-center">
+                  <Search size={15} class="absolute left-3 text-[var(--md-sys-color-on-surface-variant)] pointer-events-none" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    oninput={(e: any) => (searchQuery = sanitizeInput(e.target.value))}
+                    placeholder={t("searchZonePlaceholder")}
+                    class="w-full bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface)] placeholder:text-[var(--md-sys-color-on-surface-variant)]/60 text-xs font-medium pl-8 pr-8 py-2 rounded-full border border-[var(--md-sys-color-outline)]/20 focus:outline-none focus:ring-2 focus:ring-[var(--md-sys-color-primary)]"
+                  />
                   {#if searchQuery}
-                    <div slot="trailing-icon">
-                      <md-icon-button onclick={() => (searchQuery = "")}>
-                        <md-icon>close</md-icon>
-                      </md-icon-button>
-                    </div>
+                    <button
+                      onclick={() => (searchQuery = "")}
+                      class="absolute right-2.5 w-5 h-5 flex items-center justify-center rounded-full hover:bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-on-surface-variant)] cursor-pointer"
+                      aria-label="Clear search"
+                    >
+                      <X size={13} />
+                    </button>
                   {/if}
-                </md-outlined-text-field>
+                </div>
               </div>
 
               <div class="flex-1 overflow-y-auto divide-y divide-[var(--md-sys-color-outline)]/5 no-scrollbar">
@@ -661,6 +662,7 @@
                       </div>
                       {#each state.zones as z (z.v)}
                         <button
+                          use:ripple
                           onclick={() => {
                             shareZone = z.v;
                             showZonePicker = false;
@@ -672,7 +674,6 @@
                               "bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] font-bold"
                           )}
                         >
-                          <md-ripple></md-ripple>
                           <span class="font-black text-[11px] text-[var(--md-sys-color-primary)] w-12 shrink-0">
                             {z.v}
                           </span>
@@ -695,21 +696,46 @@
       </div>
 
       <div class="flex-1 overflow-y-auto px-5 py-3 sm:px-6 sm:py-4 space-y-3 sm:space-y-4 no-scrollbar">
-        <div class="mb-2 w-full bg-[var(--md-sys-color-surface-container)] rounded-[20px] overflow-hidden">
-          <md-tabs activeTabIndex={activeTab === 'link' ? 0 : activeTab === 'image' ? 1 : 2}>
-            <md-primary-tab onclick={() => onTabClick('link')}>
-              {t("smartLink")}
-              <div slot="icon"><md-icon>link</md-icon></div>
-            </md-primary-tab>
-            <md-primary-tab onclick={() => onTabClick('image')}>
-              {t("scheduleCard")}
-              <div slot="icon"><md-icon>image</md-icon></div>
-            </md-primary-tab>
-            <md-primary-tab onclick={() => onTabClick('qr')}>
-              {t("offlineQR")}
-              <div slot="icon"><md-icon>qr_code_2</md-icon></div>
-            </md-primary-tab>
-          </md-tabs>
+        <div class="mb-2 w-full bg-[var(--md-sys-color-surface-container)] rounded-[20px] p-1 flex items-center gap-1 border border-[var(--md-sys-color-outline)]/10">
+          <button
+            use:ripple
+            onclick={() => onTabClick('link')}
+            class={cn(
+              "flex-1 py-2 px-3 rounded-2xl flex items-center justify-center gap-1.5 text-xs font-bold transition-all cursor-pointer",
+              activeTab === 'link'
+                ? "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-sm"
+                : "text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-high)]"
+            )}
+          >
+            <Link2 size={15} />
+            <span>{t("smartLink")}</span>
+          </button>
+          <button
+            use:ripple
+            onclick={() => onTabClick('image')}
+            class={cn(
+              "flex-1 py-2 px-3 rounded-2xl flex items-center justify-center gap-1.5 text-xs font-bold transition-all cursor-pointer",
+              activeTab === 'image'
+                ? "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-sm"
+                : "text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-high)]"
+            )}
+          >
+            <ImageIcon size={15} />
+            <span>{t("scheduleCard")}</span>
+          </button>
+          <button
+            use:ripple
+            onclick={() => onTabClick('qr')}
+            class={cn(
+              "flex-1 py-2 px-3 rounded-2xl flex items-center justify-center gap-1.5 text-xs font-bold transition-all cursor-pointer",
+              activeTab === 'qr'
+                ? "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-sm"
+                : "text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-high)]"
+            )}
+          >
+            <QrCode size={15} />
+            <span>{t("offlineQR")}</span>
+          </button>
         </div>
 
         {#if activeTab === "link"}

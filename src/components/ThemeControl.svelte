@@ -25,12 +25,8 @@
   import { saveWallpaper, clearWallpaper, getWallpaperBlob } from "../lib/db";
   import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
   
-  import "@material/web/slider/slider.js";
-  import "@material/web/switch/switch.js";
-  import "@material/web/iconbutton/filled-tonal-icon-button.js";
-  import "@material/web/textfield/outlined-text-field.js";
-  import "@material/web/icon/icon.js";
-  import "@material/web/button/outlined-button.js";
+  import { Switch, Slider, Button, IconButton, TextField } from "$lib/components/ui";
+  import { ripple } from "$lib/actions/ripple";
 
   const PRESET_COLORS = [
     "#006C54", "#006874", "#2C5E8A", "#5A539B", "#734C9E",
@@ -283,17 +279,17 @@
 <svelte:window onmousedown={handleClickOutside} />
 
 <div class="relative z-50 lg:static" bind:this={containerRef}>
-  <div class="inline-flex flex-shrink-0 w-12 h-12 lg:w-[56px] lg:h-[56px] hover:scale-110 hover:rotate-[15deg] active:scale-90 active:rotate-[-5deg] transition-transform duration-300">
-    <!-- svelte-ignore a11y_consider_explicit_label -->
-    <!-- svelte-ignore a11y_click_events_have_key_events -->
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <md-filled-tonal-icon-button
+  <div class="inline-flex flex-shrink-0 hover:scale-110 hover:rotate-[15deg] active:scale-90 active:rotate-[-5deg] transition-transform duration-300">
+    <IconButton
+      variant="tonal"
+      shape="rounded"
+      size="lg"
       onclick={() => isOpen = !isOpen}
       title={appSettings.t("themeSettings")}
-      style="--md-filled-tonal-icon-button-container-shape: 24px; width: 100%; height: 100%;"
+      ariaLabel={appSettings.t("themeSettings")}
     >
       <Palette size={22} class="stroke-[2.5]" />
-    </md-filled-tonal-icon-button>
+    </IconButton>
   </div>
 
   {#if isOpen}
@@ -316,13 +312,16 @@
         <span class="text-sm font-black uppercase tracking-wider text-[var(--md-sys-color-primary)]">
           {appSettings.t("themeSettings")}
         </span>
-        <button 
+        <IconButton
+          variant="standard"
+          size="sm"
+          shape="circle"
           onclick={() => isOpen = false}
-          class="w-8 h-8 rounded-full bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline)]/10 flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] transition-all focus:outline-none hover:scale-110 active:scale-90"
-          aria-label="Close theme settings"
+          ariaLabel="Close theme settings"
+          title="Close theme settings"
         >
           <X size={18} strokeWidth={2.5} />
-        </button>
+        </IconButton>
       </div>
 
       <div class="space-y-4">
@@ -338,6 +337,7 @@
               {@const isSelected = appSettings.settings.darkThemeMode === mode.id}
               {@const Icon = mode.icon}
               <button 
+                use:ripple
                 onclick={() => withTransition(() => appSettings.updateSettings({ darkThemeMode: mode.id as any }))}
                 class={cn(
                   "relative overflow-hidden flex flex-col items-center justify-center py-2 px-0.5 rounded-xl text-center transition-all duration-200",
@@ -346,7 +346,6 @@
                     : "text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-outline)]/5"
                 )}
               >
-                <md-ripple></md-ripple>
                 <Icon size={16} class="mb-1" strokeWidth={2.5} />
                 <span class="text-[9px] sm:text-[10px] font-bold tracking-tighter sm:tracking-tight leading-none">{appSettings.t(mode.labelKey as any)}</span>
               </button>
@@ -356,6 +355,7 @@
           <!-- Manual Mode Secondary Toggle Switch -->
           {#if appSettings.settings.darkThemeMode === "manual"}
             <button 
+              use:ripple
               transition:slide={{ duration: 150 }}
               onclick={() => withTransition(() => appSettings.updateSettings({ themeDark: !appSettings.settings.themeDark }))}
               class="w-full flex items-center justify-center gap-2 bg-[var(--md-sys-color-surface-container-high)] hover:bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-surface)] hover:text-[var(--md-sys-color-on-primary)] py-2.5 rounded-xl md3-label-large transition-all shadow-sm duration-200 hover:scale-[1.02] active:scale-[0.98]"
@@ -387,6 +387,7 @@
             {#each [{ id: "manual", label: appSettings.t("colorThemeModeManual") }, { id: "prayer", label: appSettings.t("colorThemeModePrayer") }] as source}
               {@const isSelected = appSettings.settings.colorThemeMode === source.id}
               <button 
+                use:ripple
                 onclick={() => withTransition(() => appSettings.updateSettings({ colorThemeMode: source.id as any }))}
                 class={cn(
                   "relative overflow-hidden py-2 rounded-xl text-xs font-black transition-all duration-200 text-center",
@@ -395,7 +396,6 @@
                     : "text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-outline)]/5"
                 )}
               >
-                <md-ripple></md-ripple>
                 {source.label}
               </button>
             {/each}
@@ -407,6 +407,7 @@
             <div class="flex flex-wrap gap-2 justify-center pt-1">
               {#each PRESET_COLORS as color}
                 <button 
+                  use:ripple
                   onclick={() => handleColorSelect(color)}
                   class={cn(
                     "relative overflow-hidden w-8 h-8 rounded-[0.75rem] border-2 transition-all shadow-sm flex items-center justify-center shrink-0 duration-300 hover:scale-125 hover:rotate-12 active:scale-75",
@@ -416,17 +417,16 @@
                   )}
                   style="background-color: {color};"
                 >
-                  <md-ripple></md-ripple>
                   {#if appSettings.settings.themeColor === color && !appSettings.settings.wallpaperEnabled}
                     <Check size={14} strokeWidth={4} class="text-white drop-shadow" />
                   {/if}
                 </button>
               {/each}
               <label 
+                use:ripple
                 class="relative overflow-hidden w-8 h-8 rounded-[0.75rem] bg-[var(--md-sys-color-surface-container-highest)] flex items-center justify-center cursor-pointer hover:bg-[var(--md-sys-color-secondary-container)] hover:scale-125 hover:rotate-12 active:scale-75 transition-all duration-300 border-2 border-transparent shadow-sm shrink-0"
                 title={appSettings.t("customColor")}
               >
-                <md-ripple></md-ripple>
                 <input 
                   type="color"
                   class="opacity-0 absolute w-0 h-0"
@@ -466,12 +466,10 @@
             <h3 class="md3-label-medium text-[var(--md-sys-color-primary)] uppercase tracking-widest flex items-center gap-2">
               <ImageIcon size={16} strokeWidth={2.5} /> {appSettings.t("enableWallpaper")}
             </h3>
-            <!-- svelte-ignore a11y_click_events_have_key_events -->
-            <!-- svelte-ignore a11y_no_static_element_interactions -->
-            <md-switch
-              selected={!!appSettings.settings.wallpaperEnabled}
-              onclick={() => withTransition(() => appSettings.updateSettings({ wallpaperEnabled: !appSettings.settings.wallpaperEnabled }))}
-            ></md-switch>
+            <Switch
+              checked={!!appSettings.settings.wallpaperEnabled}
+              onchange={(val) => withTransition(() => appSettings.updateSettings({ wallpaperEnabled: val }))}
+            />
           </div>
 
           {#if appSettings.settings.wallpaperEnabled}
@@ -485,6 +483,7 @@
                   {@const isSelected = appSettings.settings.wallpaperSource === src.id}
                   {@const Icon = src.icon}
                   <button 
+                    use:ripple
                     onclick={() => withTransition(() => appSettings.updateSettings({ wallpaperSource: src.id as any }))}
                     class={cn(
                       "relative overflow-hidden flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-black transition-all",
@@ -493,7 +492,6 @@
                         : "text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-outline)]/5"
                     )}
                   >
-                    <md-ripple></md-ripple>
                     <Icon size={12} strokeWidth={2.5} />
                     {appSettings.t(src.labelKey as any)}
                   </button>
@@ -522,11 +520,15 @@
                   </div>
                   
                   {#if previewWallpaperUrl}
-                    <!-- svelte-ignore a11y_click_events_have_key_events -->
-                    <!-- svelte-ignore a11y_no_static_element_interactions -->
-                    <md-outlined-button onclick={handleClearWallpaper} class="w-full mt-3" style="--md-sys-color-primary: var(--md-sys-color-error);">
+                    <Button
+                      variant="outlined"
+                      shape="rounded"
+                      size="md"
+                      onclick={handleClearWallpaper}
+                      class="w-full mt-3 !text-[var(--md-sys-color-error)] !border-[var(--md-sys-color-error)]/40 hover:!bg-[var(--md-sys-color-error)]/10"
+                    >
                       Padam Gambar Latar
-                    </md-outlined-button>
+                    </Button>
                   {/if}
 
                   <input 
@@ -544,19 +546,17 @@
                     {appSettings.t("wallpaperSourceUrl")}
                   </span>
                   <div class="w-full mt-1">
-                    <!-- svelte-ignore a11y_consider_explicit_label -->
-                    <!-- svelte-ignore a11y_click_events_have_key_events -->
-                    <!-- svelte-ignore a11y_no_static_element_interactions -->
-                    <md-outlined-text-field
+                    <TextField
                       type="url"
                       label={appSettings.t("wallpaperUrlPlaceholder")}
                       value={appSettings.settings.wallpaperUrl || ""}
                       oninput={(e: any) => appSettings.updateSettings({ wallpaperUrl: e.target.value })}
                       class="w-full"
-                      style="--md-outlined-text-field-container-shape: 12px;"
                     >
-                      <md-icon slot="leading-icon">link</md-icon>
-                    </md-outlined-text-field>
+                      {#snippet leadingIcon()}
+                        <LinkIcon size={16} class="text-[var(--md-sys-color-on-surface-variant)]" />
+                      {/snippet}
+                    </TextField>
                   </div>
                 </div>
               {/if}
@@ -567,13 +567,13 @@
                   <span>{appSettings.t("wallpaperBlurLabel")}</span>
                   <span class="font-black text-[var(--md-sys-color-primary)]">{appSettings.settings.wallpaperBlur ?? 10}px</span>
                 </div>
-                <md-slider
-                  min="0"
-                  max="40"
-                  step="2"
+                <Slider
+                  min={0}
+                  max={40}
+                  step={2}
                   value={appSettings.settings.wallpaperBlur ?? 10}
-                  oninput={(e: any) => appSettings.updateSettings({ wallpaperBlur: parseInt(e.target.value) })}
-                ></md-slider>
+                  onchange={(val) => appSettings.updateSettings({ wallpaperBlur: val })}
+                />
               </div>
 
               <!-- Overlay Dim Intensity Slider -->
@@ -582,13 +582,13 @@
                   <span>{appSettings.t("wallpaperDimLabel")}</span>
                   <span class="font-black text-[var(--md-sys-color-primary)]">{appSettings.settings.wallpaperDim ?? 40}%</span>
                 </div>
-                <md-slider
-                  min="0"
-                  max="90"
-                  step="5"
+                <Slider
+                  min={0}
+                  max={90}
+                  step={5}
                   value={appSettings.settings.wallpaperDim ?? 40}
-                  oninput={(e: any) => appSettings.updateSettings({ wallpaperDim: parseInt(e.target.value) })}
-                ></md-slider>
+                  onchange={(val) => appSettings.updateSettings({ wallpaperDim: val })}
+                />
               </div>
 
               <!-- Overlay Color Style Selector -->
@@ -600,6 +600,7 @@
                   {#each OVERLAY_STYLES as style}
                     {@const isSelected = appSettings.settings.wallpaperOverlayStyle === style.id}
                     <button 
+                      use:ripple
                       onclick={() => withTransition(() => appSettings.updateSettings({ wallpaperOverlayStyle: style.id as any }))}
                       class={cn(
                         "relative overflow-hidden px-3 py-1 rounded-lg text-[10px] font-extrabold border transition-all",
@@ -608,7 +609,6 @@
                           : "border-[var(--md-sys-color-outline)]/10 text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-outline)]/5"
                       )}
                     >
-                      <md-ripple></md-ripple>
                       {appSettings.t(style.labelKey as any)}
                     </button>
                   {/each}
@@ -620,12 +620,10 @@
                 <span class="text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)]">
                   {appSettings.t("wallpaperTextGlowLabel")}
                 </span>
-                <!-- svelte-ignore a11y_click_events_have_key_events -->
-                <!-- svelte-ignore a11y_no_static_element_interactions -->
-                <md-switch
-                  selected={!!appSettings.settings.wallpaperTextGlow}
-                  onclick={() => withTransition(() => appSettings.updateSettings({ wallpaperTextGlow: !appSettings.settings.wallpaperTextGlow }))}
-                ></md-switch>
+                <Switch
+                  checked={!!appSettings.settings.wallpaperTextGlow}
+                  onchange={(val) => withTransition(() => appSettings.updateSettings({ wallpaperTextGlow: val }))}
+                />
               </div>
 
               <!-- Vignette Shadow Toggle -->
@@ -633,12 +631,10 @@
                 <span class="text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)]">
                   {appSettings.t("wallpaperVignetteLabel")}
                 </span>
-                <!-- svelte-ignore a11y_click_events_have_key_events -->
-                <!-- svelte-ignore a11y_no_static_element_interactions -->
-                <md-switch
-                  selected={!!appSettings.settings.wallpaperVignette}
-                  onclick={() => withTransition(() => appSettings.updateSettings({ wallpaperVignette: !appSettings.settings.wallpaperVignette }))}
-                ></md-switch>
+                <Switch
+                  checked={!!appSettings.settings.wallpaperVignette}
+                  onchange={(val) => withTransition(() => appSettings.updateSettings({ wallpaperVignette: val }))}
+                />
               </div>
 
               <!-- Mosque Auto-Dim Toggle -->
@@ -646,12 +642,10 @@
                 <span class="text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)]">
                   {appSettings.t("wallpaperMosqueAutoDimLabel")}
                 </span>
-                <!-- svelte-ignore a11y_click_events_have_key_events -->
-                <!-- svelte-ignore a11y_no_static_element_interactions -->
-                <md-switch
-                  selected={!!appSettings.settings.wallpaperMosqueAutoDim}
-                  onclick={() => withTransition(() => appSettings.updateSettings({ wallpaperMosqueAutoDim: !appSettings.settings.wallpaperMosqueAutoDim }))}
-                ></md-switch>
+                <Switch
+                  checked={!!appSettings.settings.wallpaperMosqueAutoDim}
+                  onchange={(val) => withTransition(() => appSettings.updateSettings({ wallpaperMosqueAutoDim: val }))}
+                />
               </div>
             </div>
           {/if}
@@ -671,6 +665,7 @@
             <div class="flex flex-wrap gap-1.5">
               {#each VISUAL_STYLES as style}
                 <button 
+                  use:ripple
                   onclick={() => handleVisualStyleSelect(style.id)}
                   class={cn(
                     "relative overflow-hidden px-3 py-1 rounded-lg text-[10px] font-extrabold border transition-all",
@@ -679,7 +674,6 @@
                       : "border-[var(--md-sys-color-outline)]/10 text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-outline)]/5"
                   )}
                 >
-                  <md-ripple></md-ripple>
                   {style.name}
                 </button>
               {/each}
@@ -694,6 +688,7 @@
             <div class="flex flex-wrap gap-1.5">
               {#each VARIANTS as variant}
                 <button 
+                  use:ripple
                   onclick={() => handleVariantSelect(variant.id)}
                   class={cn(
                     "relative overflow-hidden px-3 py-1 rounded-lg text-[10px] font-extrabold border transition-all",
@@ -702,7 +697,6 @@
                       : "border-[var(--md-sys-color-outline)]/10 text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-outline)]/5"
                   )}
                 >
-                  <md-ripple></md-ripple>
                   {variant.name}
                 </button>
               {/each}
@@ -717,6 +711,7 @@
             <div class="flex flex-wrap gap-1.5">
               {#each CONTRASTS as contrast}
                 <button 
+                  use:ripple
                   onclick={() => handleContrastSelect(contrast.value)}
                   class={cn(
                     "relative overflow-hidden px-3 py-1 rounded-lg text-[10px] font-extrabold border transition-all",
@@ -725,7 +720,6 @@
                       : "border-[var(--md-sys-color-outline)]/10 text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-outline)]/5"
                   )}
                 >
-                  <md-ripple></md-ripple>
                   {contrast.name}
                 </button>
               {/each}
@@ -740,6 +734,7 @@
             <div class="flex flex-wrap gap-1.5">
               {#each FONTS as font}
                 <button 
+                  use:ripple
                   onclick={() => handleFontSelect(font.id)}
                   class={cn(
                     "relative overflow-hidden px-3 py-1 rounded-lg text-[10px] font-extrabold border transition-all",
@@ -749,7 +744,6 @@
                   )}
                   style="font-family: {font.id};"
                 >
-                  <md-ripple></md-ripple>
                   {font.name}
                 </button>
               {/each}
@@ -764,15 +758,15 @@
             <div class="flex flex-wrap gap-1.5">
               {#each SHAPES as shape}
                 <button 
+                  use:ripple
                   onclick={() => handleShapeSelect(shape.id)}
                   class={cn(
-                    "px-3 py-1 rounded-lg text-[10px] font-extrabold border transition-all",
+                    "relative overflow-hidden px-3 py-1 rounded-lg text-[10px] font-extrabold border transition-all",
                     appSettings.settings.themeShape === shape.id
                       ? "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] border-transparent shadow-sm"
                       : "border-[var(--md-sys-color-outline)]/10 text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-outline)]/5"
                   )}
                 >
-                  <md-ripple></md-ripple>
                   {shape.name}
                 </button>
               {/each}

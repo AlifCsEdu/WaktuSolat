@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "npm run clean && vite build",
+    "build": "npm run clean && svelte-kit sync && vite build",
     "preview": "vite preview",
     "clean": "npx rimraf .svelte-kit dist",
     "lint": "tsc --noEmit",
@@ -14,7 +14,6 @@
   "dependencies": {
     "@google/genai": "^1.29.0",
     "@material/material-color-utilities": "^0.4.0",
-    "@material/web": "^2.4.1",
     "@tailwindcss/vite": "^4.1.14",
     "adhan": "^4.4.3",
     "clsx": "^2.1.1",

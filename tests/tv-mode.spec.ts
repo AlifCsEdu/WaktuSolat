@@ -61,7 +61,7 @@ test.describe('Mosque TV Mode Visual Configurations & Local Assets E2E', () => {
 
     await page.goto('/');
     // Navigate to TV Mode
-    const tvBtn = page.locator('md-filled-tonal-icon-button[title="Mosque TV Mode"]').or(page.locator('md-filled-tonal-icon-button[title="Mod TV Masjid"]'));
+    const tvBtn = page.locator('button[title="Mosque TV Mode"], button[title="Mod TV Masjid"], button[aria-label="Mosque TV Mode"], button[aria-label="Mod TV Masjid"]').first();
     await tvBtn.waitFor({ state: 'visible' });
     await tvBtn.click();
 
@@ -119,7 +119,7 @@ test.describe('Mosque TV Mode Visual Configurations & Local Assets E2E', () => {
     });
 
     await page.goto('/');
-    const tvBtn = page.locator('md-filled-tonal-icon-button[title="Mosque TV Mode"]').or(page.locator('md-filled-tonal-icon-button[title="Mod TV Masjid"]'));
+    const tvBtn = page.locator('button[title="Mosque TV Mode"], button[title="Mod TV Masjid"], button[aria-label="Mosque TV Mode"], button[aria-label="Mod TV Masjid"]').first();
     await tvBtn.click();
 
     // Find the text block container
@@ -166,7 +166,7 @@ test.describe('Mosque TV Mode Visual Configurations & Local Assets E2E', () => {
     });
 
     await page.goto('/');
-    const tvBtn = page.locator('md-filled-tonal-icon-button[title="Mosque TV Mode"]').or(page.locator('md-filled-tonal-icon-button[title="Mod TV Masjid"]'));
+    const tvBtn = page.locator('button[title="Mosque TV Mode"], button[title="Mod TV Masjid"], button[aria-label="Mosque TV Mode"], button[aria-label="Mod TV Masjid"]').first();
     await tvBtn.click();
 
     // Verify the countdown label
@@ -255,7 +255,7 @@ test.describe('Mosque TV Mode Visual Configurations & Local Assets E2E', () => {
     // Reload page to pick up updated localStorage settings
     await page.reload();
 
-    const tvBtn = page.locator('md-filled-tonal-icon-button[title="Mosque TV Mode"]').or(page.locator('md-filled-tonal-icon-button[title="Mod TV Masjid"]'));
+    const tvBtn = page.locator('button[title="Mosque TV Mode"], button[title="Mod TV Masjid"], button[aria-label="Mosque TV Mode"], button[aria-label="Mod TV Masjid"]').first();
     await tvBtn.click();
 
     // Verify slideshow element resolves to a local blob URL

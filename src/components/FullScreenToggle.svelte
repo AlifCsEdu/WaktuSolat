@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { Maximize, Minimize } from "lucide-svelte";
-  import "@material/web/iconbutton/filled-tonal-icon-button.js";
+  import { IconButton } from "$lib/components/ui";
 
   let isFullscreen = $state(false);
 
@@ -31,20 +31,21 @@
 </script>
 
 <div
-  class="inline-flex shrink-0 w-12 h-12 lg:w-[56px] lg:h-[56px] hover:scale-105 active:scale-95 transition-transform"
+  class="inline-flex shrink-0 transition-transform hover:scale-105 active:scale-95"
 >
-  <!-- svelte-ignore a11y_click_events_have_key_events -->
-  <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <md-filled-tonal-icon-button
+  <IconButton
+    variant="tonal"
+    shape="rounded"
+    size="md"
     onclick={toggleFullscreen}
     title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-    aria-label={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-    style="--md-filled-tonal-icon-button-container-shape: 24px; width: 100%; height: 100%;"
+    ariaLabel={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
   >
     {#if isFullscreen}
-      <Minimize size={24} class="stroke-[2.5]" />
+      <Minimize class="w-6 h-6 stroke-[2.5]" />
     {:else}
-      <Maximize size={24} class="stroke-[2.5]" />
+      <Maximize class="w-6 h-6 stroke-[2.5]" />
     {/if}
-  </md-filled-tonal-icon-button>
+  </IconButton>
 </div>
+

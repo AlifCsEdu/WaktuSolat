@@ -3,6 +3,7 @@
   import { goto } from '$app/navigation';
   import { m3Fade as fade, m3Fly as fly } from '../lib/transitions';
   import { CalendarRange, Wifi, RefreshCw, Tv } from 'lucide-svelte';
+  import { Button, IconButton } from '$lib/components/ui';
 
   // Dashboard Components
   import ZoneSelector from '../components/ZoneSelector.svelte';
@@ -33,6 +34,7 @@
   }>('layoutActions');
 
   let showSharePanel = $state(false);
+  let isCalendarOpen = $state(false);
 
   // Derived widget dependencies
   let isTvMode = $derived(!!appSettings.settings.tvModeEnabled);
@@ -152,50 +154,55 @@
           <div
             class="relative shrink-0 transition-transform hover:scale-105 active:scale-95"
           >
-            <md-filled-tonal-button
+            <Button
+              variant="tonal"
+              shape="pill"
+              size="md"
               onclick={() => locationState.saveAsDefault()}
-              style="--md-filled-tonal-button-container-shape: 999px; height: 48px;"
             >
-              <span slot="icon" class="relative flex h-2 w-2 mr-1">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--md-sys-color-primary)] opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-2 w-2 bg-[var(--md-sys-color-primary)]"></span>
-              </span>
+              {#snippet leadingIcon()}
+                <span class="relative flex h-2 w-2 mr-1">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--md-sys-color-primary)] opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-[var(--md-sys-color-primary)]"></span>
+                </span>
+              {/snippet}
               {appSettings.settings.language === "ms" ? "Set Zon Utama" : "Set as Default"}
-            </md-filled-tonal-button>
+            </Button>
           </div>
         {/if}
         <div
-          class="ml-auto sm:ml-2 shrink-0 inline-flex w-12 h-12 lg:w-[48px] lg:h-[48px] transition-transform hover:scale-105 active:scale-95"
-          style="view-transition-name: calendar-transition;"
+          class="ml-auto sm:ml-2 shrink-0 inline-flex transition-transform hover:scale-105 active:scale-95"
+          style:view-transition-name={!isCalendarOpen ? 'calendar-transition' : 'none'}
         >
-          <!-- svelte-ignore a11y_consider_explicit_label -->
-          <!-- svelte-ignore a11y_click_events_have_key_events -->
-          <!-- svelte-ignore a11y_no_static_element_interactions -->
-          <md-filled-tonal-icon-button
-            onclick={() => goto('/calendar')}
+          <IconButton
+            variant="tonal"
+            shape="circle"
+            size="md"
+            onclick={() => {
+              isCalendarOpen = true;
+              goto('/calendar');
+            }}
             title={appSettings.t("calendarLabel")}
-            aria-label={appSettings.t("calendarLabel")}
-            style="--md-filled-tonal-icon-button-container-shape: 999px; width: 100%; height: 100%;"
+            ariaLabel={appSettings.t("calendarLabel")}
           >
             <CalendarRange class="w-5 h-5 lg:w-[20px] lg:h-[20px] stroke-[2.5]" />
-          </md-filled-tonal-icon-button>
+          </IconButton>
         </div>
         <div class="flex gap-2 shrink-0 ml-auto sm:ml-0 bg-[var(--md-sys-color-surface-container-highest)] p-1.5 rounded-full">
           {#if appSettings.settings.showTvShortcut}
             <div
-              class="inline-flex shrink-0 w-12 h-12 lg:w-[56px] lg:h-[56px] transition-transform hover:scale-105 active:scale-95"
+              class="inline-flex shrink-0 transition-transform hover:scale-105 active:scale-95"
             >
-              <!-- svelte-ignore a11y_consider_explicit_label -->
-              <!-- svelte-ignore a11y_click_events_have_key_events -->
-              <!-- svelte-ignore a11y_no_static_element_interactions -->
-              <md-filled-tonal-icon-button
+              <IconButton
+                variant="tonal"
+                shape="rounded"
+                size="md"
                 onclick={() => setIsTvMode(true)}
                 title={appSettings.settings.language === "ms" ? "Mod TV Masjid" : "Mosque TV Mode"}
-                aria-label={appSettings.settings.language === "ms" ? "Mod TV Masjid" : "Mosque TV Mode"}
-                style="--md-filled-tonal-icon-button-container-shape: 24px; width: 100%; height: 100%;"
+                ariaLabel={appSettings.settings.language === "ms" ? "Mod TV Masjid" : "Mosque TV Mode"}
               >
-                <Tv size={24} class="stroke-[2.5]" />
-              </md-filled-tonal-icon-button>
+                <Tv class="w-6 h-6 stroke-[2.5]" />
+              </IconButton>
             </div>
           {/if}
           <ThemeControl />
@@ -213,7 +220,10 @@
           todayHijri={todayData?.hijri}
           syurukTime={todayData?.syuruk ? todayData.syuruk.slice(0, 5) : null}
           {todayData}
-          onCalendarClick={() => goto('/calendar')}
+          onCalendarClick={() => {
+            isCalendarOpen = true;
+            goto('/calendar');
+          }}
           iqamahCountdownActive={mosque.iqamahCountdownActive}
           iqamahRemainingSeconds={mosque.iqamahRemainingSeconds}
           iqamahTotalSeconds={mosque.iqamahTotalSeconds}

@@ -12,8 +12,7 @@ onMount(() => {
 });
 import { MapPin, Check, X } from "lucide-svelte";
 import { JAKIM_ZONES } from "../lib/zones";
-import "@material/web/button/filled-button.js";
-import "@material/web/button/outlined-button.js";
+import { Button } from "$lib/components/ui";
 import { appSettings } from "../state/settings.svelte";
 import { locationState } from "../state/location.svelte";
 
@@ -76,22 +75,12 @@ const t = (key: any, params?: any) => appSettings.t(key, params);
       
       {#if promptZone}
         <div class="flex items-center justify-end gap-2 mt-2">
-          <div>
-            <!-- @ts-ignore -->
-            <!-- svelte-ignore a11y_click_events_have_key_events -->
-            <!-- svelte-ignore a11y_no_static_element_interactions -->
-            <md-outlined-button onclick={onDismiss}>
-              {t("ignore" as any)}
-            </md-outlined-button>
-          </div>
-          <div>
-            <!-- @ts-ignore -->
-            <!-- svelte-ignore a11y_click_events_have_key_events -->
-            <!-- svelte-ignore a11y_no_static_element_interactions -->
-            <md-filled-button onclick={onAccept}>
-              {t("changeZone" as any)}
-            </md-filled-button>
-          </div>
+          <Button variant="outlined" onclick={onDismiss}>
+            {t("ignore" as any)}
+          </Button>
+          <Button variant="filled" onclick={onAccept}>
+            {t("changeZone" as any)}
+          </Button>
         </div>
       {/if}
 

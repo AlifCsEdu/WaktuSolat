@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
   import { spring } from "svelte/motion";
-  import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
+  import { m3Fade as fade, m3Fly as fly, m3Slide as slide, m3Scale as scale } from "../lib/transitions";
   import { format, differenceInSeconds } from "date-fns";
   import { ms as msLocale, enUS } from "date-fns/locale";
   import { Compass, Sunrise, Moon, Calendar, Play, Pause, Plus } from "lucide-svelte";
@@ -10,6 +10,9 @@
   import { cn } from "../lib/utils";
   import type { PrayerData } from "../types";
   import { StorageManager } from "../lib/StorageManager";
+  import { playSynthesizedSound } from "../lib/audio";
+  import { Button, IconButton } from "$lib/components/ui";
+  import { ripple } from "$lib/actions/ripple";
 
   import DigitalClock from "./clocks/DigitalClock.svelte";
   import AnalogClock from "./clocks/AnalogClock.svelte";
@@ -29,9 +32,6 @@
   import SwissStationClock from "./clocks/SwissStationClock.svelte";
   import BauhausClock from "./clocks/BauhausClock.svelte";
   import LayeredClock from "./clocks/LayeredClock.svelte";
-
-  import "@material/web/elevation/elevation.js";
-  import "@material/web/ripple/ripple.js";
 
   let {
     currentTime,
@@ -72,35 +72,6 @@
   let visualStyle = $derived(appSettings.settings.visualStyle);
   let themeShape = $derived(appSettings.settings.themeShape);
 
-  function playSynthesizedSound(type: 'chime' | 'tick', pitchHz?: number) {
-    try {
-      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const osc = audioCtx.createOscillator();
-      const gainNode = audioCtx.createGain();
-      
-      osc.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
-      
-      if (type === 'tick') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
-        gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.1);
-      } else {
-        osc.type = 'triangle';
-        const freq = pitchHz || 587.33;
-        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        gainNode.gain.setValueAtTime(0.25, audioCtx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.7);
-      }
-    } catch (e) {
-      // AudioContext might be blocked or not supported
-    }
-  }
 
   let countdownParts = $state({ h: 0, m: 0, s: 0, active: false });
   let progress = $state(0);
@@ -306,8 +277,6 @@
         visualStyle === 'glass' && "bg-[var(--glass-bg)]/60 backdrop-blur-2xl border border-[var(--glass-border)] text-[var(--md-sys-color-on-surface)] ring-0 shadow-lg",
         visualStyle === 'soft' && "bg-[var(--md-sys-color-surface-container-lowest)] shadow-[var(--soft-shadow-medium)] border-0 ring-0"
       )}>
-        <md-elevation level={visualStyle === 'retro' || visualStyle === 'soft' ? '0' : '1'}></md-elevation>
-        
         <span class="font-sans drop-shadow-sm tabular-nums">{timeString}</span>
         {#if ampm}
           <span class="ml-1.5 sm:ml-2 lg:ml-4 text-[10px] sm:text-xs md:text-base lg:text-2xl xl:text-3xl opacity-70 font-sans font-extrabold uppercase tracking-widest">{ampm}</span>
@@ -350,7 +319,6 @@
           visualStyle === 'soft' && "shadow-[var(--soft-shadow-light)] border border-white/20"
         )}
       >
-        <md-elevation level="1"></md-elevation>
         
         <div class="flex flex-col md:flex-row w-full relative z-10 gap-1.5 sm:gap-2 lg:gap-3 p-1.5 sm:p-2 lg:p-2.5">
           {#if prevPrayerName}
@@ -512,6 +480,7 @@
         <!-- svelte-ignore a11y_click_events_have_key_events -->
         <!-- svelte-ignore a11y_interactive_supports_focus -->
         <div
+          use:ripple
           style={gregorianCardStyle}
           class={cn(
             "relative overflow-hidden flex items-center gap-2 sm:gap-2 md:gap-3 lg:gap-2 xl:gap-4 p-2.5 sm:p-2.5 md:p-3.5 lg:p-2.5 xl:p-4 transition-all duration-500 ease-out cursor-pointer select-none group",
@@ -524,9 +493,6 @@
           role="button"
           tabindex="0"
         >
-          <md-elevation level="1"></md-elevation>
-          <md-ripple></md-ripple>
-
           <Calendar class={cn(
             "absolute -right-3 -bottom-3 w-10 h-10 md:w-14 md:h-14 lg:w-10 lg:h-10 xl:w-16 xl:h-16 opacity-[0.04] pointer-events-none transition-all duration-700 ease-out group-hover:rotate-12 group-hover:scale-125 group-hover:opacity-[0.08]",
             "text-[var(--md-sys-color-primary)]",
@@ -564,6 +530,7 @@
 
         <!-- Hijri Date Card -->
         <div
+          use:ripple
           style={hijriCardStyle}
           class={cn(
             "relative overflow-hidden flex items-center gap-2 sm:gap-2 md:gap-3 lg:gap-2 xl:gap-4 p-2.5 sm:p-2.5 md:p-3.5 lg:p-2.5 xl:p-4 transition-all duration-500 ease-out select-none group hover:scale-[1.03] hover:-translate-y-[3px] active:scale-[0.98]",
@@ -573,9 +540,6 @@
             visualStyle === 'soft' && "shadow-[var(--soft-shadow-light)] border border-white/20 bg-[var(--md-sys-color-tertiary-container)]"
           )}
         >
-          <md-elevation level="1"></md-elevation>
-          <md-ripple></md-ripple>
-
           <Moon class={cn(
             "absolute -right-3 -bottom-3 w-10 h-10 md:w-14 md:h-14 lg:w-10 lg:h-10 xl:w-16 xl:h-16 opacity-[0.04] pointer-events-none transition-all duration-700 ease-out group-hover:-rotate-12 group-hover:scale-125 group-hover:opacity-[0.08]",
             "text-[var(--md-sys-color-tertiary)]",
@@ -627,8 +591,7 @@
       )}
     >
       {#if !iqamahCountdownActive}
-        <div in:fade={{ duration: 300 }} out:fade={{ duration: 200 }} class="absolute inset-0 p-2 sm:p-2.5 flex flex-col justify-between h-full w-full">
-          <md-ripple></md-ripple>
+        <div use:ripple in:fade={{ duration: 300 }} out:fade={{ duration: 200 }} class="absolute inset-0 p-2 sm:p-2.5 flex flex-col justify-between h-full w-full">
           <div class="absolute -right-2 -bottom-2 w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 text-[var(--md-sys-color-tertiary)]/10 pointer-events-none transition-all duration-300 group-hover:-rotate-12 group-hover:opacity-20">
             <Compass class="w-full h-full" />
           </div>
@@ -697,32 +660,40 @@
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div class="absolute inset-0 bg-black/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-3 z-20">
-              <!-- svelte-ignore a11y_click_events_have_key_events -->
-              <!-- svelte-ignore a11y_no_static_element_interactions -->
-              <md-icon-button onclick={(e: any) => {
+              <IconButton
+                variant="tonal"
+                shape="circle"
+                size="md"
+                onclick={(e: any) => {
                   e.stopPropagation();
                   onIqamahTogglePause?.();
                 }}
-                style="--md-icon-button-state-layer-color: white; --md-icon-button-icon-color: white;"
                 title={iqamahPaused ? "Mula" : "Jeda"}
+                ariaLabel={iqamahPaused ? "Mula" : "Jeda"}
+                class="!bg-white/20 !text-white hover:!bg-white/30"
               >
                 {#if iqamahPaused}
                   <Play class="fill-white stroke-[2.5]" />
                 {:else}
                   <Pause class="fill-white stroke-[2.5]" />
                 {/if}
-              </md-icon-button>
-              <md-filled-tonal-button
+              </IconButton>
+              <Button
+                variant="tonal"
+                shape="pill"
+                size="sm"
                 onclick={(e: Event) => {
                   e.stopPropagation();
                   onIqamahAddMinute?.();
                 }}
                 title="Tambah 1 minit"
-                style="--md-sys-color-secondary-container: rgba(255,255,255,0.2); --md-sys-color-on-secondary-container: white;"
+                class="!bg-white/20 !text-white hover:!bg-white/30"
               >
-                <span slot="icon" class="flex items-center justify-center"><Plus size={18} /></span>
+                {#snippet leadingIcon()}
+                  <Plus size={18} />
+                {/snippet}
                 +1m
-              </md-filled-tonal-button>
+              </Button>
             </div>
           {/if}
         </div>
@@ -730,6 +701,7 @@
     </div>
 
     <div
+      use:ripple
       class={cn(
         "bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] p-2 sm:p-2.5 rounded-[var(--md-sys-shape-corner-extra-large)] flex-1 relative overflow-hidden cursor-default min-h-[56px] sm:min-h-[64px] lg:min-h-[68px] flex flex-col justify-between group hover:scale-[1.02] hover:rotate-1 hover:-translate-y-1 active:scale-[0.98] transition-all",
         visualStyle === 'retro' && "border-2 border-[var(--md-sys-color-on-surface)] shadow-[4px_4px_0px_0px_var(--md-sys-color-on-surface)]",
@@ -737,7 +709,6 @@
         visualStyle === 'soft' && "shadow-[var(--soft-shadow-light)]"
       )}
     >
-      <md-ripple></md-ripple>
       <div class="absolute -right-2 -bottom-2 w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 text-[var(--md-sys-color-secondary)]/10 pointer-events-none transition-all duration-300 group-hover:rotate-12 group-hover:opacity-20">
         <Sunrise class="w-full h-full" />
       </div>

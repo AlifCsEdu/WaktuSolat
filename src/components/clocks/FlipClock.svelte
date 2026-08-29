@@ -3,7 +3,6 @@
   import { appSettings } from "../../state/settings.svelte";
   import { cn } from "../../lib/utils";
   import { cubicOut } from 'svelte/easing';
-  import "@material/web/elevation/elevation.js";
 
   let time = $state(new Date());
 
@@ -86,7 +85,6 @@
   visualStyle === 'glass' && "bg-[var(--glass-bg)]/35 backdrop-blur-[var(--glass-blur)] border border-[var(--glass-border)] rounded-[var(--md-sys-shape-corner-extra-large)] shadow-none",
   visualStyle === 'soft' && "shadow-[var(--soft-shadow-light)] border border-white/25 rounded-[var(--md-sys-shape-corner-extra-large)] bg-[var(--md-sys-color-surface-container-low)]"
 )}>
-  <md-elevation level="1"></md-elevation>
 
   <div class="flex items-center justify-center gap-0.5 sm:gap-1 lg:gap-1.5 w-full">
     {@render flipDigit(timeString[0] || '0', visualStyle)}

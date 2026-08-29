@@ -1,7 +1,6 @@
 <script lang="ts">
   import { cn } from "../../lib/utils";
   import { appSettings } from "../../state/settings.svelte";
-  import "@material/web/elevation/elevation.js";
 
   let { movement }: { movement: 'tick' | 'sweep' } = $props();
 
@@ -48,9 +47,6 @@
   visualStyle === 'glass' && "border-2 border-[var(--glass-border)] bg-[var(--glass-bg)]/35 backdrop-blur-[var(--glass-blur)] rounded-full shadow-none",
   visualStyle === 'soft' && "border border-white/10 shadow-[var(--soft-shadow-light)] bg-[var(--md-sys-color-surface-container-low)] rounded-full"
 )}>
-  <!-- svelte-ignore element_invalid_self_closing_tag -->
-  <md-elevation level="1"></md-elevation>
-  
   <!-- Abstract Hour Blob - Enlarged for visibility -->
   <div 
     class={cn(

@@ -1,6 +1,5 @@
 <script lang="ts">
   import { cn } from "../../lib/utils";
-  import "@material/web/elevation/elevation.js";
   import { createTime, createVisualStyle } from "./clockState.svelte";
 
   let { movement = 'sweep' }: { movement?: 'tick' | 'sweep' } = $props();
@@ -36,7 +35,6 @@
   visualStyle === 'glass' && "border-2 border-[var(--glass-border)] bg-[var(--glass-bg)]/35 backdrop-blur-[var(--glass-blur)] rounded-full shadow-none",
   visualStyle === 'soft' && "border border-[var(--md-sys-color-outline-variant)]/10 bg-[var(--md-sys-color-surface-container-lowest)] shadow-[var(--soft-shadow-light)] rounded-full"
 )}>
-  <md-elevation level="2"></md-elevation>
   
   {#each ROMAN_POSITIONS as pos (pos.num)}
     <div

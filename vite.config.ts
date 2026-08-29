@@ -3,8 +3,11 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  plugins: [sveltekit(), tailwindcss()],
+  plugins: [tailwindcss(), sveltekit()],
 
+  build: {
+    emptyOutDir: false,
+  },
   esbuild: {
     drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
   },

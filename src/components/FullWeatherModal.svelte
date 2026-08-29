@@ -19,6 +19,7 @@
   import { getWeatherDetails, type WeatherData } from "../lib/weather";
   import { format, parseISO } from "date-fns";
   import { ms } from "date-fns/locale";
+  import { ripple } from "$lib/actions/ripple";
 
   let {
     isOpen = false,
@@ -316,15 +317,15 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
               {#each PROVIDERS as p (p.id)}
                 <button
+                  use:ripple
                   onclick={() => appSettings.updateSettings({ weatherProvider: p.id as any })}
                   class={cn(
-                    "relative overflow-hidden flex flex-col items-start p-3 sm:p-4 rounded-2xl transition-all border-2 text-left",
+                    "relative overflow-hidden flex flex-col items-start p-3 sm:p-4 rounded-2xl transition-all border-2 text-left cursor-pointer",
                     (appSettings.settings.weatherProvider || 'best_match') === p.id
                       ? "border-[var(--md-sys-color-primary)] bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]"
                       : "border-transparent bg-[var(--md-sys-color-surface)] hover:border-[var(--md-sys-color-outline-variant)]"
                   )}
                 >
-                  <md-ripple></md-ripple>
                   <span class="font-black text-sm sm:text-base mb-0.5 sm:mb-1">{t(p.name as any)}</span>
                   <span class="text-[10px] sm:text-xs font-medium opacity-80">{t(p.desc as any)}</span>
                 </button>

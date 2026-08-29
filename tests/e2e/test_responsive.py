@@ -65,9 +65,8 @@ def capture_responsive():
             # --- 2. Settings Modal View ---
             print("  Opening Settings Modal...")
             try:
-                # Find the settings icon button. It's inside PrayerSchedule and is a motion.div containing md-filled-tonal-icon-button
-                # Let's locate the md-filled-tonal-icon-button or the lucide Settings icon
-                settings_btn = page.locator('md-filled-tonal-icon-button:has(svg.lucide-settings)')
+                # Locate the button with settings icon or title
+                settings_btn = page.locator('button:has(svg.lucide-settings), button[aria-label*="Settings"], button[title*="Settings"], button[title*="Tetapan"]')
                 if settings_btn.count() > 0:
                     settings_btn.first.click()
                     page.wait_for_timeout(1000)  # Wait for modal open animation

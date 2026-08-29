@@ -3,7 +3,6 @@
   import { appSettings } from "../../state/settings.svelte";
   import { createTime } from "./useTime.svelte";
   import { cn } from "../../lib/utils";
-  import "@material/web/elevation/elevation.js";
   import type { PrayerData } from "../../types";
   import { StorageManager } from "../../lib/StorageManager";
 
@@ -96,8 +95,6 @@
   visualStyle === 'glass' && "border-2 border-[var(--glass-border)] bg-[var(--glass-bg)]/35 backdrop-blur-[var(--glass-blur)] rounded-full shadow-none",
   visualStyle === 'soft' && "border border-[var(--md-sys-color-outline-variant)]/10 bg-[var(--md-sys-color-surface-container-lowest)] shadow-[var(--soft-shadow-light)] rounded-full"
 )}>
-  <!-- @ts-ignore -->
-  <md-elevation level="2"></md-elevation>
   
   <!-- Abstract Prayer Markers on the Bezel -->
   {#each prayerMarkers as pr}

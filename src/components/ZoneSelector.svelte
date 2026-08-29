@@ -4,18 +4,8 @@ import { JAKIM_ZONES } from "../lib/zones";
 import { Search, MapPin, X, Crosshair, Map as MapIcon, CheckCircle2 } from "lucide-svelte";
 import { cn } from "../lib/utils";
 import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
-import "@material/web/iconbutton/filled-icon-button.js";
-import "@material/web/iconbutton/icon-button.js";
-import "@material/web/button/filled-tonal-button.js";
-import "@material/web/ripple/ripple.js";
-import "@material/web/elevation/elevation.js";
-import "@material/web/focus/md-focus-ring.js";
-import "@material/web/switch/switch.js";
-import "@material/web/tabs/tabs.js";
-import "@material/web/icon/icon.js";
-import "@material/web/chips/filter-chip.js";
-import "@material/web/textfield/outlined-text-field.js";
-
+import { Tabs, TextField, FilterChip, Button, IconButton } from "$lib/components/ui";
+import { ripple } from "$lib/actions/ripple";
 import MapModal from "./MapModal.svelte";
 import { fetchReverseGeocode, matchZoneFromGeocode, ALIASES } from "../lib/geocoding";
 import { analytics } from "../lib/analytics";
@@ -61,17 +51,9 @@ let searchQuery = $state("");
 let isDetecting = $state(false);
 let locationPermission = $state<PermissionState | null>(null);
 let userCoords = $state<{ lat: number; lng: number } | null>(null);
-let inputRef = $state<any>(null);
 let activeScrollState = $state<string | null>(null);
 let scrollTimeoutRef = $state<number | null>(null);
 let detectReason = $state<string | null>(null);
-
-function handleKeyDown(e: KeyboardEvent) {
-  if (e.key === "Enter" || e.key === " ") {
-    e.preventDefault();
-    (e.currentTarget as HTMLElement).click();
-  }
-}
 
 $effect(() => {
   if ('permissions' in navigator) {
@@ -85,12 +67,7 @@ $effect(() => {
 });
 
 $effect(() => {
-  if (isOpen) {
-    const timer = setTimeout(() => {
-      if (inputRef) inputRef.focus();
-    }, 150);
-    return () => clearTimeout(timer);
-  } else {
+  if (!isOpen) {
     searchQuery = "";
   }
 });
@@ -244,6 +221,7 @@ const handleScroll = (e: Event) => {
 
 <div class="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
   <button
+    use:ripple
     onclick={() => isOpen = true}
     class={cn(
       "relative flex-1 max-w-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] hover:bg-[var(--md-sys-color-primary)] hover:text-[var(--md-sys-color-on-primary)] rounded-[20px] sm:rounded-[24px] overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-sys-color-primary)] px-3 py-2.5 sm:px-4 sm:py-3 flex items-center justify-between group shadow-sm border border-[var(--md-sys-color-outline)]/5 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200",
@@ -252,7 +230,6 @@ const handleScroll = (e: Event) => {
       visualStyle === 'soft' && "shadow-[var(--soft-shadow-light)] border-0"
     )}
   >
-    <md-ripple></md-ripple>
     <div class="flex items-center w-full min-w-0">
       <div class="w-9 h-9 lg:w-11 lg:h-11 bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] rounded-[10px] sm:rounded-[12px] flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110 shadow-sm mr-3">
         <MapPin size={20} class={cn(
@@ -285,11 +262,11 @@ const handleScroll = (e: Event) => {
     </div>
   </button>
 
-  <div class="shrink-0 inline-flex w-[48px] h-[48px] lg:w-[56px] lg:h-[56px] hover:scale-105 active:scale-95 transition-transform duration-200" style:view-transition-name={!isMapOpen ? 'map-transition' : 'none'}>
-    <md-filled-tonal-icon-button
-      role="button"
-      tabindex={0}
-      onkeydown={handleKeyDown}
+  <div class="shrink-0 inline-flex hover:scale-105 active:scale-95 transition-transform duration-200" style:view-transition-name={!isMapOpen ? 'map-transition' : 'none'}>
+    <IconButton
+      variant="tonal"
+      shape="rounded"
+      size="lg"
       onclick={() => {
         if (document.startViewTransition) {
           document.startViewTransition(async () => {
@@ -301,7 +278,7 @@ const handleScroll = (e: Event) => {
         }
       }}
       title={t("viewMap")}
-      style="--md-filled-tonal-icon-button-container-shape: 20px; width: 100%; height: 100%;"
+      ariaLabel={t("viewMap")}
     >
       <MapIcon class={cn(
         "w-[22px] h-[22px] lg:w-[24px] lg:h-[24px]",
@@ -309,7 +286,7 @@ const handleScroll = (e: Event) => {
         (visualStyle === 'glass' || visualStyle === 'soft') && "stroke-[1.5]",
         !(visualStyle === 'retro' || visualStyle === 'glass' || visualStyle === 'soft') && "stroke-[2.5]"
       )} />
-    </md-filled-tonal-icon-button>
+    </IconButton>
   </div>
 </div>
 
@@ -366,31 +343,32 @@ const handleScroll = (e: Event) => {
               {t("selectZoneDesc")}
             </p>
           </div>
-          <!-- svelte-ignore a11y_click_events_have_key_events -->
-          <!-- svelte-ignore a11y_no_static_element_interactions -->
-          <md-icon-button onclick={() => isOpen = false}>
-            <md-icon>close</md-icon>
-          </md-icon-button>
+          <IconButton
+            variant="standard"
+            size="md"
+            shape="circle"
+            onclick={() => isOpen = false}
+            title="Close"
+            ariaLabel="Close"
+          >
+            <X size={24} strokeWidth={2.5} />
+          </IconButton>
         </div>
 
-        <div class="mb-2 w-full bg-[var(--md-sys-color-surface-container-high)]/50 backdrop-blur-md rounded-[20px] overflow-hidden">
-          <md-tabs activeTabIndex={appSettings.settings.locationMode === 'auto' ? 1 : 0}>
-            <!-- svelte-ignore a11y_click_events_have_key_events -->
-            <!-- svelte-ignore a11y_no_static_element_interactions -->
-            <md-primary-tab onclick={() => appSettings.updateSettings({ locationMode: 'manual' })}>
-              {t('modeManual') || "Manual Selection"}
-              <md-icon slot="icon">search</md-icon>
-            </md-primary-tab>
-            <!-- svelte-ignore a11y_click_events_have_key_events -->
-            <!-- svelte-ignore a11y_no_static_element_interactions -->
-            <md-primary-tab onclick={() => {
-              appSettings.updateSettings({ locationMode: 'auto' });
-              searchQuery = "";
-            }}>
-              {t('modeAuto') || "Auto Tracking"}
-              <md-icon slot="icon">my_location</md-icon>
-            </md-primary-tab>
-          </md-tabs>
+        <div class="mb-2 w-full">
+          <Tabs
+            tabs={[
+              { id: 'manual', label: t('modeManual') || "Manual Selection", icon: Search },
+              { id: 'auto', label: t('modeAuto') || "Auto Tracking", icon: Crosshair }
+            ]}
+            activeTab={appSettings.settings.locationMode || 'manual'}
+            onchange={(tabId) => {
+              appSettings.updateSettings({ locationMode: tabId as any });
+              if (tabId === 'auto') {
+                searchQuery = "";
+              }
+            }}
+          />
         </div>
 
         {#if locationPermission === 'denied'}
@@ -411,42 +389,35 @@ const handleScroll = (e: Event) => {
             class="flex flex-col gap-4"
           >
             <div class="relative group w-full mb-2">
-              <md-outlined-text-field
-                bind:this={inputRef}
-                type="text"
+              <TextField
+                bind:value={searchQuery}
                 placeholder={t("searchPlaceholder")}
-                value={searchQuery}
-                oninput={(e: any) => searchQuery = sanitizeInput(e.target.value)}
+                clearable={true}
                 class="w-full"
-                style="--md-outlined-text-field-container-shape: 28px; --md-sys-color-surface-variant: var(--md-sys-color-surface-container-highest);"
               >
-                <md-icon slot="leading-icon">search</md-icon>
-                {#if searchQuery}
-                  <md-icon-button
-                    slot="trailing-icon"
-                    onclick={() => searchQuery = ""}
-                  >
-                    <md-icon>close</md-icon>
-                  </md-icon-button>
-                {/if}
-              </md-outlined-text-field>
+                {#snippet leadingIcon()}
+                  <Search size={20} class="text-[var(--md-sys-color-on-surface-variant)]" />
+                {/snippet}
+              </TextField>
             </div>
 
             {#if !searchQuery}
-              <md-filled-tonal-button
+              <Button
+                variant="tonal"
+                shape="pill"
+                size="lg"
                 onclick={handleAutoDetect}
                 disabled={isDetecting}
                 class="w-full shadow-sm"
-                style="--md-filled-tonal-button-container-height: 52px; --md-filled-tonal-button-container-shape: 26px;"
               >
-                <span slot="icon" class="contents">
+                {#snippet leadingIcon()}
                   <Crosshair
                     size={20}
                     class={isDetecting ? "animate-spin" : ""}
                   />
-                </span>
+                {/snippet}
                 {isDetecting ? t("detecting") : t("detectLocation")}
-              </md-filled-tonal-button>
+              </Button>
             {/if}
           </div>
         {/if}
@@ -499,17 +470,15 @@ const handleScroll = (e: Event) => {
                 </h3>
                 <div class="flex gap-2 overflow-x-auto no-scrollbar pb-2 pt-1 -mx-2 px-2 snap-x">
                   {#each recentFiltered as code (code)}
-                    <md-filter-chip
-                      role="button"
-                      tabindex={0}
-                      onkeydown={handleKeyDown}
-                      label={getZoneLabel(code)}
-                      class="snap-start shrink-0"
-                      onclick={() => {
-                        onZoneSelect(code);
-                        isOpen = false;
-                      }}
-                    ></md-filter-chip>
+                    <div class="snap-start shrink-0">
+                      <FilterChip
+                        label={getZoneLabel(code)}
+                        onclick={() => {
+                          onZoneSelect(code);
+                          isOpen = false;
+                        }}
+                      />
+                    </div>
                   {/each}
                 </div>
               </div>
@@ -572,6 +541,7 @@ const handleScroll = (e: Event) => {
                           {@const isSelected = selectedZone === zone.v}
                           <button
                             type="button"
+                            use:ripple
                             onclick={() => {
                               onZoneSelect(zone.v);
                               isOpen = false;

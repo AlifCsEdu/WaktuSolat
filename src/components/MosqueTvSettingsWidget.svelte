@@ -6,6 +6,8 @@
   import { onMount, onDestroy } from "svelte";
   import { saveAsset, getAssetBlob, deleteAsset } from "../lib/db";
 
+  import { Slider, FilterChip } from "$lib/components/ui";
+
   let { open = $bindable(false) } = $props();
   const settings = $derived(appSettings.settings);
   const slidesList = $derived((settings.tvModeSlideshowUrls || "").split("\n").map(l => l.trim()).filter(Boolean));
@@ -254,16 +256,14 @@
             </span>
           </div>
           <div class="flex items-center gap-3 flex-1 max-w-[250px] w-full self-end sm:self-auto justify-end">
-            <md-slider
-              min="5"
-              max="60"
-              step="5"
+            <Slider
+              min={5}
+              max={60}
+              step={5}
               value={settings.tvModeReminderInterval ?? 15}
-              labeled
-              ticks
-              onchange={(e: any) => updateSettings({ tvModeReminderInterval: parseInt(e.target.value) })}
+              onchange={(val) => updateSettings({ tvModeReminderInterval: val })}
               class="flex-1"
-            ></md-slider>
+            />
             <span class="w-12 text-right font-mono font-bold text-[var(--md-sys-color-primary)] tabular-nums text-sm">
               {settings.tvModeReminderInterval ?? 15}s
             </span>
@@ -279,38 +279,26 @@
           </span>
           
           <div class="flex flex-wrap gap-2 mt-3">
-            <md-filter-chip
-              role="button"
-              tabindex={0}
-              onkeydown={handleKeyDown}
+            <FilterChip
               label={t("widgetTypeNone")}
               selected={settings.tvModeCenterWidget === "none" || !settings.tvModeCenterWidget}
               onclick={() => updateSettings({ tvModeCenterWidget: "none" })}
-            ></md-filter-chip>
-            <md-filter-chip
-              role="button"
-              tabindex={0}
-              onkeydown={handleKeyDown}
+            />
+            <FilterChip
               label={t("widgetTypeReminders")}
               selected={settings.tvModeCenterWidget === "reminders"}
               onclick={() => updateSettings({ tvModeCenterWidget: "reminders" })}
-            ></md-filter-chip>
-            <md-filter-chip
-              role="button"
-              tabindex={0}
-              onkeydown={handleKeyDown}
+            />
+            <FilterChip
               label={t("widgetTypeSlideshow")}
               selected={settings.tvModeCenterWidget === "slideshow"}
               onclick={() => updateSettings({ tvModeCenterWidget: "slideshow" })}
-            ></md-filter-chip>
-            <md-filter-chip
-              role="button"
-              tabindex={0}
-              onkeydown={handleKeyDown}
+            />
+            <FilterChip
               label={t("widgetTypeCamera")}
               selected={settings.tvModeCenterWidget === "camera"}
               onclick={() => updateSettings({ tvModeCenterWidget: "camera" })}
-            ></md-filter-chip>
+            />
           </div>
         </div>
 
@@ -465,16 +453,14 @@
                 </span>
               </div>
               <div class="flex items-center gap-3 flex-1 max-w-[250px] w-full self-end sm:self-auto justify-end">
-                <md-slider
-                  min="5"
-                  max="120"
-                  step="5"
+                <Slider
+                  min={5}
+                  max={120}
+                  step={5}
                   value={settings.tvModeSlideshowInterval ?? 15}
-                  labeled
-                  ticks
-                  onchange={(e: any) => updateSettings({ tvModeSlideshowInterval: parseInt(e.target.value) })}
+                  onchange={(val) => updateSettings({ tvModeSlideshowInterval: val })}
                   class="flex-1"
-                ></md-slider>
+                />
                 <span class="w-12 text-right font-mono font-bold text-[var(--md-sys-color-primary)] tabular-nums text-sm">
                   {settings.tvModeSlideshowInterval ?? 15}s
                 </span>

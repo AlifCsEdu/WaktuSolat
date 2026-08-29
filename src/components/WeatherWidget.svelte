@@ -22,6 +22,7 @@
   import FullWeatherModal from "./FullWeatherModal.svelte";
   import { StorageManager } from "../lib/StorageManager";
   import { analytics } from "../lib/analytics";
+  import { ripple } from "$lib/actions/ripple";
 
   let { selectedZone, userCoords = null, currentLocationName = null } = $props<{
     selectedZone: string;
@@ -230,7 +231,6 @@
       visualStyle === 'soft' && "shadow-[var(--soft-shadow-light)] border-0"
     )}
   >
-    <md-ripple></md-ripple>
     <div class="flex items-center gap-3 sm:gap-4 z-10 w-full pr-2 lg:pr-3 relative">
       <div
         class="w-10 h-10 sm:w-12 sm:h-12 lg:w-11 lg:h-11 xl:w-12 xl:h-12 rounded-[var(--md-sys-shape-corner-large)] flex items-center justify-center shrink-0 bg-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)] transition-transform hover:rotate-12 hover:scale-110"
@@ -255,6 +255,7 @@
   </div>
 {:else if weather}
   <button
+    use:ripple
     onclick={() => {
       if (document.startViewTransition) {
         document.startViewTransition(async () => {
@@ -267,15 +268,13 @@
     }}
     style:view-transition-name={!isModalOpen ? 'weather-transition' : 'none'}
     class={cn(
-      "flex w-full items-center justify-between text-[var(--md-sys-color-on-surface)] rounded-[var(--md-sys-shape-corner-extra-large)] p-3 sm:p-4 lg:p-3 xl:p-4 relative overflow-hidden shrink-0 cursor-pointer text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-sys-color-primary)] transition-transform hover:-translate-y-0.5 active:scale-[0.98]",
+      "flex w-full items-center justify-between text-[var(--md-sys-color-on-surface)] rounded-[var(--md-sys-shape-corner-extra-large)] p-3 sm:p-4 lg:p-3 xl:p-4 relative overflow-hidden shrink-0 cursor-pointer text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-sys-color-primary)] transition-transform hover:-translate-y-0.5 active:scale-[0.98] shadow-sm",
       widgetBgClass,
       visualStyle === 'retro' && "border-2 border-[var(--md-sys-color-on-surface)] shadow-[3px_3px_0px_0px_var(--md-sys-color-on-surface)]",
       visualStyle === 'glass' && "bg-[var(--glass-bg)] backdrop-blur-[8px] border border-[var(--glass-border)]",
       visualStyle === 'soft' && "shadow-[var(--soft-shadow-light)] border-0"
     )}
   >
-    <md-ripple></md-ripple>
-    <md-elevation level="1"></md-elevation>
     <div class="flex items-center gap-3 sm:gap-4 z-10 w-full pr-2 lg:pr-3 relative">
       <div
         class="w-10 h-10 sm:w-12 sm:h-12 lg:w-11 lg:h-11 xl:w-12 xl:h-12 rounded-[var(--md-sys-shape-corner-large)] flex items-center justify-center shrink-0 bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] transition-all hover:rotate-12 hover:scale-110 hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)]"

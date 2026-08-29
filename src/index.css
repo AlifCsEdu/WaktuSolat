@@ -22,6 +22,44 @@
     --radius-3xl: calc(40px * var(--app-radius-scale, 1.2));
     --radius-4xl: calc(48px * var(--app-radius-scale, 1.2));
 
+    /* Semantic MD3 Colors */
+    --color-primary: var(--md-sys-color-primary);
+    --color-on-primary: var(--md-sys-color-on-primary);
+    --color-primary-container: var(--md-sys-color-primary-container);
+    --color-on-primary-container: var(--md-sys-color-on-primary-container);
+
+    --color-secondary: var(--md-sys-color-secondary);
+    --color-on-secondary: var(--md-sys-color-on-secondary);
+    --color-secondary-container: var(--md-sys-color-secondary-container);
+    --color-on-secondary-container: var(--md-sys-color-on-secondary-container);
+
+    --color-tertiary: var(--md-sys-color-tertiary);
+    --color-on-tertiary: var(--md-sys-color-on-tertiary);
+    --color-tertiary-container: var(--md-sys-color-tertiary-container);
+    --color-on-tertiary-container: var(--md-sys-color-on-tertiary-container);
+
+    --color-surface: var(--md-sys-color-surface);
+    --color-on-surface: var(--md-sys-color-on-surface);
+    --color-surface-variant: var(--md-sys-color-surface-variant);
+    --color-on-surface-variant: var(--md-sys-color-on-surface-variant);
+
+    --color-surface-container-lowest: var(--md-sys-color-surface-container-lowest);
+    --color-surface-container-low: var(--md-sys-color-surface-container-low);
+    --color-surface-container: var(--md-sys-color-surface-container);
+    --color-surface-container-high: var(--md-sys-color-surface-container-high);
+    --color-surface-container-highest: var(--md-sys-color-surface-container-highest);
+
+    --color-background: var(--md-sys-color-background);
+    --color-on-background: var(--md-sys-color-on-background);
+
+    --color-outline: var(--md-sys-color-outline);
+    --color-outline-variant: var(--md-sys-color-outline-variant, #bfc9c3);
+
+    --color-error: var(--md-sys-color-error);
+    --color-on-error: var(--md-sys-color-on-error);
+    --color-error-container: var(--md-sys-color-error-container);
+    --color-on-error-container: var(--md-sys-color-on-error-container);
+
     /* Material 3 Motion Tokens */
     --ease-m3-emphasized: cubic-bezier(0.2, 0.0, 0.0, 1.0);
     --ease-m3-emphasized-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1.0);
@@ -643,6 +681,7 @@ html.dark[data-style="soft"] {
         --md-sys-color-on-surface-variant: #404944;
 
         --md-sys-color-outline: #707974;
+        --md-sys-color-outline-variant: #bfc9c3;
 
         /* Surface Containers Fallbacks */
         --md-sys-color-surface-container-lowest: #ffffff;
@@ -690,6 +729,7 @@ html.dark[data-style="soft"] {
         --md-sys-color-on-surface-variant: #bfc9c3;
 
         --md-sys-color-outline: #89938e;
+        --md-sys-color-outline-variant: #404944;
 
         /* Surface Containers Fallbacks */
         --md-sys-color-surface-container-lowest: #0b110e;

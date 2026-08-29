@@ -4,6 +4,8 @@
   import { cn } from "../lib/utils";
   import { appSettings } from "../state/settings.svelte.ts";
 
+  import { Switch } from "$lib/components/ui";
+
   let { open = $bindable(false) } = $props();
   const settings = $derived(appSettings.settings);
   const updateSettings = (updates: any) => appSettings.updateSettings(updates);
@@ -46,11 +48,10 @@
                 : "Activate persistent full-screen landscape TV presentation layout."}
             </p>
           </div>
-          <md-switch
-            selected={!!settings.tvModeEnabled}
-            onchange={(e: any) => updateSettings({ tvModeEnabled: e.target.selected })}
-            icons
-          ></md-switch>
+          <Switch
+            checked={!!settings.tvModeEnabled}
+            onchange={(checked) => updateSettings({ tvModeEnabled: checked })}
+          />
         </div>
 
         <!-- TV Shortcut Toggle -->
@@ -63,11 +64,10 @@
               {t("showTvShortcutDesc")}
             </p>
           </div>
-          <md-switch
-            selected={!!settings.showTvShortcut}
-            onchange={(e: any) => updateSettings({ showTvShortcut: e.target.selected })}
-            icons
-          ></md-switch>
+          <Switch
+            checked={!!settings.showTvShortcut}
+            onchange={(checked) => updateSettings({ showTvShortcut: checked })}
+          />
         </div>
 
         <!-- Mosque Name Input -->

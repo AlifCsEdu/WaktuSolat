@@ -22,35 +22,12 @@
   import { appSettings } from "../state/settings.svelte";
   import { getStyleClasses } from "../hooks/useVisualStyle";
   import MosqueTvSettings from "./MosqueTvSettings.svelte";
+  import { Button, IconButton, FilterChip, Switch, Slider, TextField } from "$lib/components/ui";
+  import { ripple } from "$lib/actions/ripple";
+  import { playSynthesizedSound } from "../lib/audio";
 
   function playSynthesizedSoundLocal(type: 'chime' | 'tick', volume = 0.8, pitchHz?: number) {
-    try {
-      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const osc = audioCtx.createOscillator();
-      const gainNode = audioCtx.createGain();
-      
-      osc.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
-      
-      if (type === 'tick') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
-        gainNode.gain.setValueAtTime(0.15 * volume, audioCtx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.1);
-      } else {
-        osc.type = 'triangle';
-        const freq = pitchHz || 587.33; // D5 default
-        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        gainNode.gain.setValueAtTime(0.25 * volume, audioCtx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.7);
-      }
-    } catch (e) {
-      // Ignore context errors
-    }
+    playSynthesizedSound(type, volume, pitchHz);
   }
 
   interface Props {
@@ -322,14 +299,13 @@
 
 {#snippet languageTime()}
   <div class={cn("relative rounded-[32px] p-6 space-y-6 overflow-hidden", getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface-container)] border border-[var(--md-sys-color-outline)]/5 shadow-sm"))}>
-    <md-elevation></md-elevation>
     <div class="space-y-3 relative z-10">
       <span class="md3-title-medium font-bold text-[var(--md-sys-color-primary)] flex items-center gap-2">
         {t("language")}
       </span>
       <div class="flex flex-wrap gap-3">
-        <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={t("malay")} selected={settings.language === "ms"} onclick={() => updateSettings({ language: "ms" })}></md-filter-chip>
-        <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={t("english")} selected={settings.language === "en"} onclick={() => updateSettings({ language: "en" })}></md-filter-chip>
+        <FilterChip label={t("malay")} selected={settings.language === "ms"} onclick={() => updateSettings({ language: "ms" })} />
+        <FilterChip label={t("english")} selected={settings.language === "en"} onclick={() => updateSettings({ language: "en" })} />
       </div>
     </div>
 
@@ -338,8 +314,8 @@
         {t("timeFormat")}
       </span>
       <div class="flex flex-wrap gap-3">
-        <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={t("hour12")} selected={settings.timeFormat === "12h"} onclick={() => updateSettings({ timeFormat: "12h" })}></md-filter-chip>
-        <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={t("hour24")} selected={settings.timeFormat === "24h"} onclick={() => updateSettings({ timeFormat: "24h" })}></md-filter-chip>
+        <FilterChip label={t("hour12")} selected={settings.timeFormat === "12h"} onclick={() => updateSettings({ timeFormat: "12h" })} />
+        <FilterChip label={t("hour24")} selected={settings.timeFormat === "24h"} onclick={() => updateSettings({ timeFormat: "24h" })} />
       </div>
     </div>
   </div>
@@ -347,14 +323,13 @@
 
 {#snippet religionFormatting()}
   <div class={cn("relative rounded-[32px] p-6 space-y-6 overflow-hidden", getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface-container)] border border-[var(--md-sys-color-outline)]/5 shadow-sm"))}>
-    <md-elevation></md-elevation>
     <div class="space-y-3 relative z-10">
       <span class="md3-title-medium font-bold text-[var(--md-sys-color-primary)] flex items-center gap-2">
         {t("mazhab")}
       </span>
       <div class="flex flex-wrap gap-3">
-        <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={t("mazhabShafii" as any)} selected={settings.mazhab !== "hanafi"} onclick={() => updateSettings({ mazhab: "shafii" })}></md-filter-chip>
-        <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={t("mazhabHanafi" as any)} selected={settings.mazhab === "hanafi"} onclick={() => updateSettings({ mazhab: "hanafi" })}></md-filter-chip>
+        <FilterChip label={t("mazhabShafii" as any)} selected={settings.mazhab !== "hanafi"} onclick={() => updateSettings({ mazhab: "shafii" })} />
+        <FilterChip label={t("mazhabHanafi" as any)} selected={settings.mazhab === "hanafi"} onclick={() => updateSettings({ mazhab: "hanafi" })} />
       </div>
       {#if settings.mazhab === "hanafi"}
         <p class="text-sm text-[var(--md-sys-color-error)] mt-2 italic font-bold">
@@ -368,9 +343,9 @@
         {t("hijriFormat")}
       </span>
       <div class="flex flex-wrap gap-3">
-        <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={t("hijriBoth")} selected={!settings.hijriFormat || settings.hijriFormat === "both"} onclick={() => updateSettings({ hijriFormat: "both" })}></md-filter-chip>
-        <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={t("hijriText")} selected={settings.hijriFormat === "text"} onclick={() => updateSettings({ hijriFormat: "text" })}></md-filter-chip>
-        <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={t("hijriNumber")} selected={settings.hijriFormat === "number"} onclick={() => updateSettings({ hijriFormat: "number" })}></md-filter-chip>
+        <FilterChip label={t("hijriBoth")} selected={!settings.hijriFormat || settings.hijriFormat === "both"} onclick={() => updateSettings({ hijriFormat: "both" })} />
+        <FilterChip label={t("hijriText")} selected={settings.hijriFormat === "text"} onclick={() => updateSettings({ hijriFormat: "text" })} />
+        <FilterChip label={t("hijriNumber")} selected={settings.hijriFormat === "number"} onclick={() => updateSettings({ hijriFormat: "number" })} />
       </div>
     </div>
   </div>
@@ -378,7 +353,6 @@
 
 {#snippet themeContrast()}
   <div class={cn("relative rounded-[32px] p-6 space-y-4 overflow-hidden", getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface-container)] border border-[var(--md-sys-color-outline)]/5 shadow-sm"))}>
-    <md-elevation></md-elevation>
     <div class="space-y-1 relative z-10">
       <span class="md3-title-medium font-bold text-[var(--md-sys-color-primary)] flex items-center gap-2">
         {t("contrastLevelLabel" as any) || "Tahap Kontras"}
@@ -393,7 +367,7 @@
         { label: t("contrastMedium" as any) || "Sederhana", value: 0.5 },
         { label: t("contrastHigh" as any) || "Tinggi", value: 1.0 }
       ] as c}
-        <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={c.label} selected={(settings.themeContrast ?? 0) === c.value} onclick={() => updateSettings({ themeContrast: c.value })}></md-filter-chip>
+        <FilterChip label={c.label} selected={(settings.themeContrast ?? 0) === c.value} onclick={() => updateSettings({ themeContrast: c.value })} />
       {/each}
     </div>
   </div>
@@ -401,7 +375,6 @@
 
 {#snippet clockStyle()}
   <div class={cn("relative rounded-[32px] overflow-hidden flex flex-col", getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface-container)] border border-[var(--md-sys-color-outline)]/5 shadow-sm"))}>
-    <md-elevation></md-elevation>
     <div class="p-6 pb-4 bg-[var(--md-sys-color-surface-container-high)] relative z-10">
       <span class="md3-title-medium font-bold text-[var(--md-sys-color-primary)] flex items-center gap-2">
         {t("clockStyle" as any)}
@@ -410,14 +383,11 @@
     <div class="flex flex-wrap gap-2.5 p-6 bg-[var(--md-sys-color-surface-container)] relative z-10">
       {#each ["digital", "analog", "analog-numeric", "analog-roman", "analog-arabic", "anadigi", "chronograph", "flip", "word", "minimal", "orbit", "typographic", "prayer-ring", "dashboard", "abstract", "swiss-station", "bauhaus", "layered"] as style}
         <div class="shrink-0">
-          <md-filter-chip
-            role="button"
-            tabindex={0}
-            onkeydown={handleKeyDown}
+          <FilterChip
             label={style === "digital" ? t("clockStyleDigital" as any) : style === "analog" ? t("clockStyleAnalog" as any) : style === "analog-numeric" ? t("clockStyleAnalogNumeric" as any) : style === "analog-roman" ? t("clockStyleAnalogRoman" as any) : style === "analog-arabic" ? t("clockStyleAnalogArabic" as any) : style === "anadigi" ? t("clockStyleAnaDigi" as any) : style === "chronograph" ? t("clockStyleChronograph" as any) : style === "flip" ? t("clockStyleFlip" as any) : style === "word" ? t("clockStyleWord" as any) : style === "minimal" ? t("clockStyleMinimal" as any) : style === "orbit" ? t("clockStyleOrbit" as any) : style === "typographic" ? t("clockStyleTypographic" as any) : style === "prayer-ring" ? t("clockStylePrayerRing" as any) : style === "dashboard" ? t("clockStyleDashboard" as any) : style === "swiss-station" ? t("clockStyleSwissStation" as any) : style === "bauhaus" ? t("clockStyleBauhaus" as any) : style === "layered" ? t("clockStyleLayered" as any) : t("clockStyleAbstract" as any)}
             selected={settings.clockFace === style || (!settings.clockFace && style === "digital")}
             onclick={() => updateSettings({ clockFace: style })}
-          ></md-filter-chip>
+          />
         </div>
       {/each}
     </div>
@@ -429,14 +399,11 @@
         </span>
         <div class="flex flex-wrap gap-2">
           {#each ["sweep", "tick"] as movement}
-            <md-filter-chip
-              role="button"
-              tabindex={0}
-              onkeydown={handleKeyDown}
+            <FilterChip
               label={movement === "sweep" ? t("clockMovementSweep" as any) : t("clockMovementTick" as any)}
               selected={settings.clockMovement === movement || (!settings.clockMovement && movement === "sweep")}
               onclick={() => updateSettings({ clockMovement: movement })}
-            ></md-filter-chip>
+            />
           {/each}
         </div>
 
@@ -450,7 +417,7 @@
                 {t("showExternalDigitalClockDesc" as any)}
               </div>
             </div>
-            <md-switch selected={settings.showExternalDigitalClock} onchange={(e: any) => updateSettings({ showExternalDigitalClock: e.target.selected })} icons></md-switch>
+            <Switch checked={!!settings.showExternalDigitalClock} onchange={(checked) => updateSettings({ showExternalDigitalClock: checked })} />
           </div>
         {/if}
       </div>
@@ -460,9 +427,7 @@
 
 {#snippet advancedGeneral()}
   <div class={cn("relative rounded-[32px] overflow-hidden transition-all duration-300 mt-4", showAdvancedGeneral ? getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface-container)] p-6 space-y-6 border border-[var(--md-sys-color-outline)]/10 shadow-sm") : getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface-container-low)] hover:bg-[var(--md-sys-color-surface-container)] p-4 sm:p-5 border border-transparent"))}>
-    <md-elevation></md-elevation>
-    <button data-testid="advanced-general-toggle" onclick={() => showAdvancedGeneral = !showAdvancedGeneral} type="button" class="relative w-full flex items-center justify-between font-bold text-left cursor-pointer focus:outline-none overflow-hidden z-10">
-      <md-ripple></md-ripple>
+    <button data-testid="advanced-general-toggle" use:ripple onclick={() => showAdvancedGeneral = !showAdvancedGeneral} type="button" class="relative w-full flex items-center justify-between font-bold text-left cursor-pointer focus:outline-none overflow-hidden z-10">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-2xl bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center">
           <Sliders size={20} class="stroke-[2.5]" />
@@ -488,7 +453,7 @@
             <span class="md3-label-large font-bold text-[var(--md-sys-color-on-surface)] block mb-0.5">{t("showIqamah" as any)}</span>
             <p class="md3-body-small text-[var(--md-sys-color-on-surface-variant)] leading-relaxed max-w-[200px] sm:max-w-xs">{t("iqamahDesc" as any)}</p>
           </div>
-          <md-switch selected={!!settings.showIqamah} onchange={(e: any) => updateSettings({ showIqamah: e.target.selected })} icons></md-switch>
+          <Switch checked={!!settings.showIqamah} onchange={(checked) => updateSettings({ showIqamah: checked })} />
         </div>
 
         <div class="flex items-center justify-between p-4 rounded-3xl bg-[var(--md-sys-color-surface)] ring-1 ring-[var(--md-sys-color-outline)]/5 shadow-sm mt-2">
@@ -496,7 +461,7 @@
             <span class="md3-label-large font-bold text-[var(--md-sys-color-on-surface)] block mb-0.5">{t("trackImsak" as any) || "Track Imsak"}</span>
             <p class="md3-body-small text-[var(--md-sys-color-on-surface-variant)] leading-relaxed max-w-[200px] sm:max-w-xs">{t("trackImsakDesc" as any) || "Show Imsak as the next time after Isha"}</p>
           </div>
-          <md-switch selected={!!settings.trackImsak} onchange={(e: any) => updateSettings({ trackImsak: e.target.selected })} icons></md-switch>
+          <Switch checked={!!settings.trackImsak} onchange={(checked) => updateSettings({ trackImsak: checked })} />
         </div>
 
         <div class="flex items-center justify-between p-4 rounded-3xl bg-[var(--md-sys-color-surface)] ring-1 ring-[var(--md-sys-color-outline)]/5 shadow-sm mt-2">
@@ -504,7 +469,7 @@
             <span class="md3-label-large font-bold text-[var(--md-sys-color-on-surface)] block mb-0.5">{t("showJumaat" as any) || "Show Jumu'ah"}</span>
             <p class="md3-body-small text-[var(--md-sys-color-on-surface-variant)] leading-relaxed max-w-[200px] sm:max-w-xs">{t("showJumaatDesc" as any) || "Replace Dhuhr with Jumu'ah on Fridays"}</p>
           </div>
-          <md-switch selected={settings.showJumaat !== false} onchange={(e: any) => updateSettings({ showJumaat: e.target.selected })} icons></md-switch>
+          <Switch checked={settings.showJumaat !== false} onchange={(checked) => updateSettings({ showJumaat: checked })} />
         </div>
 
         <hr class="border-[var(--md-sys-color-outline)]/10 my-4" />
@@ -547,46 +512,40 @@
               <span class="md3-label-large font-bold text-[var(--md-sys-color-on-surface)] block">{t("offlineDuration" as any)}</span>
               <div class="flex flex-wrap gap-2 mt-1">
                 {#each ["week", "month", "year"] as range}
-                  <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={t(`offline${range.charAt(0).toUpperCase() + range.slice(1)}` as any)} selected={downloadRange === range} onclick={() => downloadRange = range as any}></md-filter-chip>
+                  <FilterChip label={t(`offline${range.charAt(0).toUpperCase() + range.slice(1)}` as any)} selected={downloadRange === range} onclick={() => downloadRange = range as any} />
                 {/each}
               </div>
             </div>
 
             <div class="flex flex-wrap items-center gap-3 pt-2">
-              <md-filled-tonal-button
-                role="button"
-                tabindex={0}
-                onkeydown={handleKeyDown}
-                disabled={isDownloading ? true : undefined}
+              <Button
+                variant="tonal"
+                disabled={isDownloading}
                 onclick={handleSaveOffline}
-                style="height: 48px;"
               >
                 {#if isDownloading}
-                  <RefreshCw slot="icon" size={16} class="animate-spin" />
+                  <RefreshCw size={16} class="animate-spin mr-2" />
                   {t("syncing" as any)}
                 {:else}
-                  <Download slot="icon" size={16} />
+                  <Download size={16} class="mr-2" />
                   {t("saveOfflineBtn" as any)}
                 {/if}
-              </md-filled-tonal-button>
+              </Button>
 
               {#if settings.offlineCachedRange}
-                <md-outlined-button
-                  role="button"
-                  tabindex={0}
-                  onkeydown={handleKeyDown}
-                  disabled={isClearing ? true : undefined}
+                <Button
+                  variant="outlined"
+                  disabled={isClearing}
                   onclick={handleClearCache}
-                  style="height: 48px;"
                 >
                   {#if isClearing}
-                    <RefreshCw slot="icon" size={16} class="animate-spin" />
+                    <RefreshCw size={16} class="animate-spin mr-2" />
                     {settings.language === "ms" ? "Membersih..." : "Clearing..."}
                   {:else}
-                    <Trash2 slot="icon" size={16} />
+                    <Trash2 size={16} class="mr-2" />
                     {settings.language === "ms" ? "Padam Cache" : "Clear Cache"}
                   {/if}
-                </md-outlined-button>
+                </Button>
               {/if}
             </div>
 
@@ -608,7 +567,7 @@
               <span class="md3-label-large font-bold text-[var(--md-sys-color-on-surface)] block mb-0.5">{t("autoSyncOffline" as any)}</span>
               <p class="md3-body-small text-[var(--md-sys-color-on-surface-variant)] leading-relaxed max-w-[200px] sm:max-w-xs">{t("autoSyncOfflineDesc" as any)}</p>
             </div>
-            <md-switch selected={!!settings.autoSyncOffline} onchange={(e: any) => updateSettings({ autoSyncOffline: e.target.selected })} icons></md-switch>
+            <Switch checked={!!settings.autoSyncOffline} onchange={(checked) => updateSettings({ autoSyncOffline: checked })} />
           </div>
         </div>
       </div>
@@ -618,18 +577,16 @@
 
 {#snippet soundVolume()}
   <div class={cn("relative rounded-[32px] p-6 space-y-4 overflow-hidden", getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface-container)] border border-[var(--md-sys-color-outline)]/5 shadow-sm"))}>
-    <md-elevation></md-elevation>
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10">
       <div>
         <span class="font-bold text-sm text-[var(--md-sys-color-on-surface)] block">{t("soundVolume" as any) || "Volume Bunyi"}</span>
         <span class="text-xs text-[var(--md-sys-color-on-surface-variant)] block mt-0.5">{t("volumeDesc" as any)}</span>
       </div>
       <div class="flex items-center gap-3 flex-1 max-w-[280px] w-full self-end sm:self-auto justify-end">
-        <button type="button" class="relative overflow-hidden w-10 h-10 rounded-full flex items-center justify-center bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors hover:scale-105 active:scale-95 focus:outline-none shrink-0 cursor-pointer" onclick={() => {
+        <button type="button" use:ripple class="relative overflow-hidden w-10 h-10 rounded-full flex items-center justify-center bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors hover:scale-105 active:scale-95 focus:outline-none shrink-0 cursor-pointer" onclick={() => {
           if (currentVol > 0) { prevVolumeRef = currentVol; updateSettings({ soundVolume: 0 }); playSynthesizedSoundLocal('tick', 0); }
           else { const restoredVol = prevVolumeRef > 0 ? prevVolumeRef : 80; updateSettings({ soundVolume: restoredVol }); playSynthesizedSoundLocal('tick', restoredVol / 100); }
         }}>
-          <md-ripple></md-ripple>
           {#if isMuted}
             <VolumeX size={20} class="stroke-[2.5] relative z-10" />
           {:else if currentVol > 50}
@@ -638,10 +595,14 @@
             <Volume1 size={20} class="stroke-[2.5] relative z-10" />
           {/if}
         </button>
-        <md-slider min="0" max="100" step="5" value={currentVol} labeled onchange={(e: any) => {
-          const newVol = e.target.value; updateSettings({ soundVolume: newVol });
-          if (newVol > 0) prevVolumeRef = newVol; playSynthesizedSoundLocal('tick', newVol / 100);
-        }} class="flex-1"></md-slider>
+        <Slider min={0} max={100} step={5} value={currentVol} oninput={(newVol) => {
+          updateSettings({ soundVolume: newVol });
+          if (newVol > 0) prevVolumeRef = newVol;
+        }} onchange={(newVol) => {
+          updateSettings({ soundVolume: newVol });
+          if (newVol > 0) prevVolumeRef = newVol;
+          playSynthesizedSoundLocal('tick', newVol / 100);
+        }} class="flex-1" />
         <span class="w-12 text-right font-mono font-bold text-[var(--md-sys-color-primary)] tabular-nums text-sm">{currentVol}%</span>
       </div>
     </div>
@@ -650,21 +611,19 @@
 
 {#snippet quickAlerts()}
   <div class={cn("relative p-4 rounded-[2rem] border border-[var(--md-sys-color-outline)]/10 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[var(--md-sys-color-surface-container-high)] overflow-hidden", getStyleClasses(visualStyle))}>
-    <md-elevation></md-elevation>
     <div class="relative z-10">
       <span class="font-bold text-sm text-[var(--md-sys-color-on-surface)] block">{settings.language === 'ms' ? "Pilihan Pantas Notifikasi" : "Quick Notification Actions"}</span>
       <span class="text-xs text-[var(--md-sys-color-on-surface-variant)] block mt-0.5">{settings.language === 'ms' ? "Aktifkan atau senyapkan semua penggera sekaligus." : "Enable or mute all prayer alerts at once."}</span>
     </div>
     <div class="flex gap-2 shrink-0 relative z-10">
-      <md-filled-tonal-button role="button" tabindex={0} onkeydown={handleKeyDown} onclick={() => PRAYER_KEYS.forEach(k => onUpdatePreference(k, { enabled: true }))} style="height: 40px;">{t("enableAllAlerts" as any)}</md-filled-tonal-button>
-      <md-outlined-button role="button" tabindex={0} onkeydown={handleKeyDown} onclick={() => PRAYER_KEYS.forEach(k => onUpdatePreference(k, { enabled: false }))} style="height: 40px;">{t("muteAllAlerts" as any)}</md-outlined-button>
+      <Button variant="tonal" size="sm" onclick={() => PRAYER_KEYS.forEach(k => onUpdatePreference(k, { enabled: true }))}>{t("enableAllAlerts" as any)}</Button>
+      <Button variant="outlined" size="sm" onclick={() => PRAYER_KEYS.forEach(k => onUpdatePreference(k, { enabled: false }))}>{t("muteAllAlerts" as any)}</Button>
     </div>
   </div>
 {/snippet}
 
 {#snippet visualAlerts()}
   <div class={cn("relative p-6 sm:p-8 rounded-[var(--md-sys-shape-corner-extra-large)] space-y-6 overflow-hidden", getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface-container-high)] ring-1 ring-[var(--md-sys-color-outline)]/10 shadow-sm"))}>
-    <md-elevation></md-elevation>
     <div class="flex items-center gap-3 relative z-10">
       <div class="w-10 h-10 rounded-2xl bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center">
         <Smartphone size={20} class="stroke-[2.5]" />
@@ -679,7 +638,7 @@
         <span class="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1 block">{t("azanAlertStyle" as any)}</span>
         <div class="flex flex-wrap gap-2">
           {#each ["dramatic", "standard", "modern", "subtle", "minimal", "none"] as style}
-            <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={style === "dramatic" ? t("styleDramatic" as any) : style === "standard" ? t("styleStandard" as any) : style === "modern" ? t("styleModern" as any) : style === "subtle" ? t("styleSubtle" as any) : style === "minimal" ? t("styleMinimal" as any) : t("none")} selected={settings.azanAlertStyle === style || (!settings.azanAlertStyle && style === "standard")} onclick={() => updateSettings({ azanAlertStyle: style })}></md-filter-chip>
+            <FilterChip label={style === "dramatic" ? t("styleDramatic" as any) : style === "standard" ? t("styleStandard" as any) : style === "modern" ? t("styleModern" as any) : style === "subtle" ? t("styleSubtle" as any) : style === "minimal" ? t("styleMinimal" as any) : t("none")} selected={settings.azanAlertStyle === style || (!settings.azanAlertStyle && style === "standard")} onclick={() => updateSettings({ azanAlertStyle: style })} />
           {/each}
         </div>
       </div>
@@ -688,11 +647,11 @@
           <div class="flex items-center justify-between p-4 bg-[var(--md-sys-color-surface)] rounded-[2rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5 mt-4">
             <span class="font-bold text-[var(--md-sys-color-on-surface)] text-sm">{t("azanAlertDuration" as any)}</span>
             <div class="flex-1 px-2 sm:px-4">
-              <md-slider min="5" max="120" step="5" value={settings.azanAlertDuration ?? 20} labeled ticks onchange={(e: any) => updateSettings({ azanAlertDuration: e.target.value })}></md-slider>
+              <Slider min={5} max={120} step={5} value={settings.azanAlertDuration ?? 20} onchange={(val) => updateSettings({ azanAlertDuration: val })} />
             </div>
             <span class="w-20 text-right font-mono text-lg font-black text-[var(--md-sys-color-primary)]">{settings.azanAlertDuration ?? 20}s</span>
           </div>
-          <button class="w-full py-3 px-4 mt-2 bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] font-black text-xs rounded-2xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.02] active:scale-95" onclick={() => onPreviewAzanAlert?.(settings.azanAlertStyle || "standard")}>
+          <button use:ripple class="w-full py-3 px-4 mt-2 bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] font-black text-xs rounded-2xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.02] active:scale-95" onclick={() => onPreviewAzanAlert?.(settings.azanAlertStyle || "standard")}>
             <Volume2 size={16} />
             <span>{settings.language === "ms" ? "Pratonton Gaya Amaran" : "Preview Alert Style"}</span>
           </button>
@@ -708,10 +667,9 @@
       {@const pref = preferences[key] || { enabled: false, preAlert: 0, sound: "default", offset: 0 }}
       {@const isFardhu = ["fajr", "dhuhr", "asr", "maghrib", "isha"].includes(key)}
       <div class={cn("relative p-6 sm:p-8 rounded-[var(--md-sys-shape-corner-extra-large)] transition-all duration-300 shadow-sm overflow-hidden", pref.enabled ? getStyleClasses(visualStyle, "bg-[var(--md-sys-color-primary-container)]/10 border border-transparent ring-1 ring-[var(--md-sys-color-primary)]/20") : getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface-variant)]/30 grayscale-[0.3] border border-transparent"))}>
-        <md-elevation></md-elevation>
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4 relative z-10">
           <div class="flex items-center gap-4">
-            <md-switch selected={pref.enabled} icons onchange={(e: any) => onUpdatePreference(key, { enabled: e.target.selected })}></md-switch>
+            <Switch checked={pref.enabled} onchange={(checked) => onUpdatePreference(key, { enabled: checked })} />
             <div>
               <h4 class={cn("text-xl md:text-2xl font-black tracking-tight flex items-center gap-2 transition-colors duration-300", pref.enabled ? "text-[var(--md-sys-color-on-surface)]" : "text-[var(--md-sys-color-on-surface-variant)]/70")}>
                 {t(key as any)}
@@ -722,7 +680,7 @@
             </div>
           </div>
           {#if pref.enabled}
-            <button class="text-xs font-bold px-4 py-2 rounded-full bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors shadow-sm whitespace-nowrap self-end sm:self-auto flex items-center gap-1.5 cursor-pointer hover:scale-105 active:scale-95 transition-transform" onclick={() => {
+            <button use:ripple class="text-xs font-bold px-4 py-2 rounded-full bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors shadow-sm whitespace-nowrap self-end sm:self-auto flex items-center gap-1.5 cursor-pointer hover:scale-105 active:scale-95 transition-transform" onclick={() => {
               if (pref.sound === "default" && permission === "granted") {
                 new Notification(t("testDefaultNotificationTitle" as any), { body: t("testDefaultNotificationBody" as any) });
               } else {
@@ -745,21 +703,23 @@
             <span class="text-[11px] font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1 block">{t("sound")}</span>
             <div class="flex flex-wrap gap-2">
               {#each SOUND_OPTIONS as opt}
-                <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={opt.label} selected={pref.sound === opt.value} onclick={() => {
+                {@const OptIcon = opt.icon}
+                <FilterChip label={opt.label} selected={pref.sound === opt.value} onclick={() => {
                   onUpdatePreference(key, { sound: opt.value as any });
                   triggerTestSound(opt.value as any, `${t("testSoundBody" as any)} ${t(key as any)}`, key);
                 }}>
-                  {#if previewingPrayer === key && pref.sound === opt.value}
-                    <div slot="icon" class="flex items-end gap-[2.5px] h-3 mr-1 shrink-0 text-[var(--md-sys-color-primary)]">
-                      <span class="w-[2px] bg-current rounded-full animate-bar-1"></span>
-                      <span class="w-[2px] bg-current rounded-full animate-bar-2"></span>
-                      <span class="w-[2px] bg-current rounded-full animate-bar-3"></span>
-                    </div>
-                  {:else}
-                    {@const OptIcon = opt.icon}
-                    <span slot="icon" class="contents"><OptIcon size={18} /></span>
-                  {/if}
-                </md-filter-chip>
+                  {#snippet leadingIcon()}
+                    {#if previewingPrayer === key && pref.sound === opt.value}
+                      <div class="flex items-end gap-[2.5px] h-3 mr-1 shrink-0 text-[var(--md-sys-color-primary)]">
+                        <span class="w-[2px] bg-current rounded-full animate-bar-1"></span>
+                        <span class="w-[2px] bg-current rounded-full animate-bar-2"></span>
+                        <span class="w-[2px] bg-current rounded-full animate-bar-3"></span>
+                      </div>
+                    {:else}
+                      <OptIcon size={18} />
+                    {/if}
+                  {/snippet}
+                </FilterChip>
               {/each}
             </div>
           </div>
@@ -767,7 +727,7 @@
             <span class="text-[11px] font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1 block">{t("preAlert")}</span>
             <div class="flex flex-wrap gap-2">
               {#each PRE_ALERT_OPTIONS as opt}
-                <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={opt.label} selected={pref.preAlert === opt.value} onclick={() => onUpdatePreference(key, { preAlert: opt.value as any })}></md-filter-chip>
+                <FilterChip label={opt.label} selected={pref.preAlert === opt.value} onclick={() => onUpdatePreference(key, { preAlert: opt.value as any })} />
               {/each}
             </div>
           </div>
@@ -784,18 +744,15 @@
       {#each PRAYER_KEYS as key}
         {@const pref = preferences[key] || { offset: 0 }}
         <div class={cn("relative flex items-center justify-between p-4 sm:p-5 rounded-[2rem] transition-shadow overflow-hidden", getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface)] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5 hover:shadow-md"))}>
-          <md-elevation></md-elevation>
           <span class="font-black text-[var(--md-sys-color-on-surface)] w-24 tracking-wider uppercase text-sm relative z-10">{t(key as any)}</span>
           <div class="flex items-center gap-3 sm:gap-4 relative z-10">
-            <button class="relative overflow-hidden w-10 h-10 rounded-full flex items-center justify-center bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors hover:scale-105 active:scale-95" onclick={() => onUpdatePreference(key, { offset: (pref.offset || 0) - 1 })}>
-              <md-ripple></md-ripple>
+            <button use:ripple class="relative overflow-hidden w-10 h-10 rounded-full flex items-center justify-center bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors hover:scale-105 active:scale-95" onclick={() => onUpdatePreference(key, { offset: (pref.offset || 0) - 1 })}>
               <Minus size={20} class="relative z-10" />
             </button>
             <span class="w-10 sm:w-16 flex font-mono text-lg sm:text-2xl font-black items-center justify-center tabular-nums text-[var(--md-sys-color-primary)]">
               {pref.offset > 0 ? "+" : ""}{pref.offset || 0}
             </span>
-            <button class="relative overflow-hidden w-10 h-10 rounded-full flex items-center justify-center bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors hover:scale-105 active:scale-95" onclick={() => onUpdatePreference(key, { offset: (pref.offset || 0) + 1 })}>
-              <md-ripple></md-ripple>
+            <button use:ripple class="relative overflow-hidden w-10 h-10 rounded-full flex items-center justify-center bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors hover:scale-105 active:scale-95" onclick={() => onUpdatePreference(key, { offset: (pref.offset || 0) + 1 })}>
               <Plus size={20} class="relative z-10" />
             </button>
           </div>
@@ -813,18 +770,15 @@
         {#each ["fajr", "dhuhr", "asr", "maghrib", "isha"] as key}
           {@const pref = preferences[key as PrayerKey] || { iqamahOffset: 0 }}
           <div class={cn("relative flex items-center justify-between p-4 sm:p-5 rounded-[2rem] transition-shadow overflow-hidden", getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface)] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5 hover:shadow-md"))}>
-            <md-elevation></md-elevation>
             <span class="font-black text-[var(--md-sys-color-on-surface)] w-24 tracking-wider uppercase text-sm relative z-10">{t(key as any)}</span>
             <div class="flex items-center gap-3 sm:gap-4 relative z-10">
-              <button class="relative overflow-hidden w-10 h-10 rounded-full flex items-center justify-center bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors hover:scale-105 active:scale-95" onclick={() => onUpdatePreference(key as PrayerKey, { iqamahOffset: Math.max(0, (pref.iqamahOffset || 0) - 1) })}>
-                <md-ripple></md-ripple>
+              <button use:ripple class="relative overflow-hidden w-10 h-10 rounded-full flex items-center justify-center bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors hover:scale-105 active:scale-95" onclick={() => onUpdatePreference(key as PrayerKey, { iqamahOffset: Math.max(0, (pref.iqamahOffset || 0) - 1) })}>
                 <Minus size={20} />
               </button>
               <span class="w-10 sm:w-16 flex font-mono text-lg sm:text-2xl font-black items-center justify-center tabular-nums text-[var(--md-sys-color-primary)]">
                 {pref.iqamahOffset || 0}
               </span>
-              <button class="relative overflow-hidden w-10 h-10 rounded-full flex items-center justify-center bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors hover:scale-105 active:scale-95" onclick={() => onUpdatePreference(key as PrayerKey, { iqamahOffset: (pref.iqamahOffset || 0) + 1 })}>
-                <md-ripple></md-ripple>
+              <button use:ripple class="relative overflow-hidden w-10 h-10 rounded-full flex items-center justify-center bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors hover:scale-105 active:scale-95" onclick={() => onUpdatePreference(key as PrayerKey, { iqamahOffset: (pref.iqamahOffset || 0) + 1 })}>
                 <Plus size={20} />
               </button>
             </div>
@@ -837,7 +791,6 @@
 
 {#snippet advancedSunnah()}
   <div class={cn("relative rounded-[32px] p-6 sm:p-8 border border-[var(--md-sys-color-outline)]/5 shadow-sm space-y-6 overflow-hidden", getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface-container)]"))}>
-    <md-elevation></md-elevation>
     <div class="flex items-center gap-3 mb-6 relative z-10">
       <div class="w-10 h-10 rounded-2xl bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center">
         <MoonStar size={20} class="stroke-[2.5]" />
@@ -853,8 +806,8 @@
         <span class="text-xs text-[var(--md-sys-color-on-surface-variant)] block mt-0.5">{t("quickActionSunnahDesc" as any) || "Aktifkan atau senyapkan semua penggera amalan sunat sekaligus."}</span>
       </div>
       <div class="flex gap-2 shrink-0">
-        <button onclick={() => updateSettings({ showSunnahTimes: [...SUNNAH_KEYS] })} class="px-4 py-2 bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] rounded-full text-xs font-black transition-all hover:scale-105 active:scale-95 shadow-sm hover:opacity-95 cursor-pointer">{t("enableAllSunnah" as any) || "Aktifkan Semua"}</button>
-        <button onclick={() => updateSettings({ showSunnahTimes: [] })} class="px-4 py-2 bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] rounded-full text-xs font-black transition-all hover:scale-105 active:scale-95 shadow-sm hover:opacity-95 cursor-pointer">{t("muteAllSunnah" as any) || "Senyapkan Semua"}</button>
+        <button use:ripple onclick={() => updateSettings({ showSunnahTimes: [...SUNNAH_KEYS] })} class="px-4 py-2 bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] rounded-full text-xs font-black transition-all hover:scale-105 active:scale-95 shadow-sm hover:opacity-95 cursor-pointer">{t("enableAllSunnah" as any) || "Aktifkan Semua"}</button>
+        <button use:ripple onclick={() => updateSettings({ showSunnahTimes: [] })} class="px-4 py-2 bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] rounded-full text-xs font-black transition-all hover:scale-105 active:scale-95 shadow-sm hover:opacity-95 cursor-pointer">{t("muteAllSunnah" as any) || "Senyapkan Semua"}</button>
       </div>
     </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 relative z-10">
@@ -864,11 +817,11 @@
             <span class="font-bold text-[var(--md-sys-color-on-surface)] text-sm block">{t(key as any)}</span>
             <span class="text-[10px] text-[var(--md-sys-color-on-surface-variant)] leading-tight block mt-0.5">{t(`${key}Desc` as any)}</span>
           </div>
-          <md-switch selected={!!settings.showSunnahTimes?.includes(key as any)} onchange={(e: any) => {
+          <Switch checked={!!settings.showSunnahTimes?.includes(key as any)} onchange={(checked) => {
             const current = settings.showSunnahTimes || [];
-            if (e.target.selected && !current.includes(key as any)) updateSettings({ showSunnahTimes: [...current, key as any] });
-            else if (!e.target.selected && current.includes(key as any)) updateSettings({ showSunnahTimes: current.filter(k => k !== key) });
-          }} icons></md-switch>
+            if (checked && !current.includes(key as any)) updateSettings({ showSunnahTimes: [...current, key as any] });
+            else if (!checked && current.includes(key as any)) updateSettings({ showSunnahTimes: current.filter(k => k !== key) });
+          }} />
         </div>
       {/each}
     </div>
@@ -877,9 +830,7 @@
 
 {#snippet advancedRules()}
   <div class={cn("relative rounded-[32px] overflow-hidden transition-all duration-300 shadow-sm", showAdvancedCalculations ? getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface-container)] p-6 space-y-6 border border-[var(--md-sys-color-outline)]/10") : getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface-container-low)] hover:bg-[var(--md-sys-color-surface-container)] p-4 sm:p-5 border border-transparent"))}>
-    <md-elevation></md-elevation>
-    <button onclick={() => showAdvancedCalculations = !showAdvancedCalculations} type="button" class="relative w-full flex items-center justify-between font-bold text-left cursor-pointer focus:outline-none overflow-hidden z-10">
-      <md-ripple></md-ripple>
+    <button use:ripple onclick={() => showAdvancedCalculations = !showAdvancedCalculations} type="button" class="relative w-full flex items-center justify-between font-bold text-left cursor-pointer focus:outline-none overflow-hidden z-10">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-2xl bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center">
           <Sliders size={20} class="stroke-[2.5]" />
@@ -899,7 +850,7 @@
           <span class="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1 block">{t("suhoorOffset" as any)}</span>
           <div class="flex flex-wrap gap-2">
             {#each [15, 30, 45, 60] as mins}
-              <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={`${mins} min`} selected={settings.suhoorOffset === mins || (!settings.suhoorOffset && mins === 30)} onclick={() => updateSettings({ suhoorOffset: mins })}></md-filter-chip>
+              <FilterChip label={`${mins} min`} selected={settings.suhoorOffset === mins || (!settings.suhoorOffset && mins === 30)} onclick={() => updateSettings({ suhoorOffset: mins })} />
             {/each}
           </div>
         </div>
@@ -907,22 +858,22 @@
           <span class="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1 block">{t("imsakOffset" as any)}</span>
           <div class="flex flex-wrap gap-2">
             {#each [2, 5, 10, 15] as mins}
-              <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={`${mins} min`} selected={settings.imsakOffset === mins || (!settings.imsakOffset && mins === 10)} onclick={() => updateSettings({ imsakOffset: mins })}></md-filter-chip>
+              <FilterChip label={`${mins} min`} selected={settings.imsakOffset === mins || (!settings.imsakOffset && mins === 10)} onclick={() => updateSettings({ imsakOffset: mins })} />
             {/each}
           </div>
         </div>
         <div class="space-y-2">
           <span class="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1 block">{t("midnightMethod" as any)}</span>
           <div class="flex flex-wrap gap-2">
-            <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={t("midnightFajr" as any)} selected={!settings.midnightMethod || settings.midnightMethod === "fajr"} onclick={() => updateSettings({ midnightMethod: "fajr" })}></md-filter-chip>
-            <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={t("midnightSunrise" as any)} selected={settings.midnightMethod === "sunrise"} onclick={() => updateSettings({ midnightMethod: "sunrise" })}></md-filter-chip>
+            <FilterChip label={t("midnightFajr" as any)} selected={!settings.midnightMethod || settings.midnightMethod === "fajr"} onclick={() => updateSettings({ midnightMethod: "fajr" })} />
+            <FilterChip label={t("midnightSunrise" as any)} selected={settings.midnightMethod === "sunrise"} onclick={() => updateSettings({ midnightMethod: "sunrise" })} />
           </div>
         </div>
         <div class="space-y-2">
           <span class="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1 block">{t("asrEnds" as any)}</span>
           <div class="flex flex-wrap gap-2">
-            <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={t("asrEndsMaghrib" as any)} selected={!settings.asrEnds || settings.asrEnds === "maghrib"} onclick={() => updateSettings({ asrEnds: "maghrib" })}></md-filter-chip>
-            <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={t("asrEndsSunset" as any)} selected={settings.asrEnds === "sunset"} onclick={() => updateSettings({ asrEnds: "sunset" })}></md-filter-chip>
+            <FilterChip label={t("asrEndsMaghrib" as any)} selected={!settings.asrEnds || settings.asrEnds === "maghrib"} onclick={() => updateSettings({ asrEnds: "maghrib" })} />
+            <FilterChip label={t("asrEndsSunset" as any)} selected={settings.asrEnds === "sunset"} onclick={() => updateSettings({ asrEnds: "sunset" })} />
           </div>
         </div>
       </div>
@@ -932,9 +883,7 @@
 
 {#snippet advancedHijri()}
   <div class={cn("relative rounded-[32px] overflow-hidden transition-all duration-300 mt-4", showHijriEngine ? getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface-container)] p-6 space-y-6 border border-[var(--md-sys-color-outline)]/10") : getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface-container-low)] hover:bg-[var(--md-sys-color-surface-container)] p-4 sm:p-5 border border-transparent"))}>
-    <md-elevation></md-elevation>
-    <button onclick={() => showHijriEngine = !showHijriEngine} type="button" class="relative w-full flex items-center justify-between font-bold text-left cursor-pointer focus:outline-none overflow-hidden z-10">
-      <md-ripple></md-ripple>
+    <button use:ripple onclick={() => showHijriEngine = !showHijriEngine} type="button" class="relative w-full flex items-center justify-between font-bold text-left cursor-pointer focus:outline-none overflow-hidden z-10">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-2xl bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center">
           <Sliders size={20} class="stroke-[2.5]" />
@@ -952,28 +901,26 @@
       <div transition:slide={{ duration: 250 }} class="overflow-hidden space-y-6 pt-4 border-t border-[var(--md-sys-color-outline)]/10 relative z-10">
         <div class="space-y-2">
           <span class="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1 block">{t("hijriMethod" as any)}</span>
-          <div class="w-full">
-            <md-outlined-select value={settings.hijriMethod || "jakim"} onchange={(e: any) => updateSettings({ hijriMethod: e.target.value })} style="width: 100%">
-              {#each ["jakim", "umalqura", "tbla", "civil", "islamic"] as method}
-                <md-select-option role="option" tabindex={0} aria-selected={(settings.hijriMethod || "jakim") === method} onkeydown={handleKeyDown} value={method} onclick={() => updateSettings({ hijriMethod: method })}>
-                  <div slot="headline">{t(`method${method.charAt(0).toUpperCase() + method.slice(1)}` as any)}</div>
-                </md-select-option>
-              {/each}
-            </md-outlined-select>
+          <div class="flex flex-wrap gap-2">
+            {#each ["jakim", "umalqura", "tbla", "civil", "islamic"] as method}
+              <FilterChip
+                label={t(`method${method.charAt(0).toUpperCase() + method.slice(1)}` as any)}
+                selected={(settings.hijriMethod || "jakim") === method}
+                onclick={() => updateSettings({ hijriMethod: method })}
+              />
+            {/each}
           </div>
         </div>
         <div class="flex items-center justify-between p-4 bg-[var(--md-sys-color-surface)] rounded-[2rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5 mt-4">
           <span class="font-bold text-[var(--md-sys-color-on-surface)] text-sm">{t("hijriAdjustment" as any)}</span>
           <div class="flex items-center gap-3 sm:gap-4">
-            <button class="relative overflow-hidden w-10 h-10 rounded-full flex items-center justify-center bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors hover:scale-105 active:scale-95" onclick={() => updateSettings({ hijriAdjustment: Math.max(-2, (settings.hijriAdjustment ?? 0) - 1) })}>
-              <md-ripple></md-ripple>
+            <button use:ripple class="relative overflow-hidden w-10 h-10 rounded-full flex items-center justify-center bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors hover:scale-105 active:scale-95" onclick={() => updateSettings({ hijriAdjustment: Math.max(-2, (settings.hijriAdjustment ?? 0) - 1) })}>
               <Minus size={20} />
             </button>
             <span class="w-16 flex font-mono text-lg sm:text-xl font-black items-center justify-center tabular-nums text-[var(--md-sys-color-primary)]">
               {(settings.hijriAdjustment ?? 0) > 0 ? "+" : ""}{settings.hijriAdjustment ?? 0}
             </span>
-            <button class="relative overflow-hidden w-10 h-10 rounded-full flex items-center justify-center bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors hover:scale-105 active:scale-95" onclick={() => updateSettings({ hijriAdjustment: Math.min(2, (settings.hijriAdjustment ?? 0) + 1) })}>
-              <md-ripple></md-ripple>
+            <button use:ripple class="relative overflow-hidden w-10 h-10 rounded-full flex items-center justify-center bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors hover:scale-105 active:scale-95" onclick={() => updateSettings({ hijriAdjustment: Math.min(2, (settings.hijriAdjustment ?? 0) + 1) })}>
               <Plus size={20} />
             </button>
           </div>
@@ -985,7 +932,6 @@
 
 {#snippet advancedReset()}
   <div class={cn("relative rounded-[32px] p-6 sm:p-8 border border-[var(--md-sys-color-outline)]/5 shadow-sm space-y-4 mt-6 overflow-hidden", getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface-container)]"))}>
-    <md-elevation></md-elevation>
     <div class="flex items-center gap-3 relative z-10">
       <div class="w-10 h-10 rounded-2xl bg-[var(--md-sys-color-error-container)] text-[var(--md-sys-color-on-error-container)] flex items-center justify-center">
         <RefreshCw size={20} class="stroke-[2.5]" />
@@ -998,10 +944,10 @@
     <div class="pt-2 border-t border-[var(--md-sys-color-outline)]/10 flex flex-wrap items-center gap-4 justify-between relative z-10">
       <p class="text-xs text-[var(--md-sys-color-on-surface-variant)] leading-relaxed max-w-sm">{settings.language === 'ms' ? "Tindakan ini akan menetapkan semula semua konfigurasi dan penggera solat serta-merta." : "This action will immediately revert all prayer offsets, sounds, and settings."}</p>
       <div class="flex items-center gap-3 w-full sm:w-auto">
-        <md-outlined-button role="button" tabindex={0} onkeydown={handleKeyDown} onclick={handleResetToDefaults} style="height: 48px;">
-          <RefreshCw slot="icon" size={16} />
+        <Button variant="outlined" onclick={handleResetToDefaults}>
+          <RefreshCw size={16} class="mr-2" />
           {t("resetDefault" as any)}
-        </md-outlined-button>
+        </Button>
       </div>
     </div>
     {#if showResetToast}
@@ -1019,7 +965,6 @@
 
 {#snippet mosqueCountdown()}
   <div class={cn("relative p-6 sm:p-8 rounded-[var(--md-sys-shape-corner-extra-large)] space-y-6 overflow-hidden", getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface-container-high)] ring-1 ring-[var(--md-sys-color-outline)]/10 shadow-sm"))}>
-    <md-elevation></md-elevation>
     <div class="flex items-center gap-3 relative z-10">
       <div class="w-10 h-10 rounded-2xl bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center">
         <Activity size={20} class="stroke-[2.5]" />
@@ -1034,16 +979,20 @@
         <span class="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-primary)] ml-1 block">{t("iqamahCountdownSound" as any)}</span>
         <div class="flex flex-wrap gap-2">
           {#each ["chime", "tick", "none"] as sound}
-            <md-filter-chip role="button" tabindex={0} onkeydown={handleKeyDown} label={sound === "chime" ? t("chime" as any) : sound === "tick" ? t("clockMovementTick" as any) : t("none")} selected={settings.iqamahCountdownSound === sound || (!settings.iqamahCountdownSound && sound === "chime")} onclick={() => updateSettings({ iqamahCountdownSound: sound })}></md-filter-chip>
+            <FilterChip
+              label={sound === "chime" ? t("chime" as any) : sound === "tick" ? t("clockMovementTick" as any) : t("none")}
+              selected={settings.iqamahCountdownSound === sound || (!settings.iqamahCountdownSound && sound === "chime")}
+              onclick={() => updateSettings({ iqamahCountdownSound: sound })}
+            />
           {/each}
         </div>
       </div>
       <div class="grid grid-cols-2 gap-3 mt-4">
-        <button class="flex items-center justify-center gap-2 py-2.5 px-4 rounded-3xl bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] text-xs font-bold shadow-sm border border-[var(--md-sys-color-outline)]/5 transition-all hover:scale-105 active:scale-95" onclick={() => playSynthesizedSoundLocal('chime', (settings.soundVolume ?? 80) / 100, 800)}>
+        <button use:ripple class="flex items-center justify-center gap-2 py-2.5 px-4 rounded-3xl bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] text-xs font-bold shadow-sm border border-[var(--md-sys-color-outline)]/5 transition-all hover:scale-105 active:scale-95" onclick={() => playSynthesizedSoundLocal('chime', (settings.soundVolume ?? 80) / 100, 800)}>
           <Volume2 size={16} />
           {t("testIqamahChime" as any)}
         </button>
-        <button class="flex items-center justify-center gap-2 py-2.5 px-4 rounded-3xl bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] text-xs font-bold shadow-sm border border-[var(--md-sys-color-outline)]/5 transition-all hover:scale-105 active:scale-95" onclick={() => playSynthesizedSoundLocal('tick', (settings.soundVolume ?? 80) / 100)}>
+        <button use:ripple class="flex items-center justify-center gap-2 py-2.5 px-4 rounded-3xl bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] text-xs font-bold shadow-sm border border-[var(--md-sys-color-outline)]/5 transition-all hover:scale-105 active:scale-95" onclick={() => playSynthesizedSoundLocal('tick', (settings.soundVolume ?? 80) / 100)}>
           <Volume2 size={16} />
           {t("testIqamahTick" as any)}
         </button>
@@ -1054,7 +1003,6 @@
 
 {#snippet mosqueScreensaver()}
   <div class={cn("relative p-6 sm:p-8 rounded-[var(--md-sys-shape-corner-extra-large)] space-y-6 overflow-hidden", getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface-container-high)] ring-1 ring-[var(--md-sys-color-outline)]/10 shadow-sm"))}>
-    <md-elevation></md-elevation>
     <div class="flex items-center gap-3 relative z-10">
       <div class="w-10 h-10 rounded-2xl bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center">
         <Clock size={20} class="stroke-[2.5]" />
@@ -1070,18 +1018,18 @@
           <h4 class="text-sm font-bold text-[var(--md-sys-color-on-surface)]">{t("solatModeEnabled" as any)}</h4>
           <p class="text-[11px] text-[var(--md-sys-color-on-surface-variant)] leading-relaxed mt-0.5">{t("solatModeInstruction" as any)}</p>
         </div>
-        <md-switch selected={!!settings.solatModeEnabled} onchange={(e: any) => updateSettings({ solatModeEnabled: e.target.selected })} icons></md-switch>
+        <Switch checked={!!settings.solatModeEnabled} onchange={(checked) => updateSettings({ solatModeEnabled: checked })} />
       </div>
       {#if settings.solatModeEnabled}
         <div class="space-y-4 pt-4 mt-2 border-t border-[var(--md-sys-color-outline)]/5">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="flex items-center justify-between p-4 bg-[var(--md-sys-color-surface)] rounded-[2rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5">
               <span class="font-bold text-[var(--md-sys-color-on-surface)] text-xs">{t("solatModeShowClock" as any)}</span>
-              <md-switch selected={settings.solatModeShowClock !== false} onchange={(e: any) => updateSettings({ solatModeShowClock: e.target.selected })} icons></md-switch>
+              <Switch checked={settings.solatModeShowClock !== false} onchange={(checked) => updateSettings({ solatModeShowClock: checked })} />
             </div>
             <div class="flex items-center justify-between p-4 bg-[var(--md-sys-color-surface)] rounded-[2rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5">
               <span class="font-bold text-[var(--md-sys-color-on-surface)] text-xs">{t("solatModeShowQibla" as any)}</span>
-              <md-switch selected={settings.solatModeShowQibla !== false} onchange={(e: any) => updateSettings({ solatModeShowQibla: e.target.selected })} icons></md-switch>
+              <Switch checked={settings.solatModeShowQibla !== false} onchange={(checked) => updateSettings({ solatModeShowQibla: checked })} />
             </div>
           </div>
           <div class="flex items-center justify-between p-4 bg-[var(--md-sys-color-surface)] rounded-[2rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5 mt-2">
@@ -1090,7 +1038,7 @@
               <span class="text-[10px] text-[var(--md-sys-color-on-surface-variant)] block">Serene dhikr interval before exit.</span>
             </div>
             <div class="flex-1 px-4 max-w-[200px]">
-              <md-slider min="0" max="10" step="1" value={settings.solatModeDuaDuration ?? 0} labeled ticks onchange={(e: any) => updateSettings({ solatModeDuaDuration: e.target.value })}></md-slider>
+              <Slider min={0} max={10} step={1} value={settings.solatModeDuaDuration ?? 0} onchange={(val) => updateSettings({ solatModeDuaDuration: val })} />
             </div>
             <span class="w-12 text-right font-mono font-bold text-[var(--md-sys-color-primary)] tabular-nums">{settings.solatModeDuaDuration ?? 0}m</span>
           </div>
@@ -1102,7 +1050,7 @@
                 <div class="flex items-center justify-between p-3 bg-[var(--md-sys-color-surface)] rounded-[1.5rem] shadow-sm ring-1 ring-[var(--md-sys-color-outline)]/5">
                   <span class="font-bold text-[var(--md-sys-color-on-surface)] tracking-wider uppercase text-xs w-24 pl-1">{t(key as any)}</span>
                   <div class="flex-1 px-4">
-                    <md-slider min="1" max="60" step="1" value={duration} labeled ticks onchange={(e: any) => { const currentDurations = settings.solatModeDuration ?? { fajr: 10, dhuhr: 10, asr: 10, maghrib: 10, isha: 10 }; updateSettings({ solatModeDuration: { ...currentDurations, [key]: e.target.value } }); }}></md-slider>
+                    <Slider min={1} max={60} step={1} value={duration} onchange={(val) => { const currentDurations = settings.solatModeDuration ?? { fajr: 10, dhuhr: 10, asr: 10, maghrib: 10, isha: 10 }; updateSettings({ solatModeDuration: { ...currentDurations, [key]: val } }); }} />
                   </div>
                   <span class="w-12 text-right font-mono font-bold text-[var(--md-sys-color-primary)] tabular-nums text-sm">{duration}m</span>
                 </div>
@@ -1117,13 +1065,12 @@
 
 {#snippet mosqueBackground()}
   <div class={cn("relative p-6 sm:p-8 rounded-[var(--md-sys-shape-corner-extra-large)] space-y-4 overflow-hidden", getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface-container-high)] ring-1 ring-[var(--md-sys-color-outline)]/10 shadow-sm"))}>
-    <md-elevation></md-elevation>
     <div class="flex items-center justify-between relative z-10">
       <div>
         <h3 class="text-sm font-bold text-[var(--md-sys-color-on-surface)]">{t("backgroundNotifications" as any)}</h3>
         <p class="text-[10px] text-[var(--md-sys-color-on-surface-variant)] leading-relaxed mt-0.5 max-w-[200px] sm:max-w-xs">Keep prayer sound/alerts active even when tab is minimized or screen is locked.</p>
       </div>
-      <md-switch selected={!!settings.backgroundNotifications} onchange={(e: any) => updateSettings({ backgroundNotifications: e.target.selected })} icons></md-switch>
+      <Switch checked={!!settings.backgroundNotifications} onchange={(checked) => updateSettings({ backgroundNotifications: checked })} />
     </div>
   </div>
 {/snippet}
@@ -1162,8 +1109,7 @@
               <kbd transition:fade={{ duration: 200 }} class="absolute right-4 top-1/2 -translate-y-1/2 px-2 py-0.5 text-[10px] font-black font-mono rounded bg-[var(--md-sys-color-surface-container-highest)] border border-[var(--md-sys-color-outline)]/10 text-[var(--md-sys-color-on-surface-variant)]/40 pointer-events-none select-none transition-all duration-300 group-focus-within:opacity-0 group-focus-within:scale-75">/</kbd>
             {/if}
           </div>
-          <button onclick={onClose} aria-label={t("close") || "Close"} class="relative overflow-hidden w-10 h-10 flex items-center justify-center rounded-full text-[var(--md-sys-color-on-surface)] bg-[var(--md-sys-color-surface-container-high)] hover:bg-[var(--md-sys-color-error-container)] hover:text-[var(--md-sys-color-on-error-container)] shrink-0 shadow-sm transition-colors hover:scale-105 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-sys-color-error)] cursor-pointer">
-            <md-ripple></md-ripple>
+          <button use:ripple onclick={onClose} aria-label={t("close") || "Close"} class="relative overflow-hidden w-10 h-10 flex items-center justify-center rounded-full text-[var(--md-sys-color-on-surface)] bg-[var(--md-sys-color-surface-container-high)] hover:bg-[var(--md-sys-color-error-container)] hover:text-[var(--md-sys-color-on-error-container)] shrink-0 shadow-sm transition-colors hover:scale-105 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-sys-color-error)] cursor-pointer">
             <X size={22} class="stroke-[2.5] relative z-10" />
           </button>
         </div>
@@ -1173,7 +1119,7 @@
         {#if !searchQuery}
           <div style={`width: ${sidebarCollapsed ? 80 : 256}px`} class={cn("hidden md:flex flex-col border-r border-[var(--md-sys-color-outline)]/10 bg-[var(--md-sys-color-surface-container-low)] space-y-2 shrink-0 overflow-y-auto no-scrollbar transition-all duration-300", sidebarCollapsed ? "p-3" : "p-4")}>
             <div class="flex items-center mb-6 px-2">
-              <button onclick={toggleSidebar} type="button" class={cn("h-9 rounded-full flex items-center bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline)]/10 text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors hover:scale-102 active:scale-95 focus:outline-none cursor-pointer overflow-hidden shadow-sm", sidebarCollapsed ? "w-9 justify-center mx-auto" : "px-3 justify-between w-full")}>
+              <button use:ripple onclick={toggleSidebar} type="button" class={cn("h-9 rounded-full flex items-center bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline)]/10 text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] transition-colors hover:scale-102 active:scale-95 focus:outline-none cursor-pointer overflow-hidden shadow-sm", sidebarCollapsed ? "w-9 justify-center mx-auto" : "px-3 justify-between w-full")}>
                 {#if !sidebarCollapsed}
                   <span transition:slide={{ axis: 'x' }} class="text-[10px] uppercase font-black tracking-widest whitespace-nowrap overflow-hidden pl-1">{t("settings")}</span>
                 {/if}
@@ -1189,13 +1135,12 @@
             {#each tabs as tab}
               {@const Icon = tab.icon}
               {@const isActive = activeTab === tab.id}
-              <button data-tab={tab.id} onclick={() => activeTab = tab.id} title={sidebarCollapsed ? tab.label : undefined} class="relative group select-none flex items-center h-12 pl-4 pr-4 rounded-2xl outline-none focus:outline-none cursor-pointer w-full transition-all duration-300 overflow-hidden">
+              <button use:ripple data-tab={tab.id} onclick={() => activeTab = tab.id} title={sidebarCollapsed ? tab.label : undefined} class="relative group select-none flex items-center h-12 pl-4 pr-4 rounded-2xl outline-none focus:outline-none cursor-pointer w-full transition-all duration-300 overflow-hidden">
                 {#if isActive}
                   <div class="absolute inset-0 bg-[var(--md-sys-color-secondary-container)] border border-[var(--md-sys-color-outline)]/10 shadow-sm z-0 rounded-2xl"></div>
                 {:else}
                   <div class="absolute inset-0 bg-[var(--md-sys-color-on-surface)] opacity-0 group-hover:opacity-5 transition-opacity duration-200 z-0 rounded-2xl"></div>
                 {/if}
-                <md-ripple></md-ripple>
                 <div class="w-6 h-6 flex items-center justify-center relative z-10 shrink-0">
                   <Icon class={cn("transition-all duration-300 shrink-0", isActive ? "text-[var(--md-sys-color-on-secondary-container)] scale-110" : "text-[var(--md-sys-color-on-surface-variant)] group-hover:scale-110 group-hover:text-[var(--md-sys-color-primary)]")} size={20} />
                 </div>

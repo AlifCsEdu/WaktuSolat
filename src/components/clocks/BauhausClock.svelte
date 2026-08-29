@@ -1,6 +1,5 @@
 <script lang="ts">
   import { cn } from "../../lib/utils";
-  import "@material/web/elevation/elevation.js";
   import { appSettings } from "../../state/settings.svelte";
 
   let { movement = 'sweep' }: { movement?: 'tick' | 'sweep' } = $props();
@@ -51,7 +50,6 @@
   visualStyle === 'glass' && "border-2 border-[var(--glass-border)] bg-[var(--glass-bg)]/45 backdrop-blur-[var(--glass-blur)] rounded-full shadow-none",
   visualStyle === 'soft' && "border border-[var(--md-sys-color-outline-variant)]/10 bg-[var(--md-sys-color-surface-container-lowest)] shadow-[var(--soft-shadow-light)] rounded-full"
 )}>
-  <md-elevation level="1"></md-elevation>
   
   {#each [0, 3, 6, 9] as i}
     {@const color = i === 0 ? 'var(--md-sys-color-error)' : i === 3 ? 'var(--md-sys-color-primary)' : i === 6 ? 'var(--md-sys-color-tertiary)' : 'var(--md-sys-color-on-surface)'}

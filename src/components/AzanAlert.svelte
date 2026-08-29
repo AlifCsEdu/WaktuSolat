@@ -6,6 +6,7 @@
   import { backOut, cubicOut } from "svelte/easing";
   import { onMount } from "svelte";
   import GooeyBackground from "./GooeyBackground.svelte";
+  import { IconButton, Button } from "$lib/components/ui";
 
   let isMorphing = $state(false);
   onMount(() => {
@@ -97,11 +98,11 @@
         </div>
       </div>
       
-      <!-- svelte-ignore a11y_click_events_have_key_events -->
-      <!-- svelte-ignore a11y_no_static_element_interactions -->
-      <md-icon-button onclick={onDismiss}>
-        <md-icon>close</md-icon>
-      </md-icon-button>
+      <IconButton onclick={onDismiss} ariaLabel="Close">
+        {#snippet children()}
+          <X size={18} />
+        {/snippet}
+      </IconButton>
 
       <!-- Glowing slide timeline at the bottom -->
       <div class="absolute bottom-0 inset-x-0 h-1 bg-[var(--md-sys-color-primary)]/10 dark:bg-white/5">
@@ -160,11 +161,11 @@
         <span class="text-[10px] font-mono font-black text-[var(--md-sys-color-primary)] bg-[var(--md-sys-color-primary)]/12 px-2.5 py-1.5 rounded-xl border border-[var(--md-sys-color-primary)]/15 tabular-nums">
           {remainingSeconds}s
         </span>
-        <!-- svelte-ignore a11y_click_events_have_key_events -->
-        <!-- svelte-ignore a11y_no_static_element_interactions -->
-        <md-icon-button onclick={onDismiss}>
-          <md-icon>close</md-icon>
-        </md-icon-button>
+        <IconButton onclick={onDismiss} ariaLabel="Close">
+          {#snippet children()}
+            <X size={18} />
+          {/snippet}
+        </IconButton>
       </div>
     </div>
   </div>
@@ -191,11 +192,11 @@
         </span>
       </span>
       
-      <!-- svelte-ignore a11y_click_events_have_key_events -->
-      <!-- svelte-ignore a11y_no_static_element_interactions -->
-      <md-icon-button onclick={onDismiss} style="--md-icon-button-state-layer-size: 24px; --md-icon-button-icon-size: 16px;">
-        <md-icon>close</md-icon>
-      </md-icon-button>
+      <IconButton onclick={onDismiss} size="sm" ariaLabel="Close">
+        {#snippet children()}
+          <X size={14} />
+        {/snippet}
+      </IconButton>
     </div>
   </div>
 
@@ -231,12 +232,12 @@
       </div>
 
       <div class="flex items-center gap-3 relative z-10 shrink-0">
-        <!-- svelte-ignore a11y_click_events_have_key_events -->
-        <!-- svelte-ignore a11y_no_static_element_interactions -->
-        <md-filled-button onclick={handleDismiss}>
-          <div slot="icon"><X size={16} class="stroke-[2.5]" /></div>
+        <Button variant="filled" onclick={handleDismiss}>
+          {#snippet leadingIcon()}
+            <X size={16} class="stroke-[2.5]" />
+          {/snippet}
           {dismissTapCount > 0 ? t("doubleTapExit") : t("dismissAlert")}
-        </md-filled-button>
+        </Button>
       </div>
 
       <!-- Dynamic sliding indicator at bottom of banner -->
@@ -320,12 +321,17 @@
 
     <!-- Bottom: Close Button with Accidental Dismiss Protection -->
     <div class="z-10 w-full max-w-xs relative flex flex-col items-center gap-3">
-      <!-- svelte-ignore a11y_click_events_have_key_events -->
-      <!-- svelte-ignore a11y_no_static_element_interactions -->
-      <md-filled-button onclick={handleDismiss} class="w-full" style="--md-filled-button-container-shape: 16px;">
-        <div slot="icon"><X size={20} class="stroke-[2.5]" /></div>
+      <Button
+        variant="filled"
+        size="lg"
+        onclick={handleDismiss}
+        class="w-full"
+      >
+        {#snippet leadingIcon()}
+          <X size={20} class="stroke-[2.5]" />
+        {/snippet}
         {dismissTapCount > 0 ? t("doubleTapExit") : t("dismissAlert")}
-      </md-filled-button>
+      </Button>
       {#if dismissTapCount > 0}
         <span 
           in:fly={{ y: 5, duration: 300, easing: backOut }}

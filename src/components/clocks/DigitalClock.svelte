@@ -2,7 +2,6 @@
   import { format } from "date-fns";
   import { appSettings } from "../../state/settings.svelte";
   import { cn } from "../../lib/utils";
-  import "@material/web/elevation/elevation.js";
 
   let time = $state(new Date());
 
@@ -30,7 +29,6 @@
   visualStyle === 'glass' && "bg-[var(--glass-bg)]/35 backdrop-blur-[var(--glass-blur)] border border-[var(--glass-border)] text-[var(--md-sys-color-on-surface)] rounded-[var(--md-sys-shape-corner-extra-large)]",
   visualStyle === 'soft' && "shadow-[var(--soft-shadow-light)] border border-white/20 text-[var(--md-sys-color-primary)] bg-[var(--md-sys-color-surface-container-low)] rounded-[var(--md-sys-shape-corner-extra-large)]"
 )}>
-  <md-elevation level="1"></md-elevation>
 
   <!-- Subtle seconds progress bar at top -->
   <div class="absolute top-0 left-0 right-0 h-[2px] sm:h-[3px] z-10">

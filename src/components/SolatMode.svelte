@@ -20,7 +20,7 @@
   import { format } from "date-fns";
   import { appSettings } from "../state/settings.svelte";
   import { cn } from "../lib/utils";
-  import "@material/web/button/filled-tonal-button.js";
+  import { Button } from "$lib/components/ui";
 
   let {
     prayerName,
@@ -319,14 +319,17 @@
       out:fly={{ y: 10, duration: 300 , isExit: true}}
       class="absolute bottom-24 inset-x-0 mx-auto w-fit z-20 flex flex-col items-center gap-2"
     >
-      <md-filled-tonal-button
+      <Button
+        variant="tonal"
+        size="lg"
         onclick={handleExitClick}
         class="shadow-xl"
-        style="--md-filled-tonal-button-container-shape: 24px; --md-filled-tonal-button-container-height: 48px; --md-filled-tonal-button-label-text-size: 14px;"
       >
-        <span slot="icon" class="flex"><X size={16} class="stroke-[2.5]" /></span>
+        {#snippet leadingIcon()}
+          <X size={16} class="stroke-[2.5]" />
+        {/snippet}
         {exitTapCount > 0 ? appSettings.t("doubleTapExit") : appSettings.t("exitSolatMode")}
-      </md-filled-tonal-button>
+      </Button>
       {#if exitTapCount > 0}
         <span
           in:fly={{ y: 5, duration: 200 }}

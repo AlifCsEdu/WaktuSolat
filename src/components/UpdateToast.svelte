@@ -11,8 +11,7 @@
     return () => clearTimeout(timer);
   });
   import { RefreshCw, X, Sparkles } from "lucide-svelte";
-  import "@material/web/button/filled-button.js";
-  import "@material/web/button/outlined-button.js";
+  import { Button } from "$lib/components/ui";
   import { appSettings } from "../state/settings.svelte.ts";
 
   let { onAccept, onDismiss } = $props<{
@@ -44,7 +43,7 @@
       </div>
       <button 
         onclick={onDismiss}
-        class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)] transition-colors"
+        class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)] transition-colors cursor-pointer"
         aria-label="Dismiss"
       >
         <X size={18} />
@@ -52,25 +51,15 @@
     </div>
     
     <div class="flex items-center justify-end gap-3">
-      <div>
-        <!-- @ts-ignore -->
-        <!-- svelte-ignore a11y_click_events_have_key_events -->
-        <!-- svelte-ignore a11y_no_static_element_interactions -->
-        <md-outlined-button onclick={onDismiss}>
-          {t("updateLater" as any)}
-        </md-outlined-button>
-      </div>
-      <div>
-        <!-- @ts-ignore -->
-        <!-- svelte-ignore a11y_click_events_have_key_events -->
-        <!-- svelte-ignore a11y_no_static_element_interactions -->
-        <md-filled-button onclick={onAccept}>
-          <div class="flex items-center gap-1.5">
-            <RefreshCw size={16} class="animate-spin-slow" />
-            <span>{t("updateRefresh" as any)}</span>
-          </div>
-        </md-filled-button>
-      </div>
+      <Button variant="outlined" onclick={onDismiss}>
+        {t("updateLater" as any)}
+      </Button>
+      <Button variant="filled" onclick={onAccept}>
+        {#snippet leadingIcon()}
+          <RefreshCw size={16} class="animate-spin-slow" />
+        {/snippet}
+        {t("updateRefresh" as any)}
+      </Button>
     </div>
   </div>
 </div>

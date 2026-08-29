@@ -121,7 +121,7 @@ test.describe('Tier 1: Feature Coverage (24 Test Cases)', () => {
       await route.continue();
     });
     await page.goto('/');
-    const mapBtn = page.locator('md-filled-tonal-icon-button[title="View Map"]').or(page.locator('md-filled-tonal-icon-button[title="Papar Peta"]')).first();
+    const mapBtn = page.locator('button[title="View Map"], button[title="Papar Peta"], button[aria-label="View Map"], button[aria-label="Papar Peta"]').first();
     await mapBtn.waitFor({ state: 'visible' });
     const responsePromise = page.waitForResponse('**/malaysia-jakim.geojson');
     await mapBtn.click();
@@ -211,7 +211,7 @@ test.describe('Tier 1: Feature Coverage (24 Test Cases)', () => {
     await clearIndexedDB();
     await expandAdvancedGeneral(page);
     // Locate and click manual save offline download button in advanced setting
-    const saveOfflineBtn = page.locator('md-filled-tonal-button', { hasText: 'Save Offline' }).or(page.locator('md-filled-tonal-button', { hasText: 'Simpan Luar Talian' }));
+    const saveOfflineBtn = page.locator('button', { hasText: 'Save Offline' }).or(page.locator('button', { hasText: 'Simpan Luar Talian' })).first();
     await saveOfflineBtn.scrollIntoViewIfNeeded();
     await saveOfflineBtn.click();
     // Wait for the success toast or check database
@@ -226,7 +226,7 @@ test.describe('Tier 1: Feature Coverage (24 Test Cases)', () => {
     await page.waitForTimeout(500);
     await gotoSettings(page);
     await expandAdvancedGeneral(page);
-    const clearOfflineBtn = page.locator('md-outlined-button', { hasText: 'Clear Cache' }).or(page.locator('md-outlined-button', { hasText: 'Padam Cache' }));
+    const clearOfflineBtn = page.locator('button', { hasText: 'Clear Cache' }).or(page.locator('button', { hasText: 'Padam Cache' })).first();
     await clearOfflineBtn.scrollIntoViewIfNeeded();
     await makeOffline();
     await clearOfflineBtn.click();
@@ -250,7 +250,7 @@ test.describe('Tier 1: Feature Coverage (24 Test Cases)', () => {
     });
     await page.goto('/');
     // Click the notification bell on one of the items
-    const bellBtn = page.locator('md-icon-button').filter({ has: page.locator('svg.lucide-bell-off, svg.lucide-bell-ring') }).first();
+    const bellBtn = page.locator('button').filter({ has: page.locator('svg.lucide-bell-off, svg.lucide-bell-ring') }).first();
     await bellBtn.click();
     // Expect pre-prompt dialog to show up
     await expect(page.locator('h2, h3', { hasText: 'Enable Notifications' }).or(page.locator('h2, h3', { hasText: 'Aktifkan Notifikasi' }))).toBeVisible();
@@ -260,7 +260,7 @@ test.describe('Tier 1: Feature Coverage (24 Test Cases)', () => {
     // Grant notification permission for this test to avoid prompting
     await page.context().grantPermissions(['notifications']);
     await page.goto('/');
-    const bellBtn = page.locator('md-icon-button').filter({ has: page.locator('svg.lucide-bell-off, svg.lucide-bell-ring') }).first();
+    const bellBtn = page.locator('button').filter({ has: page.locator('svg.lucide-bell-off, svg.lucide-bell-ring') }).first();
     await bellBtn.click();
     const storedPrefs = await page.evaluate(() => localStorage.getItem('prayer_notifications_v2'));
     expect(storedPrefs).toBeDefined();
@@ -273,7 +273,7 @@ test.describe('Tier 1: Feature Coverage (24 Test Cases)', () => {
     await selectTab(page, 'notifications');
     
     // Enable All Alerts
-    const enableAllBtn = page.locator('md-filled-tonal-button', { hasText: 'Enable All Alerts' }).or(page.locator('md-filled-tonal-button', { hasText: 'Aktifkan Semua' }));
+    const enableAllBtn = page.locator('button', { hasText: 'Enable All Alerts' }).or(page.locator('button', { hasText: 'Aktifkan Semua' })).first();
     await enableAllBtn.scrollIntoViewIfNeeded();
     await enableAllBtn.click();
     
@@ -283,7 +283,7 @@ test.describe('Tier 1: Feature Coverage (24 Test Cases)', () => {
     expect(prefs.maghrib.enabled).toBe(true);
 
     // Mute All Alerts
-    const muteAllBtn = page.locator('md-outlined-button', { hasText: 'Mute All Alerts' }).or(page.locator('md-outlined-button', { hasText: 'Senyapkan Semua' }));
+    const muteAllBtn = page.locator('button', { hasText: 'Mute All Alerts' }).or(page.locator('button', { hasText: 'Senyapkan Semua' })).first();
     await muteAllBtn.click();
     storedPrefs = await page.evaluate(() => localStorage.getItem('prayer_notifications_v2'));
     prefs = JSON.parse(storedPrefs || '{}');
@@ -390,14 +390,13 @@ test.describe('Tier 1: Feature Coverage (24 Test Cases)', () => {
   test('R3-TC18: Background Volume Adjustments', async ({ page }) => {
     await gotoSettings(page);
     await selectTab(page, 'notifications');
-    const volSlider = page.locator('md-slider').first();
+    const volSlider = page.locator('[role="slider"]').first();
     await volSlider.scrollIntoViewIfNeeded();
-    await page.evaluate(async () => {
-      await customElements.whenDefined('md-slider');
-    });
-    await volSlider.evaluate((el: any) => {
-      el.value = 65;
-      el.dispatchEvent(new Event('change', { bubbles: true }));
+    await volSlider.evaluate((el: HTMLElement) => {
+      el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }));
+      for (let i = 0; i < 13; i++) {
+        el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+      }
     });
     await page.waitForTimeout(200);
     const volumeValue = await page.evaluate(() => {
@@ -680,7 +679,7 @@ test.describe('Tier 2: Boundary & Corner Cases (20 Test Cases)', () => {
     });
 
     await page.goto('/');
-    const bellBtn = page.locator('md-icon-button').filter({ has: page.locator('svg.lucide-bell-off, svg.lucide-bell-ring') }).first();
+    const bellBtn = page.locator('button').filter({ has: page.locator('svg.lucide-bell-off, svg.lucide-bell-ring') }).first();
     await bellBtn.click();
     // Expect blocking warnings or no changes
     await expect(page.locator('body')).toBeVisible();
@@ -694,7 +693,7 @@ test.describe('Tier 2: Boundary & Corner Cases (20 Test Cases)', () => {
       await route.abort('failed');
     });
     // Toggle a setting sound to test fallback synth sounds
-    const testVolBtn = page.locator('md-outlined-button', { hasText: 'Test Sound' }).or(page.locator('md-outlined-button', { hasText: 'Uji Bunyi' })).first();
+    const testVolBtn = page.locator('button', { hasText: 'Test Sound' }).or(page.locator('button', { hasText: 'Uji Bunyi' })).first();
     if (await testVolBtn.isVisible()) {
       await testVolBtn.click();
     }
@@ -839,7 +838,7 @@ test.describe('Tier 2: Boundary & Corner Cases (20 Test Cases)', () => {
     await gotoSettings(page);
     await makeOffline();
     await expandAdvancedGeneral(page);
-    const saveOfflineBtn = page.locator('md-filled-tonal-button', { hasText: 'Save Offline' }).or(page.locator('md-filled-tonal-button', { hasText: 'Simpan Luar Talian' }));
+    const saveOfflineBtn = page.locator('button', { hasText: 'Save Offline' }).or(page.locator('button', { hasText: 'Simpan Luar Talian' })).first();
     await saveOfflineBtn.click();
     // Toast message should indicate network failure
     await expect(page.locator('p', { hasText: 'Failed to save offline.' }).or(page.locator('p', { hasText: 'Gagal disimpan luar talian.' })).or(page.locator('body'))).toBeVisible();
@@ -847,16 +846,17 @@ test.describe('Tier 2: Boundary & Corner Cases (20 Test Cases)', () => {
 
   test('R4-TC42: Interrupted Sync Network Drop', async ({ page, makeOffline }) => {
     await page.goto('/');
+    await gotoSettings(page);
+    await expandAdvancedGeneral(page);
+
     await page.route('**/api/solat/**', async (route) => {
       await makeOffline();
       await route.abort('failed');
     });
     
-    await gotoSettings(page);
-    await expandAdvancedGeneral(page);
-    const saveOfflineBtn = page.locator('md-filled-tonal-button', { hasText: 'Save Offline' }).or(page.locator('md-filled-tonal-button', { hasText: 'Simpan Luar Talian' }));
+    const saveOfflineBtn = page.locator('button', { hasText: 'Save Offline' }).or(page.locator('button', { hasText: 'Simpan Luar Talian' })).first();
     await saveOfflineBtn.click();
-    await expect(page.locator('p', { hasText: 'Failed to save offline.' }).or(page.locator('body'))).toBeVisible();
+    await expect(page.locator('p', { hasText: 'Failed to save offline.' }).or(page.locator('p', { hasText: 'Gagal disimpan luar talian.' })).or(page.locator('body'))).toBeVisible();
   });
 
   test('R4-TC43: Large Year Payload Parse Limits', async ({ page }) => {
@@ -901,7 +901,7 @@ test.describe('Tier 3: Cross-Feature Combinations (5 Test Cases)', () => {
     await makeOffline();
     await page.goto('/');
     await expect(page.locator('h3', { hasText: 'Jadual' }).or(page.locator('h3', { hasText: 'Schedule' }))).toBeVisible();
-    await page.locator('md-filled-tonal-icon-button[title="Calendar"]').or(page.locator('md-filled-tonal-icon-button[title="Kalendar"]')).click();
+    await page.locator('button[title="Calendar"], button[title="Kalendar"], button[aria-label="Calendar"], button[aria-label="Kalendar"], a[href="/calendar"]').first().click();
     await expect(page).toHaveURL(/.*calendar/);
   });
 
@@ -1042,7 +1042,7 @@ test.describe('Tier 4: Real-World Application Scenarios (6 Test Cases)', () => {
     await makeOffline();
     
     // Navigate to TV Mode
-    const tvBtn = page.locator('md-filled-tonal-icon-button[title="Mosque TV Mode"]').or(page.locator('md-filled-tonal-icon-button[title="Mod TV Masjid"]'));
+    const tvBtn = page.locator('button[title="Mosque TV Mode"], button[title="Mod TV Masjid"], button[aria-label="Mosque TV Mode"], button[aria-label="Mod TV Masjid"]').first();
     await tvBtn.click();
     
     // Verify Mosque display runs offline
@@ -1085,7 +1085,7 @@ test.describe('Tier 4: Real-World Application Scenarios (6 Test Cases)', () => {
   test('TC55: Factory Reset and Purge Lifecycle', async ({ page }) => {
     await gotoSettings(page);
     await selectTab(page, 'advanced');
-    const resetBtn = page.locator('md-outlined-button', { hasText: 'Reset Default' }).or(page.locator('md-outlined-button', { hasText: 'Set Semula Asal' }));
+    const resetBtn = page.locator('button', { hasText: 'Reset Default' }).or(page.locator('button', { hasText: 'Set Semula Asal' })).or(page.locator('button', { hasText: 'Set Semula' })).first();
     await resetBtn.scrollIntoViewIfNeeded();
     await resetBtn.click();
     // Check that settings are reset (localStorage should be empty/default)

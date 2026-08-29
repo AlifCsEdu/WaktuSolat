@@ -10,8 +10,7 @@
   import { themeState } from "../state/theme.svelte";
   import { JAKIM_ZONES } from "../lib/zones";
   import { ZONE_COORDINATES } from "../lib/zoneCoordinates";
-  import "@material/web/iconbutton/icon-button.js";
-  import "@material/web/button/filled-tonal-button.js";
+  import { Button, IconButton } from "$lib/components/ui";
 
   // Fix for leaflet default icon
   delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -270,24 +269,32 @@
         </div>
         <div class="flex items-center gap-3 self-end sm:self-auto shrink-0">
           {#if userLocation}
-            <md-filled-tonal-button 
+            <Button 
+              variant="tonal"
+              shape="pill"
+              size="md"
               onclick={() => {
                 if (map) {
                   map.setView([userLocation!.lat, userLocation!.lng], 12);
                 }
               }}
-              style="--md-filled-tonal-button-container-shape: 20px;"
             >
-              <span slot="icon" class="flex items-center justify-center"><Navigation size={18} /></span>
+              {#snippet leadingIcon()}
+                <Navigation size={18} />
+              {/snippet}
               {appSettings.t('yourLocation')}
-            </md-filled-tonal-button>
+            </Button>
           {/if}
-          <button
+          <IconButton
+            variant="tonal"
+            shape="circle"
+            size="lg"
             onclick={onClose}
-            class="w-12 h-12 flex items-center justify-center rounded-full text-[var(--md-sys-color-on-surface)] bg-[var(--md-sys-color-surface-container-high)] hover:bg-[var(--md-sys-color-error-container)] hover:text-[var(--md-sys-color-on-error-container)] shrink-0 shadow-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-sys-color-error)]"
+            title="Close"
+            ariaLabel="Close"
           >
             <X size={24} class="stroke-[3]" />
-          </button>
+          </IconButton>
         </div>
       </div>
       

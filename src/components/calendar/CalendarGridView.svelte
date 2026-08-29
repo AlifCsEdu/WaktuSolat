@@ -16,6 +16,7 @@
   import { appSettings } from "../../state/settings.svelte";
   import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../../lib/transitions";
   import { cubicOut } from "svelte/easing";
+  import { ripple } from "$lib/actions/ripple";
 
   let {
     currentDate,
@@ -120,6 +121,7 @@
           <!-- svelte-ignore a11y_click_events_have_key_events -->
           <!-- svelte-ignore a11y_no_static_element_interactions -->
           <div
+            use:ripple
             onclick={() => {
               if (pData) onSelectDay(pData);
             }}
@@ -153,8 +155,6 @@
                 : undefined}
             style:background-size={!isCurrentMonth ? "8px 8px" : undefined}
           >
-            <!-- svelte-ignore a11y_missing_attribute -->
-            <md-ripple></md-ripple>
             <!-- Top Row: Date labels -->
             <div class="flex justify-center sm:justify-between items-center sm:items-start shrink-0 w-full z-10 relative">
               <span

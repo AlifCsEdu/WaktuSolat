@@ -34,9 +34,9 @@
   import { page } from "$app/stores";
   import { cn } from "../lib/utils";
   import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
-  import "@material/web/iconbutton/icon-button.js";
-  import "@material/web/iconbutton/filled-tonal-icon-button.js";
-  import "@material/web/chips/filter-chip.js";
+  import { FilterChip, IconButton, Button } from "$lib/components/ui";
+  import { ripple } from "$lib/actions/ripple";
+  import { flip } from "svelte/animate";
   import {
     Bell,
     BellOff,
@@ -81,13 +81,6 @@
   const isSettingsOpen = $derived($page.url.pathname === '/settings');
 
   let filter = $state<"all" | "fardu" | "sunnah">("fardu");
-
-  function handleKeyDown(e: KeyboardEvent) {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      (e.currentTarget as HTMLElement).click();
-    }
-  }
 
   type PrayerKey =
     | "imsak"
@@ -242,14 +235,14 @@
         {t("schedule")}
       </h3>
       <div class="flex items-center gap-1">
-        <div class="inline-flex mt-1 w-10 h-10 lg:w-[44px] lg:h-[44px] hover:scale-105 active:scale-95 transition-transform">
-          <md-icon-button
-            role="button"
-            tabindex={0}
-            onkeydown={handleKeyDown}
+        <div class="inline-flex mt-1 hover:scale-105 active:scale-95 transition-transform">
+          <IconButton
+            variant="standard"
+            size="md"
+            shape="circle"
             onclick={onShareClick}
             title={t("share" as any) || "Share"}
-            style="width: 100%; height: 100%;"
+            ariaLabel={t("share" as any) || "Share"}
           >
             <Share2 size={18} class={cn(
               visualStyle === 'retro' && "stroke-[3]",
@@ -257,16 +250,16 @@
               visualStyle === 'soft' && "stroke-[1.5]",
               !(visualStyle === 'retro' || visualStyle === 'glass' || visualStyle === 'soft') && "stroke-[2]"
             )} />
-          </md-icon-button>
+          </IconButton>
         </div>
-        <div class="inline-flex rotate-3 mt-1 w-10 h-10 lg:w-[48px] lg:h-[48px] hover:scale-105 active:scale-95 transition-transform" style:view-transition-name={!isSettingsOpen ? 'settings-transition' : 'none'}>
-          <md-filled-tonal-icon-button
-            role="button"
-            tabindex={0}
-            onkeydown={handleKeyDown}
+        <div class="inline-flex rotate-3 mt-1 hover:scale-105 active:scale-95 transition-transform" style:view-transition-name={!isSettingsOpen ? 'settings-transition' : 'none'}>
+          <IconButton
+            variant="tonal"
+            shape="rounded"
+            size="md"
             onclick={onSettingsClick}
             title={t("settings")}
-            style="--md-filled-tonal-icon-button-container-shape: 20px; width: 100%; height: 100%;"
+            ariaLabel={t("settings")}
           >
             <Settings size={20} class={cn(
               visualStyle === 'retro' && "stroke-[3]",
@@ -274,20 +267,17 @@
               visualStyle === 'soft' && "stroke-[1.5]",
               !(visualStyle === 'retro' || visualStyle === 'glass' || visualStyle === 'soft') && "stroke-[2.5]"
             )} />
-          </md-filled-tonal-icon-button>
+          </IconButton>
         </div>
       </div>
     </div>
 
     <div class="flex gap-2 mb-2 lg:mb-3 px-2 overflow-x-auto no-scrollbar pt-1 pb-1 shrink-0">
-      {#each ["all", "fardu", "sunnah"] as f}
+      {#each ["all", "fardu", "sunnah"] as f (f)}
         {@const isSelected = filter === f}
         <div class="inline-flex shrink-0 hover:scale-[1.04] active:scale-[0.96] transition-transform">
-          <md-filter-chip
-            role="button"
-            tabindex={0}
-            onkeydown={handleKeyDown}
-            selected={isSelected ? true : undefined}
+          <FilterChip
+            selected={isSelected}
             label={
               f === "all"
                 ? t("filterAll" as any)
@@ -296,7 +286,7 @@
                   : t("filterSunat" as any)
             }
             onclick={() => filter = f as any}
-          ></md-filter-chip>
+          />
         </div>
       {/each}
     </div>
@@ -326,7 +316,9 @@
         {@const shapeClasses = isNext ? "rounded-[32px] sm:rounded-[40px]" : isCurrent ? "rounded-[28px] sm:rounded-[36px]" : "rounded-[24px] sm:rounded-[32px]"}
 
         <div
+          animate:flip={{ duration: 300 }}
           in:fly={{ x: -20, duration: 400, delay: index * 40 }}
+          use:ripple
           class={cn(
             "group relative overflow-hidden flex items-center justify-between min-h-0 hover:scale-[0.98] active:scale-[0.96] transition-transform",
             shapeClasses,
@@ -342,8 +334,6 @@
             visualStyle === 'soft' && "shadow-[var(--soft-shadow-light)] border-0"
           )}
         >
-          <md-ripple></md-ripple>
-          <md-elevation level={isNext ? "2" : isCurrent ? "1" : "0"}></md-elevation>
           <div class="flex items-center gap-2 sm:gap-3 z-10 h-full pl-0.5 sm:pl-1">
             <div
               class={cn(
@@ -447,23 +437,25 @@
               {/if}
             </div>
 
-            <md-icon-button
-              role="button"
-              tabindex={0}
-              onkeydown={handleKeyDown}
+            <IconButton
+              variant="standard"
+              size="sm"
+              shape="circle"
               onclick={() => onTogglePreference(key as any)}
+              title={pref.enabled ? "Nyahaktifkan notifikasi" : "Aktifkan notifikasi"}
+              ariaLabel={pref.enabled ? "Nyahaktifkan notifikasi" : "Aktifkan notifikasi"}
               class={cn(
-                "flex items-center justify-center shrink-0",
+                "shrink-0 transition-all duration-300 hover:scale-110 active:scale-90",
                 pref.enabled &&
                   "text-[var(--md-sys-color-primary)] bg-[var(--md-sys-color-primary)]/10",
               )}
             >
               {#if pref.enabled}
-                <BellRing size={18} />
+                <BellRing size={18} class="text-[var(--md-sys-color-primary)] animate-in zoom-in duration-200" />
               {:else}
                 <BellOff size={18} class="opacity-40" />
               {/if}
-            </md-icon-button>
+            </IconButton>
           </div>
         </div>
       {/each}

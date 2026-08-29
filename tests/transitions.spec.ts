@@ -66,7 +66,7 @@ test.describe('Animations & Transitions Automated E2E Verification', () => {
     await expect(listView.first()).toBeVisible();
 
     // Close the calendar modal
-    const closeBtn = page.locator('md-filled-tonal-icon-button.cursor-pointer');
+    const closeBtn = page.getByRole('button', { name: /Close/i }).or(page.locator('button[aria-label="Close"]')).first();
     await closeBtn.click();
 
     // Verify no console errors were thrown during transitions
@@ -88,7 +88,7 @@ test.describe('Animations & Transitions Automated E2E Verification', () => {
     await expect(headerTitle).toBeVisible();
 
     // Close the calendar modal
-    const closeBtn = page.locator('md-filled-tonal-icon-button.cursor-pointer');
+    const closeBtn = page.getByRole('button', { name: /Close/i }).or(page.locator('button[aria-label="Close"]')).first();
     await closeBtn.click();
 
     // Verify no console errors

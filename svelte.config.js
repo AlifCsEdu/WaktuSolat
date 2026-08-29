@@ -6,6 +6,10 @@ const config = {
   preprocess: vitePreprocess(),
   kit: {
     adapter: adapter(),
+    alias: {
+      '@/*': 'src/*',
+      '@': 'src'
+    },
     files: {
       assets: 'public'
     },

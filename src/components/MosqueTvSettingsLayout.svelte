@@ -4,16 +4,12 @@
   import { cn } from "../lib/utils";
   import { appSettings } from "../state/settings.svelte.ts";
 
+  import { Switch, FilterChip, Slider } from "$lib/components/ui";
+
   let { open = $bindable(false) } = $props();
   const settings = $derived(appSettings.settings);
   const updateSettings = (updates: any) => appSettings.updateSettings(updates);
   const t = (key: any, params?: any) => appSettings.t(key, params);
-  function handleKeyDown(e: KeyboardEvent) {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      (e.currentTarget as HTMLElement).click();
-    }
-  }
 </script>
 
 <div class="border border-[var(--md-sys-color-outline)]/10 rounded-2xl overflow-hidden bg-[var(--md-sys-color-surface)] shadow-sm">
@@ -50,11 +46,10 @@
               {t("tvShowWeatherDesc")}
             </p>
           </div>
-          <md-switch
-            selected={settings.tvModeShowWeather !== false}
-            onchange={(e: any) => updateSettings({ tvModeShowWeather: e.target.selected })}
-            icons
-          ></md-switch>
+          <Switch
+            checked={settings.tvModeShowWeather !== false}
+            onchange={(checked) => updateSettings({ tvModeShowWeather: checked })}
+          />
         </div>
 
         <!-- Show Countdown Panel Toggle -->
@@ -67,11 +62,10 @@
               {t("tvShowCountdownDesc")}
             </p>
           </div>
-          <md-switch
-            selected={settings.tvModeShowCountdown !== false}
-            onchange={(e: any) => updateSettings({ tvModeShowCountdown: e.target.selected })}
-            icons
-          ></md-switch>
+          <Switch
+            checked={settings.tvModeShowCountdown !== false}
+            onchange={(checked) => updateSettings({ tvModeShowCountdown: checked })}
+          />
         </div>
 
         <!-- Show Date Bar Toggle -->
@@ -84,11 +78,10 @@
               {t("tvShowDateBarDesc")}
             </p>
           </div>
-          <md-switch
-            selected={settings.tvModeShowDateBar !== false}
-            onchange={(e: any) => updateSettings({ tvModeShowDateBar: e.target.selected })}
-            icons
-          ></md-switch>
+          <Switch
+            checked={settings.tvModeShowDateBar !== false}
+            onchange={(checked) => updateSettings({ tvModeShowDateBar: checked })}
+          />
         </div>
 
         <!-- Clock Colon Blink Toggle -->
@@ -101,11 +94,10 @@
               {t("tvClockColonBlinkDesc")}
             </p>
           </div>
-          <md-switch
-            selected={settings.tvModeClockColonBlink !== false}
-            onchange={(e: any) => updateSettings({ tvModeClockColonBlink: e.target.selected })}
-            icons
-          ></md-switch>
+          <Switch
+            checked={settings.tvModeClockColonBlink !== false}
+            onchange={(checked) => updateSettings({ tvModeClockColonBlink: checked })}
+          />
         </div>
 
         <!-- Clock Hide Seconds Toggle -->
@@ -118,11 +110,10 @@
               {t("tvModeHideSecondsDesc")}
             </p>
           </div>
-          <md-switch
-            selected={!!settings.tvModeHideSeconds}
-            onchange={(e: any) => updateSettings({ tvModeHideSeconds: e.target.selected })}
-            icons
-          ></md-switch>
+          <Switch
+            checked={!!settings.tvModeHideSeconds}
+            onchange={(checked) => updateSettings({ tvModeHideSeconds: checked })}
+          />
         </div>
 
         <!-- Scrolling Ticker Speed -->
@@ -134,30 +125,21 @@
             {t("tvModeTickerSpeedDesc")}
           </span>
           <div class="flex flex-wrap gap-2 mt-3">
-            <md-filter-chip
-              role="button"
-              tabindex={0}
-              onkeydown={handleKeyDown}
+            <FilterChip
               label={t("tickerSpeedSlow")}
               selected={settings.tvModeTickerSpeed === "slow"}
               onclick={() => updateSettings({ tvModeTickerSpeed: "slow" })}
-            ></md-filter-chip>
-            <md-filter-chip
-              role="button"
-              tabindex={0}
-              onkeydown={handleKeyDown}
+            />
+            <FilterChip
               label={t("tickerSpeedMedium")}
               selected={settings.tvModeTickerSpeed === "medium" || !settings.tvModeTickerSpeed}
               onclick={() => updateSettings({ tvModeTickerSpeed: "medium" })}
-            ></md-filter-chip>
-            <md-filter-chip
-              role="button"
-              tabindex={0}
-              onkeydown={handleKeyDown}
+            />
+            <FilterChip
               label={t("tickerSpeedFast")}
               selected={settings.tvModeTickerSpeed === "fast"}
               onclick={() => updateSettings({ tvModeTickerSpeed: "fast" })}
-            ></md-filter-chip>
+            />
           </div>
         </div>
 
@@ -172,16 +154,14 @@
             </span>
           </div>
           <div class="flex items-center gap-3 flex-1 max-w-[250px] w-full self-end sm:self-auto justify-end">
-            <md-slider
-              min="70"
-              max="130"
-              step="5"
+            <Slider
+              min={70}
+              max={130}
+              step={5}
               value={settings.tvModeTickerSize ?? 100}
-              labeled
-              ticks
-              onchange={(e: any) => updateSettings({ tvModeTickerSize: parseInt(e.target.value) })}
+              onchange={(val) => updateSettings({ tvModeTickerSize: val })}
               class="flex-1"
-            ></md-slider>
+            />
             <span class="w-12 text-right font-mono font-bold text-[var(--md-sys-color-primary)] tabular-nums text-sm">
               {settings.tvModeTickerSize ?? 100}%
             </span>

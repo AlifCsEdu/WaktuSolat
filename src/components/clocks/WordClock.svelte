@@ -2,7 +2,6 @@
   import { format } from "date-fns";
   import { appSettings } from "../../state/settings.svelte";
   import { cn } from "../../lib/utils";
-  import "@material/web/elevation/elevation.js";
 
   const numberWords: string[] = [
     "TWELVE", "ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE", "TEN", "ELEVEN", "TWELVE", "THIRTEEN", "FOURTEEN", "FIFTEEN", "SIXTEEN", "SEVENTEEN", "EIGHTEEN", "NINETEEN", "TWENTY"
@@ -56,8 +55,6 @@
   visualStyle === 'glass' && "bg-[var(--glass-bg)]/35 backdrop-blur-[var(--glass-blur)] border border-[var(--glass-border)] text-[var(--md-sys-color-on-surface)] rounded-[var(--md-sys-shape-corner-extra-large)]",
   visualStyle === 'soft' && "shadow-[var(--soft-shadow-light)] border border-white/25 bg-[var(--md-sys-color-surface-container-low)] rounded-[var(--md-sys-shape-corner-extra-large)]"
 )}>
-  
-  <md-elevation level="1"></md-elevation>
 
   <!-- Subtle accent glow in background -->
   {#if visualStyle === 'default'}

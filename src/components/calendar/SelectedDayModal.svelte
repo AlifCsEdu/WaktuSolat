@@ -8,9 +8,8 @@
   import { format, parse } from "date-fns";
   import { ms, enUS } from "date-fns/locale";
   import { appSettings } from "../../state/settings.svelte";
-  import "@material/web/iconbutton/filled-tonal-icon-button.js";
-  import "@material/web/button/filled-button.js";
-  import "@material/web/ripple/ripple.js";
+  import { IconButton, Button } from "$lib/components/ui";
+  import { ripple } from "$lib/actions/ripple";
 
   let { day, onClose, onPrayerSelect } = $props<{
     day: PrayerData | null;
@@ -137,13 +136,17 @@
       )}
       onclick={e => e.stopPropagation()}
     >
-      <!-- @ts-ignore -->
-      <md-filled-tonal-icon-button
-        onclick={onClose}
-        class="absolute top-4 right-4 sm:top-6 sm:right-6 z-50 cursor-pointer"
-      >
-        <X size={20} strokeWidth={iconStroke} />
-      </md-filled-tonal-icon-button>
+      <div class="absolute top-4 right-4 sm:top-6 sm:right-6 z-50">
+        <IconButton
+          variant="tonal"
+          onclick={onClose}
+          ariaLabel="Close"
+        >
+          {#snippet children()}
+            <X size={20} strokeWidth={iconStroke} />
+          {/snippet}
+        </IconButton>
+      </div>
 
       <!-- Header Ticket (Editorial) -->
       <div class="bg-[var(--md-sys-color-surface-container-low)] p-6 sm:p-10 md:p-8 lg:p-10 relative border-b-2 md:border-b-0 md:border-r-2 border-dashed border-[var(--md-sys-color-outline-variant)] select-none md:w-[310px] md:shrink-0 md:flex md:flex-col md:justify-between md:h-full">
@@ -199,19 +202,20 @@
            
            <!-- Bottom Section -->
            <div class="flex flex-wrap items-center gap-2 mt-4 md:mt-auto">
-             <!-- @ts-ignore -->
-             <md-filled-button
+             <Button
+               variant="filled"
                onclick={handleShareDaySchedule}
-               class="cursor-pointer"
-               style="--md-filled-button-container-color: {shareSuccess ? '#25D366' : ''}; --md-filled-button-label-text-color: {shareSuccess ? '#ffffff' : ''}"
+               class={cn(shareSuccess && "bg-[#25D366] text-white hover:bg-[#25D366]/90")}
              >
-               {#if shareSuccess}
-                 <div slot="icon"><Check size={14} strokeWidth={3} /></div>
-               {:else}
-                 <div slot="icon"><Share2 size={14} /></div>
-               {/if}
+               {#snippet leadingIcon()}
+                 {#if shareSuccess}
+                   <Check size={14} strokeWidth={3} />
+                 {:else}
+                   <Share2 size={14} />
+                 {/if}
+               {/snippet}
                {shareSuccess ? t("copied") : (isMalay ? "Kongsi Jadual" : "Share Schedule")}
-             </md-filled-button>
+             </Button>
 
              <!-- Event tags styled as outline pills -->
              {#if events.length > 0}
@@ -237,6 +241,7 @@
             {@const Icon = PRAYER_ICONS[k]}
             {@const isNext = nextPrayerInfo && nextPrayerInfo.name === k}
             <button
+              use:ripple
               in:fly={{ y: 20, duration: 400, delay: idx * 50 }}
               onclick={() => onPrayerSelect(k)}
               class={cn(
@@ -249,8 +254,6 @@
                 visualStyle !== "retro" && "rounded-[24px] sm:rounded-[32px]"
               )}
             >
-              <!-- @ts-ignore -->
-              <md-ripple></md-ripple>
               {#if isNext}
                 <span class="absolute top-3 right-3 px-2 py-0.5 bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] rounded-md text-[8px] font-black uppercase tracking-wider shadow-xs z-10">
                   {isMalay ? "Seterusnya" : "Next"}

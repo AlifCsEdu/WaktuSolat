@@ -13,6 +13,8 @@
   import SelectedDayModal from "./calendar/SelectedDayModal.svelte";
   import { m3Fade as fade, m3Fly as fly, m3Slide as slide, m3Scale as scale, send, receive } from "../lib/transitions";
   import { portal } from "../lib/portal";
+  import { Button, IconButton } from "$lib/components/ui";
+  import { ripple } from "$lib/actions/ripple";
 
   let { 
     isOpen, 
@@ -272,15 +274,15 @@
             </span>
           </div>
 
-          <md-filled-tonal-icon-button
-            role="button"
-            tabindex={0}
-            onkeydown={handleKeyDown}
+          <IconButton
+            variant="tonal"
             onclick={onClose}
-            class="cursor-pointer"
+            ariaLabel="Close"
           >
-            <X size={18} strokeWidth={iconStroke} />
-          </md-filled-tonal-icon-button>
+            {#snippet children()}
+              <X size={18} strokeWidth={iconStroke} />
+            {/snippet}
+          </IconButton>
         </div>
 
         <!-- Custom Bouncy Segmented Control -->
@@ -290,13 +292,13 @@
               {@const isActive = tab.id === activeTab}
               {@const Icon = tab.icon}
               <button
+                use:ripple
                 onclick={() => activeTab = tab.id}
                 class={cn(
                   "relative overflow-hidden flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-[10.5px] sm:text-sm font-black uppercase tracking-tight sm:tracking-wider rounded-xl sm:rounded-full transition-colors whitespace-nowrap cursor-pointer z-10 w-full sm:w-auto",
                   isActive ? "text-[var(--md-sys-color-on-primary)]" : "text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-highest)]"
                 )}
               >
-                <md-ripple></md-ripple>
                 {#if isActive}
                   <div
                     in:receive={{ key: 'active-calendar-tab' }}
@@ -323,6 +325,7 @@
               <div class="flex bg-[var(--md-sys-color-surface-container-high)] p-1 rounded-xl shadow-inner shrink-0 overflow-x-auto no-scrollbar">
                 {#each VIEWS as v (v)}
                   <button
+                    use:ripple
                     onclick={() => view = v}
                     class={cn(
                       "relative overflow-hidden px-4 py-1.5 rounded-lg font-black text-xs transition-all duration-200 whitespace-nowrap cursor-pointer",
@@ -331,7 +334,6 @@
                         : "text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container-highest)]"
                     )}
                   >
-                    <md-ripple></md-ripple>
                     {t(v)}
                   </button>
                 {/each}
@@ -346,42 +348,39 @@
             )}>
               {#if activeTab === 'list'}
                 <div class="shrink-0 sm:mr-1">
-                  <md-filled-tonal-button
-                    role="button"
-                    tabindex={0}
-                    onkeydown={handleKeyDown}
+                  <Button
+                    variant="tonal"
                     onclick={handleCopy}
                     disabled={uniqueDisplayData.length === 0}
                     title={t("copySchedule")}
-                    class="shrink-0 cursor-pointer"
-                    style="--md-filled-tonal-button-container-height: 40px; --md-filled-tonal-button-container-shape: 20px; --md-filled-tonal-button-label-text-size: 13px; --md-filled-tonal-button-horizontal-padding: 16px;"
                   >
-                    {#if isCopied}
-                      <span slot="icon" class="contents"><Check size={16} /></span>
-                    {:else}
-                      <span slot="icon" class="contents"><Copy size={16} /></span>
-                    {/if}
+                    {#snippet leadingIcon()}
+                      {#if isCopied}
+                        <Check size={16} />
+                      {:else}
+                        <Copy size={16} />
+                      {/if}
+                    {/snippet}
                     {isCopied ? t("copied") : t("copy")}
-                  </md-filled-tonal-button>
+                  </Button>
                 </div>
               {/if}
               
               <!-- Jump to Today Button -->
               {#if !(currentDate.getMonth() === new Date().getMonth() && currentDate.getFullYear() === new Date().getFullYear() && view === "monthly")}
-                <!-- svelte-ignore a11y_click_events_have_key_events -->
-                <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <div
                   transition:scale={{ duration: 200, start: 0.8 }}
                   class="shrink-0"
                 >
-                  <md-filled-tonal-button
+                  <Button
+                    variant="tonal"
                     onclick={() => currentDate = new Date()}
-                    class="shrink-0 cursor-pointer"
-                    style="--md-filled-tonal-button-container-height: 40px; --md-filled-tonal-button-container-shape: 20px; --md-filled-tonal-button-label-text-size: 13px; --md-filled-tonal-button-horizontal-padding: 16px;"
                   >
-                    <span slot="icon" class="contents"><Calendar size={16} strokeWidth={iconStroke + 0.5} /></span>
+                    {#snippet leadingIcon()}
+                      <Calendar size={16} strokeWidth={iconStroke + 0.5} />
+                    {/snippet}
                     {t("today") || "Today"}
-                  </md-filled-tonal-button>
+                  </Button>
                 </div>
               {/if}
 
@@ -391,16 +390,16 @@
                 visualStyle === "retro" && "rounded-none",
                 visualStyle === "soft" && "shadow-[var(--soft-shadow-light)] border-[var(--md-sys-color-outline)]/10"
               )}>
-                 <md-filled-icon-button 
-                  role="button"
-                  tabindex={0}
-                  onkeydown={handleKeyDown}
+                <IconButton
+                  variant="filled"
                   onclick={handlePrev}
                   disabled={isLoading}
-                  class="cursor-pointer"
+                  ariaLabel="Previous"
                 >
-                  <ChevronLeft size={20} strokeWidth={iconStroke} />
-                </md-filled-icon-button>
+                  {#snippet children()}
+                    <ChevronLeft size={20} strokeWidth={iconStroke} />
+                  {/snippet}
+                </IconButton>
 
                 <div class="flex items-center justify-center min-w-[120px] px-2 h-8 bg-[var(--md-sys-color-surface)] rounded-xl border border-[var(--md-sys-color-outline)]/10 font-mono font-black text-xs uppercase tracking-widest text-[var(--md-sys-color-on-surface)] overflow-hidden relative">
                   <div class="absolute inset-0 opacity-[0.03] bg-[radial-gradient(circle_at_center,_var(--md-sys-color-on-surface)_1px,_transparent_1px)] bg-[size:4px_4px] pointer-events-none"></div>
@@ -424,16 +423,16 @@
                   {/key}
                 </div>
 
-                <md-filled-icon-button 
-                  role="button"
-                  tabindex={0}
-                  onkeydown={handleKeyDown}
+                <IconButton
+                  variant="filled"
                   onclick={handleNext}
                   disabled={isLoading}
-                  class="cursor-pointer"
+                  ariaLabel="Next"
                 >
-                  <ChevronRight size={20} strokeWidth={iconStroke} />
-                </md-filled-icon-button>
+                  {#snippet children()}
+                    <ChevronRight size={20} strokeWidth={iconStroke} />
+                  {/snippet}
+                </IconButton>
               </div>
 
               {#if showLoadingState}

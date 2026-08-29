@@ -32,8 +32,6 @@
 </script>
 
 <div class={cn("relative p-6 sm:p-8 rounded-[var(--md-sys-shape-corner-extra-large)] space-y-6 overflow-hidden", getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface-container-high)] ring-1 ring-[var(--md-sys-color-outline)]/10 shadow-sm"))}>
-  <md-elevation></md-elevation>
-  
   <!-- Mosque Mode Title & Header -->
   <div class="flex items-center gap-3 relative z-10">
     <div class="w-10 h-10 rounded-2xl bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center">

@@ -4,9 +4,6 @@
     "allowJs": true,
     "experimentalDecorators": true,
     "useDefineForClassFields": false,
-    "verbatimModuleSyntax": false,
-    "paths": {
-      "@/*": ["./*"]
-    }
+    "verbatimModuleSyntax": false
   }
 }

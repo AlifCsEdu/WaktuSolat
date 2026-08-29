@@ -4,7 +4,9 @@ import {
   extractLocalityName,
   mapStateToZone,
   matchZoneFromGeocode,
-  cleanText
+  cleanText,
+  calculateHaversineDistance,
+  findNearestZone
 } from "../src/lib/geocoding";
 import { JAKIM_ZONES } from "../src/lib/zones";
 
@@ -132,4 +134,33 @@ describe("Geocoding Service Helpers", () => {
       }
     }
   });
+
+  it("should calculate Haversine distances accurately between coordinate pairs", () => {
+    const dist = calculateHaversineDistance(3.13, 101.68, 3.07, 101.51);
+    expect(dist).toBeGreaterThan(15);
+    expect(dist).toBeLessThan(25);
+
+    expect(calculateHaversineDistance(3.13, 101.68, 3.13, 101.68)).toBe(0);
+  });
+
+  it("should resolve nearest JAKIM zones based on offline GPS coordinates", () => {
+    // Kuala Lumpur (3.1390, 101.6869) -> WLY01
+    expect(findNearestZone(3.1390, 101.6869)).toBe("WLY01");
+
+    // Shah Alam (3.0738, 101.5183) -> SGR01
+    expect(findNearestZone(3.0738, 101.5183)).toBe("SGR01");
+
+    // George Town Penang (5.4141, 100.3288) -> PNG01
+    expect(findNearestZone(5.4141, 100.3288)).toBe("PNG01");
+
+    // Johor Bahru (1.4927, 103.7414) -> JHR02
+    expect(findNearestZone(1.4927, 103.7414)).toBe("JHR02");
+
+    // Kota Kinabalu (5.9804, 116.0735) -> SBH07
+    expect(findNearestZone(5.9804, 116.0735)).toBe("SBH07");
+
+    // Kuching (1.5533, 110.3592) -> SWK08
+    expect(findNearestZone(1.5533, 110.3592)).toBe("SWK08");
+  });
 });
+

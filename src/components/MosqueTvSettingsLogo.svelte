@@ -7,6 +7,8 @@
   import { StorageManager } from "../lib/StorageManager";
   import { onMount, onDestroy } from "svelte";
 
+  import { Switch, Slider } from "$lib/components/ui";
+
   let { open = $bindable(false) } = $props();
   const settings = $derived(appSettings.settings);
   const updateSettings = (updates: any) => appSettings.updateSettings(updates);
@@ -124,11 +126,10 @@
               {t("tvLogoEnabledDesc")}
             </p>
           </div>
-          <md-switch
-            selected={!!settings.mosqueLogoEnabled}
-            onchange={(e: any) => updateSettings({ mosqueLogoEnabled: e.target.selected })}
-            icons
-          ></md-switch>
+          <Switch
+            checked={!!settings.mosqueLogoEnabled}
+            onchange={(checked) => updateSettings({ mosqueLogoEnabled: checked })}
+          />
         </div>
 
         {#if settings.mosqueLogoEnabled}
@@ -240,16 +241,14 @@
                     {t("logoSizeLabel")}
                   </span>
                   <div class="flex items-center gap-2 max-w-[200px] w-full justify-end">
-                    <md-slider
-                      min="32"
-                      max="120"
-                      step="4"
+                    <Slider
+                      min={32}
+                      max={120}
+                      step={4}
                       value={settings.mosqueLogoSize ?? 48}
-                      labeled
-                      ticks
-                      onchange={(e: any) => updateSettings({ mosqueLogoSize: parseInt(e.target.value) })}
+                      onchange={(val) => updateSettings({ mosqueLogoSize: val })}
                       class="flex-1"
-                    ></md-slider>
+                    />
                     <span class="text-xs font-mono font-bold text-[var(--md-sys-color-primary)] w-12 text-right">
                       {settings.mosqueLogoSize ?? 48}px
                     </span>
@@ -261,16 +260,14 @@
                     {t("logoPaddingLabel")}
                   </span>
                   <div class="flex items-center gap-2 max-w-[200px] w-full justify-end">
-                    <md-slider
-                      min="0"
-                      max="24"
-                      step="2"
+                    <Slider
+                      min={0}
+                      max={24}
+                      step={2}
                       value={settings.mosqueLogoPadding ?? 0}
-                      labeled
-                      ticks
-                      onchange={(e: any) => updateSettings({ mosqueLogoPadding: parseInt(e.target.value) })}
+                      onchange={(val) => updateSettings({ mosqueLogoPadding: val })}
                       class="flex-1"
-                    ></md-slider>
+                    />
                     <span class="text-xs font-mono font-bold text-[var(--md-sys-color-primary)] w-12 text-right">
                       {settings.mosqueLogoPadding ?? 0}px
                     </span>

@@ -7,6 +7,7 @@
   import { getIslamicEvent, getHijriFormatted } from "../../lib/holidays";
   import { cn } from "../../lib/utils";
   import { appSettings } from "../../state/settings.svelte";
+  import { ripple } from "$lib/actions/ripple";
   import type { PrayerData, PrayerKey } from "../../types";
 
   let { 
@@ -165,6 +166,7 @@
           {#if timeStr && Icon}
             {@const isNext = nextPrayerKey === k}
             <button
+              use:ripple
               in:fly={{ y: 10, duration: 400, delay: idx * 40 }}
               onclick={() => onPrayerSelect({ key: k as PrayerKey, time: timeStr.substring(0, 5), dateValue: day.date, hijriValue: day.hijri })}
               class={cn(
@@ -178,7 +180,6 @@
                 visualStyle !== "retro" && "rounded-[32px] sm:rounded-[40px]"
               )}
             >
-              <md-ripple></md-ripple>
               {#if isNext}
                 <span class="absolute top-2.5 right-2.5 px-2 py-0.5 bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] rounded-md text-[7px] font-black uppercase tracking-wider shadow-xs z-10">
                   {isMalay ? "Seterusnya" : "Next"}
@@ -258,6 +259,7 @@
           {#each timesToDisplay as k}
             {@const Icon = PRAYER_ICONS[k]}
             <button
+              use:ripple
               onclick={() => onPrayerSelect({
                 key: k,
                 time: day[k] ? day[k].substring(0, 5) : "--:--",
@@ -270,7 +272,6 @@
                 visualStyle === "retro" && "border-2 border-[var(--md-sys-color-on-surface)] rounded-none"
               )}
             >
-              <md-ripple></md-ripple>
               <div class="p-1 rounded-full bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] relative z-10 shrink-0">
                 <Icon size={12} strokeWidth={iconStroke} />
               </div>
@@ -444,6 +445,7 @@
             {#each timesToDisplay as k}
               <td class="py-1.5 px-0.5 text-center align-middle border-r border-[var(--md-sys-color-outline)]/8">
                 <button 
+                  use:ripple
                   onclick={() => onPrayerSelect({
                     key: k,
                     time: day[k] ? day[k].substring(0, 5) : "--:--",
@@ -458,7 +460,6 @@
                   )}
                   title={t(k)}
                 >
-                  <md-ripple></md-ripple>
                   <span class="tabular-nums font-sans text-[11px] sm:text-xs font-black whitespace-nowrap">{day[k] ? day[k].substring(0, 5) : "--:--"}</span>
                 </button>
               </td>

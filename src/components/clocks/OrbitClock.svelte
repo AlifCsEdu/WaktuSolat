@@ -2,7 +2,6 @@
   import { cn } from "../../lib/utils";
   import { appSettings } from "../../state/settings.svelte";
   import { createTime } from "./useTime.svelte";
-  import "@material/web/elevation/elevation.js";
 
   interface Props {
     movement: 'tick' | 'sweep';
@@ -27,8 +26,6 @@
   visualStyle === 'glass' && "border-2 border-[var(--glass-border)] bg-[var(--glass-bg)]/35 backdrop-blur-[var(--glass-blur)] rounded-full shadow-none",
   visualStyle === 'soft' && "border border-white/10 shadow-[var(--soft-shadow-light)] bg-[var(--md-sys-color-surface-container-low)] rounded-full"
 )}>
-  <!-- @ts-ignore -->
-  <md-elevation level="1"></md-elevation>
   
   <!-- Outer Orbit (Seconds) -->
   <div class={cn(

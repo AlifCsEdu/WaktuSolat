@@ -5,10 +5,6 @@
   import '../index.css';
   import '../m3e-layout.css';
   
-  // Custom Web Component registration
-  import "@material/web/button/filled-tonal-button.js";
-  import "@material/web/slider/slider.js";
-
   // Transitions
   import { m3Fade as fade, m3Fly as fly } from '../lib/transitions';
 

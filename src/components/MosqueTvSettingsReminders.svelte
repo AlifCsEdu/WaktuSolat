@@ -8,6 +8,8 @@
   import { onDestroy } from "svelte";
   import type { TvModeReminderImage } from "../types";
 
+  import { Switch, Slider } from "$lib/components/ui";
+
   let { open = $bindable(false) } = $props();
   const settings = $derived(appSettings.settings);
   const updateSettings = (updates: any) => appSettings.updateSettings(updates);
@@ -279,11 +281,10 @@
                     <GripVertical size={16} />
                   </div>
                   
-                  <md-switch
-                    selected={!!reminder.enabled}
-                    onchange={(e: any) => handleUpdateReminder(reminder.id, { enabled: e.target.selected })}
-                    icons
-                  ></md-switch>
+                  <Switch
+                    checked={!!reminder.enabled}
+                    onchange={(checked) => handleUpdateReminder(reminder.id, { enabled: checked })}
+                  />
                   
                   <button
                     type="button"
@@ -970,15 +971,14 @@
                                <!-- svelte-ignore a11y_label_has_associated_control -->
                                <label class="text-xs font-bold block text-[var(--md-sys-color-on-surface)]">
                                  Pattern Opacity
-                                 <md-slider
-                                   min="0.01"
-                                   max="0.4"
-                                   step="0.01"
+                                 <Slider
+                                   min={0.01}
+                                   max={0.4}
+                                   step={0.01}
                                    value={reminder.bgPatternOpacity ?? 0.07}
-                                   labeled
-                                   onchange={(e: any) => handleUpdateReminder(reminder.id, { bgPatternOpacity: parseFloat(e.target.value) })}
+                                   onchange={(val) => handleUpdateReminder(reminder.id, { bgPatternOpacity: val })}
                                    class="mt-1"
-                                 ></md-slider>
+                                 />
                                </label>
                              </div>
                            {/if}
@@ -992,15 +992,14 @@
                              <!-- svelte-ignore a11y_label_has_associated_control -->
                              <label class="text-xs font-bold block text-[var(--md-sys-color-on-surface)]">
                                Display Duration (s)
-                               <md-slider
-                                 min="5"
-                                 max="120"
-                                 step="5"
+                               <Slider
+                                 min={5}
+                                 max={120}
+                                 step={5}
                                  value={reminder.duration ?? settings.tvModeReminderInterval ?? 15}
-                                 labeled
-                                 onchange={(e: any) => handleUpdateReminder(reminder.id, { duration: parseInt(e.target.value) })}
+                                 onchange={(val) => handleUpdateReminder(reminder.id, { duration: val })}
                                  class="mt-1"
-                               ></md-slider>
+                               />
                              </label>
                            </div>
                            
@@ -1029,15 +1028,14 @@
                                <label class="text-xs font-bold block text-[var(--md-sys-color-on-surface)]">
                                  Chime Volume
                                  <div class="flex items-center gap-3">
-                                   <md-slider
-                                     min="10"
-                                     max="100"
-                                     step="10"
+                                   <Slider
+                                     min={10}
+                                     max={100}
+                                     step={10}
                                      value={reminder.chimeVolume ?? 80}
-                                     labeled
-                                     onchange={(e: any) => handleUpdateReminder(reminder.id, { chimeVolume: parseInt(e.target.value) })}
+                                     onchange={(val) => handleUpdateReminder(reminder.id, { chimeVolume: val })}
                                      class="flex-1 mt-1"
-                                   ></md-slider>
+                                   />
                                    <span class="font-mono text-xs font-bold w-8 text-right text-[var(--md-sys-color-primary)]">
                                      {reminder.chimeVolume ?? 80}%
                                    </span>

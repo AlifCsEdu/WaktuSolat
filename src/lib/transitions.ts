@@ -15,7 +15,6 @@ export const expressiveExit = expoIn;
 const DEFAULT_ENTER_DURATION = 400;
 const DEFAULT_EXIT_DURATION = 250;
 
-const isNativeSupported = () => typeof document !== 'undefined' && !!document.startViewTransition;
 const isReducedMotion = () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /**
@@ -30,9 +29,6 @@ export function m3Fly(node: Element, params: any = {}) {
       easing: cubicOut,
       delay: params.delay ?? 0,
     });
-  }
-  if (isNativeSupported() && !params.force) {
-    return { duration: 0 };
   }
   const isExit = params.isExit || false;
   return svelteFly(node, {
@@ -55,9 +51,6 @@ export function m3Fade(node: Element, params: any = {}) {
       delay: params.delay ?? 0,
     });
   }
-  if (isNativeSupported() && !params.force) {
-    return { duration: 0 };
-  }
   const isExit = params.isExit || false;
   return svelteFade(node, {
     duration: params.duration ?? (isExit ? DEFAULT_EXIT_DURATION : DEFAULT_ENTER_DURATION),
@@ -76,9 +69,6 @@ export function m3Slide(node: Element, params: any = {}) {
       easing: cubicOut,
       delay: params.delay ?? 0,
     });
-  }
-  if (isNativeSupported() && !params.force) {
-    return { duration: 0 };
   }
   const isExit = params.isExit || false;
   return svelteSlide(node, {
@@ -100,9 +90,6 @@ export function m3Scale(node: Element, params: any = {}) {
       delay: params.delay ?? 0,
     });
   }
-  if (isNativeSupported() && !params.force) {
-    return { duration: 0 };
-  }
   const isExit = params.isExit || false;
   return svelteScale(node, {
     duration: params.duration ?? (isExit ? DEFAULT_EXIT_DURATION : DEFAULT_ENTER_DURATION),
@@ -112,6 +99,9 @@ export function m3Scale(node: Element, params: any = {}) {
     opacity: params.opacity ?? 0,
   });
 }
+
+// Aliases for standard Svelte transition names
+export { m3Scale as scale, m3Fly as fly, m3Fade as fade, m3Slide as slide };
 
 // Crossfade for FLIP transitions with prefers-reduced-motion safety
 const [rawSend, rawReceive] = crossfade({
