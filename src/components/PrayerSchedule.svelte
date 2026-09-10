@@ -300,7 +300,7 @@
       </div>
     {/if}
 
-    <div class="flex flex-col gap-1.5 sm:gap-2 flex-1 justify-start px-1 sm:px-2 pb-2 lg:pb-0 min-h-0 overflow-y-auto no-scrollbar">
+    <div class="m3e-schedule-cards flex flex-col gap-1.5 sm:gap-2 lg:gap-1.5 flex-1 justify-between px-1 sm:px-2 pb-2 lg:pb-0 min-h-0">
       {#each timesToDisplay as key, index (key)}
         {@const isNext = key === nextPrayerKey}
         {@const isCurrent = key === currentPrayerKey}
@@ -321,26 +321,27 @@
           use:ripple
           class={cn(
             "group relative overflow-hidden flex items-center justify-between min-h-0 hover:scale-[0.98] active:scale-[0.96] transition-transform",
+            "px-3 sm:px-4 lg:px-4 xl:px-5 py-1 sm:py-1.5 lg:py-2 shrink min-h-[56px] sm:min-h-[62px] lg:min-h-0",
             shapeClasses,
             isNext
-              ? "bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] shadow-md px-[var(--sys-spacing-edge)] py-3 sm:py-4 z-20 flex-[1.05] min-h-[64px] lg:min-h-[76px] shrink-0"
+              ? "bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] shadow-md z-20 flex-[1.1]"
               : isCurrent
-                ? "bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)] shadow-sm px-[var(--sys-spacing-edge)] py-3 sm:py-3.5 z-10 flex-[1.02] min-h-[60px] lg:min-h-[70px] shrink-0"
+                ? "bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)] shadow-sm z-10 flex-[1.05]"
                 : isFardhu
-                  ? "bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] px-[var(--sys-spacing-edge)] py-2.5 sm:py-3 shadow-sm flex-1 min-h-[56px] lg:min-h-[64px] shrink-0"
-                  : "bg-[var(--md-sys-color-surface-container-low)] text-[var(--md-sys-color-on-surface-variant)] px-[var(--sys-spacing-edge)] py-2.5 sm:py-3 flex-1 min-h-[56px] lg:min-h-[64px] shrink-0",
+                  ? "bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] shadow-sm flex-1"
+                  : "bg-[var(--md-sys-color-surface-container-low)] text-[var(--md-sys-color-on-surface-variant)] flex-1",
             visualStyle === 'retro' && "border-2 border-[var(--md-sys-color-on-surface)] shadow-[3px_3px_0px_0px_var(--md-sys-color-on-surface)]",
             visualStyle === 'glass' && "backdrop-blur-[8px] border border-[var(--glass-border)]",
             visualStyle === 'soft' && "shadow-[var(--soft-shadow-light)] border-0"
           )}
         >
-          <div class="flex items-center gap-2 sm:gap-3 z-10 h-full pl-0.5 sm:pl-1">
+          <div class="flex items-center gap-2 sm:gap-3 z-10 h-full pl-0.5 sm:pl-1 min-w-0">
             <div
               class={cn(
-                "w-8 h-8 sm:w-10 sm:h-10 lg:w-11 lg:h-11 rounded-full flex items-center justify-center shrink-0 shadow-sm transition-transform hover:scale-110",
+                "w-7 h-7 sm:w-8 sm:h-8 lg:w-8 lg:h-8 xl:w-9 xl:h-9 rounded-full flex items-center justify-center shrink-0 shadow-sm transition-transform hover:scale-110",
                 isNext ? "rotate-12 hover:rotate-[15deg]" : isCurrent ? "-rotate-12 hover:-rotate-[15deg]" : "",
                 isNext
-                  ? "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-md w-10 h-10 sm:w-12 sm:h-12"
+                  ? "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-md"
                   : isCurrent
                     ? "bg-[var(--md-sys-color-tertiary)]/20 text-[var(--md-sys-color-on-tertiary-container)] ring-1 ring-[var(--md-sys-color-tertiary)]/20"
                     : isFardhu
@@ -351,59 +352,53 @@
               <Icon
                 size={isNext || isCurrent ? 18 : 16}
                 class={cn(
-                  isNext || isCurrent
-                    ? "sm:w-5 sm:h-5 lg:w-6 lg:h-6"
-                    : "w-4 h-4 sm:w-[18px] sm:h-[18px]",
+                  "w-4 h-4 xl:w-[18px] xl:h-[18px]",
                   visualStyle === 'retro' && "stroke-[3]",
                   (visualStyle === 'glass' || visualStyle === 'soft') && "stroke-[1.5]"
                 )}
                 strokeWidth={isNext ? 2.5 : 2}
               />
             </div>
-            <div class="flex flex-col justify-center">
-              <div class="flex items-center gap-1.5 sm:gap-2">
+            <div class="flex flex-col justify-center min-w-0">
+              <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
                 <span
                   class={cn(
-                    "font-black tracking-tight",
-                    isNext
-                      ? "text-4xl sm:text-5xl lg:text-6xl drop-shadow-sm font-black"
-                      : isCurrent
-                        ? "text-3xl sm:text-4xl lg:text-5xl font-black"
-                        : "text-2xl sm:text-3xl lg:text-4xl lg:leading-tight font-bold",
+                    "text-base sm:text-lg lg:text-base xl:text-lg 2xl:text-xl font-black leading-tight truncate tracking-tight",
+                    isNext && "drop-shadow-sm",
                   )}
                 >
                   {getPrayerDisplayName(key)}
                 </span>
                 {#if !isFardhu && !isNext && !isCurrent}
-                  <span class="hidden sm:inline-block px-1.5 py-0.5 rounded-md bg-[var(--md-sys-color-surface)] text-[10px] font-black uppercase tracking-widest opacity-70">
+                  <span class="hidden sm:inline-block px-1.5 py-0.5 rounded-md bg-[var(--md-sys-color-surface)] text-[9px] sm:text-[10px] font-bold uppercase tracking-wider opacity-70 leading-none shrink-0">
                     {t("filterSunat" as any)}
                   </span>
                 {/if}
               </div>
               {#if isNext}
-                <span class="text-[10px] sm:text-xs lg:text-sm font-black uppercase tracking-[0.15em] opacity-80 mt-0.5 max-w-fit border-b-[2px] border-[var(--md-sys-color-primary)]/20 pb-0.5">
+                <span class="text-[9px] sm:text-[10px] font-bold leading-none uppercase tracking-[0.12em] opacity-80 mt-0.5 max-w-fit border-b border-[var(--md-sys-color-primary)]/20 pb-0.5">
                   {t("nextPrayer")}
                 </span>
               {/if}
               {#if isCurrent}
-                <span class="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[var(--md-sys-color-tertiary)] mt-1 flex items-center gap-1.5">
-                  <span class="w-2 h-2 rounded-full bg-[var(--md-sys-color-tertiary)] animate-pulse"></span>
+                <span class="text-[9px] sm:text-[10px] font-bold leading-none uppercase tracking-widest text-[var(--md-sys-color-tertiary)] mt-0.5 flex items-center gap-1.5">
+                  <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[var(--md-sys-color-tertiary)] animate-pulse"></span>
                   {t("currentPrayer")}
                 </span>
               {/if}
             </div>
           </div>
 
-          <div class="z-10 ml-auto flex items-center gap-2 sm:gap-4 pr-1 sm:pr-2">
+          <div class="z-10 ml-auto flex items-center gap-2 sm:gap-4 pr-1 sm:pr-2 shrink-0">
             <div class="flex flex-col items-end">
               <span
                 class={cn(
-                  "font-black tracking-[-0.04em] tabular-nums whitespace-nowrap",
+                  "text-base sm:text-lg lg:text-lg xl:text-xl 2xl:text-2xl font-black tabular-nums whitespace-nowrap leading-tight tracking-[-0.02em]",
                   isNext
-                    ? "text-4xl sm:text-5xl lg:text-6xl text-[var(--md-sys-color-primary)] font-black"
+                    ? "text-[var(--md-sys-color-primary)]"
                     : isCurrent
-                      ? "text-3xl sm:text-4xl lg:text-5xl font-black text-[var(--md-sys-color-on-tertiary-container)]"
-                      : "text-2xl sm:text-3xl lg:text-4xl lg:leading-tight font-bold",
+                      ? "text-[var(--md-sys-color-on-tertiary-container)]"
+                      : "text-[var(--md-sys-color-on-surface)]",
                 )}
               >
                 {timeLabel}
@@ -411,7 +406,7 @@
               {#if settings.showIqamah && isFardhu && pref.iqamahOffset !== undefined}
                 <span
                   class={cn(
-                    "text-[9px] sm:text-[10px] lg:text-[11px] font-bold uppercase tracking-wider block text-right mt-0.5",
+                    "text-[9px] sm:text-[10px] font-bold leading-none uppercase tracking-wider block text-right mt-0.5",
                     isNext
                       ? "text-[var(--md-sys-color-primary)]/70"
                       : isCurrent
@@ -424,12 +419,7 @@
               {/if}
               {#if pref.preAlert > 0 && pref.enabled}
                 <span
-                  class={cn(
-                    "text-[8px] sm:text-[9px] lg:text-[10px] font-bold uppercase tracking-wider opacity-60 block text-right",
-                    settings.showIqamah && isFardhu && pref.iqamahOffset !== undefined
-                      ? "mt-0.5"
-                      : "mt-0.5",
-                  )}
+                  class="text-[8px] sm:text-[9px] font-bold leading-none uppercase tracking-wider opacity-60 block text-right mt-0.5"
                 >
                   -{pref.preAlert}
                   {t("minutesShort")} {t("alert")}

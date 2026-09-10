@@ -278,17 +278,18 @@
 
 <svelte:window onmousedown={handleClickOutside} />
 
-<div class="relative z-50 lg:static" bind:this={containerRef}>
-  <div class="inline-flex flex-shrink-0 hover:scale-110 hover:rotate-[15deg] active:scale-90 active:rotate-[-5deg] transition-transform duration-300">
+<div class="relative z-50 lg:static shrink-0" bind:this={containerRef}>
+  <div class="inline-flex shrink-0 transition-transform duration-200 hover:scale-105 active:scale-95">
     <IconButton
       variant="tonal"
-      shape="rounded"
-      size="lg"
+      shape="circle"
+      size="md"
+      class="w-11 h-11"
       onclick={() => isOpen = !isOpen}
       title={appSettings.t("themeSettings")}
       ariaLabel={appSettings.t("themeSettings")}
     >
-      <Palette size={22} class="stroke-[2.5]" />
+      <Palette size={20} class="stroke-[2.2]" />
     </IconButton>
   </div>
 

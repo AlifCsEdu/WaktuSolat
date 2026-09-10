@@ -249,3 +249,53 @@ Ensure that Svelte DOM updates are properly synchronized with `document.startVie
 ### Verification Plan
 - [ ] Build verification: `npm run build` succeeds without compilation errors.
 - [ ] Playwright E2E verification: Run Playwright tests that click through Map, Weather, and Settings triggers, confirming that they open without console errors or exceptions.
+
+## Follow-up — 2026-09-10T12:46:35Z
+
+Comprehensive visual redesign, architectural polish, and deep bug remediation for AlurWaktu to achieve true, uncompromised Google Material 3 Expressive design standards, fix layout scaling and broken interactions across Location, Calendar, Prayer Schedule, and Settings.
+
+Working directory: c:\Users\alif325\Documents\WIndsurf projeks\waktu-solat-expressive
+Integrity mode: development
+
+## Requirements
+
+### R1. Unified Floating M3 Expressive App Bar & Header
+- Redesign the global top navigation bar into a unified 56px-tall floating M3 pill container:
+  - Location chip on the left with consistent height (44px), matching corner radii, refined typography, and tactile hover/press state layers.
+  - Symmetrical 44px/48px tonal circular action buttons (Map, Calendar, Mosque TV, Theme, Fullscreen) with unified icon sizing and strokes.
+  - Eliminate awkward nested wrappers, irregular button shapes, and misaligned baselines shown in the user screenshot.
+
+### R2. Calendar Grid Polish & Selected Day Modal Z-Index Fix
+- Fix the portal z-index stacking conflict between `FullCalendar.svelte` (`z-[9000]`) and `SelectedDayModal.svelte` (`z-[60]`) so that clicking any date immediately presents the detailed prayer schedule dialog in the foreground.
+- Overhaul the calendar grid into authentic Google Material 3 Expressive style: bold typography, prominent date badges, clean Hijri markers, today indicator, and fluid month navigation.
+
+### R3. Prayer Schedule Dynamic Responsive Sizing
+- Refactor `PrayerSchedule.svelte` cards from rigid fixed heights (`shrink-0` with minimum heights) to an adaptive, responsive CSS layout that fills the vertical viewport on desktop/tablet without vertical scrollbars, while providing graceful scrolling and proportional padding on compact mobile viewports.
+
+### R4. Settings Stability, Mosque TV Mode & Exit Handling
+- Eliminate the infinite reactive loop in `MosqueTvSettingsReminders.svelte` causing browser freezes and unclickable controls on the Mosque TV mode tab.
+- Guarantee that Settings modal exit triggers (close button, backdrop click, Esc key) work 100% reliably at all times.
+
+### R5. Location Update Toast Dismissal
+- Update `LocationToast.svelte` and `locationState.dismissPrompt()` so that clicking the (X) button immediately dismisses the prompt and clears `autoUpdatedZone`.
+
+## Verification Resources
+- Existing test suites in `tests/` directory (Playwright E2E and Vitest unit tests).
+- Automated test scripts: `npm run lint`, `npm run test`, and `npx playwright test`.
+
+## Acceptance Criteria
+
+### Visual Design & Aesthetics
+- [ ] Top bar presents a unified, premium Material 3 Expressive layout with harmonious button sizing, icon scaling, and fluid responsiveness.
+- [ ] Visual polish matches official Google M3 Expressive specifications across colors, typography, elevations, and corner radii.
+
+### Interactivity & Bug Fixes
+- [ ] Clicking any day in the Calendar Grid immediately opens `SelectedDayModal` in the foreground with full prayer time details.
+- [ ] Settings modal opens, navigates tabs (including Mosque TV mode) with 0 freezes or lockups, and closes reliably on click/escape.
+- [ ] Location update toast (X) button closes the prompt immediately upon clicking.
+- [ ] Prayer Schedule cards scale naturally across mobile, tablet, and desktop viewports.
+
+### Verification
+- [ ] `npm run lint` passes with 0 TypeScript/ESLint errors.
+- [ ] `npm run build` generates a production-ready client bundle without compilation warnings or errors.
+- [ ] `npx playwright test` and `npm run test` pass 100% of test cases.

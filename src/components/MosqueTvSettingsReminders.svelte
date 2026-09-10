@@ -5,7 +5,7 @@
   import { appSettings } from "../state/settings.svelte.ts";
   import { playSynthesizedChime } from "./TvModeReminderCard.svelte";
   import { saveAsset, getAssetBlob, deleteAsset } from "../lib/db";
-  import { onDestroy } from "svelte";
+  import { onDestroy, untrack } from "svelte";
   import type { TvModeReminderImage } from "../types";
 
   import { Switch, Slider } from "$lib/components/ui";
@@ -22,24 +22,35 @@
   let dragActiveReminder = $state<string | null>(null);
   let reminderUploadErrors = $state<Record<string, string>>({});
 
-  $effect(() => {
-    let active = true;
+  const reminderAssetKeys = $derived.by(() => {
     const list = settings.tvModeRemindersList || [];
-    const keysToLoad: string[] = [];
+    const keys: string[] = [];
     for (const r of list) {
       const imgs = r.images || [];
       for (const img of imgs) {
         if (img.isUploaded && img.assetKey) {
-          keysToLoad.push(img.assetKey);
+          keys.push(img.assetKey);
         }
       }
+    }
+    return keys.sort().join(",");
+  });
+
+  $effect(() => {
+    let active = true;
+    const keysStr = reminderAssetKeys;
+    const keysToLoad = keysStr ? keysStr.split(",") : [];
+
+    const currentThumbs = untrack(() => reminderLocalThumbnails);
+    if (keysToLoad.length === 0 && Object.keys(currentThumbs).length === 0) {
+      return;
     }
 
     const loadThumbs = async () => {
       const thumbs: Record<string, string> = {};
       for (const key of keysToLoad) {
-        if (reminderLocalThumbnails[key]) {
-          thumbs[key] = reminderLocalThumbnails[key];
+        if (currentThumbs[key]) {
+          thumbs[key] = currentThumbs[key];
           continue;
         }
         try {
@@ -51,15 +62,24 @@
           console.error(`Failed to load reminder thumbnail for ${key}:`, e);
         }
       }
+
       if (active) {
-        Object.keys(reminderLocalThumbnails).forEach(key => {
-          if (!thumbs[key]) {
-            try { URL.revokeObjectURL(reminderLocalThumbnails[key]); } catch (e) {}
-          }
-        });
-        reminderLocalThumbnails = thumbs;
+        const oldKeys = Object.keys(currentThumbs);
+        const newKeys = Object.keys(thumbs);
+        const isIdentical =
+          oldKeys.length === newKeys.length &&
+          oldKeys.every((k) => currentThumbs[k] === thumbs[k]);
+
+        if (!isIdentical) {
+          oldKeys.forEach((key) => {
+            if (!thumbs[key]) {
+              try { URL.revokeObjectURL(currentThumbs[key]); } catch (e) {}
+            }
+          });
+          reminderLocalThumbnails = thumbs;
+        }
       } else {
-        Object.values(thumbs).forEach(u => {
+        Object.values(thumbs).forEach((u) => {
           try { URL.revokeObjectURL(u); } catch (e) {}
         });
       }

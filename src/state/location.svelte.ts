@@ -17,6 +17,7 @@ class LocationState {
   private lastCheckTime = 0;
   private isAutoZoneChange = false;
   private checkInterval: any;
+  private autoDismissTimeout: any = null;
 
   constructor() {
     if (typeof window !== "undefined") {
@@ -92,9 +93,13 @@ class LocationState {
                 this.setZone(foundZone, true);
                 this.autoUpdatedZone = foundZone;
                 this.autoUpdatedLocationName = locName;
-                setTimeout(() => {
+                if (this.autoDismissTimeout) {
+                  clearTimeout(this.autoDismissTimeout);
+                }
+                this.autoDismissTimeout = setTimeout(() => {
                   this.autoUpdatedZone = null;
                   this.autoUpdatedLocationName = null;
+                  this.autoDismissTimeout = null;
                 }, 5000);
               }
             } else if (appSettings.settings.locationMode === 'manual') {
@@ -121,14 +126,19 @@ class LocationState {
   acceptPrompt() {
     if (this.promptZone) {
       this.setZone(this.promptZone, false);
-      this.promptZone = null;
-      this.promptLocationName = null;
+      this.dismissPrompt();
     }
   }
 
   dismissPrompt() {
     this.promptZone = null;
     this.promptLocationName = null;
+    this.autoUpdatedZone = null;
+    this.autoUpdatedLocationName = null;
+    if (this.autoDismissTimeout) {
+      clearTimeout(this.autoDismissTimeout);
+      this.autoDismissTimeout = null;
+    }
   }
 }
 

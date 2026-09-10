@@ -113,6 +113,13 @@
   };
 </script>
 
+<svelte:window onkeydown={(e) => {
+  if (day && dateObj && e.key === 'Escape') {
+    e.stopPropagation();
+    onClose();
+  }
+}} />
+
 {#if day && dateObj}
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -120,7 +127,7 @@
     use:portal
     in:fade={{ duration: 200 }} 
     out:fade={{ duration: 200 , isExit: true}}
-    class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/85 backdrop-blur-sm sm:overflow-y-auto"
+    class="fixed inset-0 z-[9100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/85 backdrop-blur-sm sm:overflow-y-auto"
     onclick={onClose}
   >
     <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -129,7 +136,7 @@
       in:fly={{ y: 200, duration: 400, opacity: 0 }}
       out:fly={{ y: 200, duration: 300, opacity: 0 , isExit: true}}
       class={cn(
-        "bg-[var(--md-sys-color-surface)] w-full max-h-[92dvh] md:max-h-[80dvh] overflow-y-auto md:overflow-hidden custom-scrollbar max-w-lg md:max-w-3xl rounded-t-[40px] sm:rounded-[40px] md:rounded-[40px] shadow-2xl flex flex-col md:flex-row transition-all duration-300 relative",
+        "bg-[var(--md-sys-color-surface)] w-full max-h-[92dvh] md:max-h-[80dvh] overflow-y-auto md:overflow-hidden custom-scrollbar max-w-lg md:max-w-3xl rounded-t-[40px] sm:rounded-[40px] md:rounded-[40px] shadow-2xl flex flex-col md:flex-row transition-all duration-300 relative border border-[var(--md-sys-color-outline-variant)]/20",
         visualStyle === "retro" && "border-[4px] border-[var(--md-sys-color-on-surface)] rounded-none shadow-[12px_12px_0px_0px_var(--md-sys-color-on-surface)]",
         visualStyle === "glass" && "border-none",
         visualStyle === "soft" && "shadow-[var(--soft-shadow-heavy)] rounded-t-[48px] sm:rounded-[48px] border border-[var(--md-sys-color-outline)]/5"
@@ -149,11 +156,7 @@
       </div>
 
       <!-- Header Ticket (Editorial) -->
-      <div class="bg-[var(--md-sys-color-surface-container-low)] p-6 sm:p-10 md:p-8 lg:p-10 relative border-b-2 md:border-b-0 md:border-r-2 border-dashed border-[var(--md-sys-color-outline-variant)] select-none md:w-[310px] md:shrink-0 md:flex md:flex-col md:justify-between md:h-full">
-        <!-- Ticket Punch Holes -->
-        <div class="absolute w-8 h-8 rounded-full bg-neutral-950/90 z-20 -left-4 md:left-auto md:-right-4 bottom-[-16px] md:top-[-16px]"></div>
-        <div class="absolute w-8 h-8 rounded-full bg-neutral-950/90 z-20 -right-4 bottom-[-16px] md:bottom-[-16px]"></div>
-
+      <div class="bg-[var(--md-sys-color-surface-container-low)] p-6 sm:p-10 md:p-8 lg:p-10 relative border-b md:border-b-0 md:border-r border-[var(--md-sys-color-outline-variant)]/25 select-none md:w-[310px] md:shrink-0 md:flex md:flex-col md:justify-between md:h-full">
         <div class="flex flex-col md:justify-between justify-start h-full gap-6 md:gap-0 relative z-0">
            <!-- Top Section -->
            <div class="flex flex-col">

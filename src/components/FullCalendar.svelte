@@ -159,6 +159,19 @@
     }
   };
 
+  const handleWindowKeyDown = (e: KeyboardEvent) => {
+    if (!isOpen) return;
+    if (e.key === 'Escape') {
+      if (selectedPrayer) {
+        selectedPrayer = null;
+      } else if (selectedDayData) {
+        selectedDayData = null;
+      } else {
+        onClose();
+      }
+    }
+  };
+
   let allAvailableData = $derived.by(() => {
     const res: PrayerData[] = [];
     Object.values(dataCache).forEach(arr => {
@@ -214,6 +227,8 @@
   const VIEWS = ["daily", "weekly", "monthly"] as const;
 </script>
 
+<svelte:window onkeydown={handleWindowKeyDown} />
+
 {#if isOpen}
   <div
     use:portal
@@ -265,7 +280,7 @@
             </div>
           </div>
 
-          <div class="hidden lg:flex flex-col items-end border-l border-[var(--md-sys-color-outline)]/12 pl-6 ml-auto mr-4 select-none font-mono">
+          <div class="hidden lg:flex flex-col items-end border-l border-[var(--md-sys-color-outline)]/12 pl-6 ml-auto mr-4 select-none font-sans">
             <span class="text-3xl font-black text-[var(--md-sys-color-primary)] leading-none tracking-tighter">
               {format(currentDate, "yyyy")}
             </span>
@@ -384,29 +399,27 @@
                 </div>
               {/if}
 
-              <!-- Chunky Cassette Nav Block -->
+              <!-- Material 3 Expressive Floating Pill Nav Container -->
               <div class={cn(
-                "flex items-center gap-1.5 sm:gap-2 bg-[var(--md-sys-color-surface-container-highest)] p-1 rounded-2xl border-2 border-[var(--md-sys-color-on-surface)] shadow-[4px_4px_0px_0px_var(--md-sys-color-on-surface)] shrink-0 transition-all duration-250 hover:translate-y-[-1px] hover:shadow-[5px_5px_0px_0px_var(--md-sys-color-on-surface)]",
-                visualStyle === "retro" && "rounded-none",
-                visualStyle === "soft" && "shadow-[var(--soft-shadow-light)] border-[var(--md-sys-color-outline)]/10"
+                "flex items-center gap-1 sm:gap-1.5 rounded-full bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline-variant)]/30 shadow-xs p-1 shrink-0 transition-all duration-200",
+                visualStyle === "glass" && "bg-[var(--glass-bg)]/60 backdrop-blur-md border-[var(--glass-border)]"
               )}>
-                <IconButton
-                  variant="filled"
+                <button
+                  type="button"
+                  use:ripple
                   onclick={handlePrev}
                   disabled={isLoading}
-                  ariaLabel="Previous"
+                  aria-label="Previous"
+                  class="w-9 h-9 rounded-full flex items-center justify-center bg-[var(--md-sys-color-surface-container)] hover:bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-on-surface)] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
                 >
-                  {#snippet children()}
-                    <ChevronLeft size={20} strokeWidth={iconStroke} />
-                  {/snippet}
-                </IconButton>
+                  <ChevronLeft size={20} strokeWidth={iconStroke} />
+                </button>
 
-                <div class="flex items-center justify-center min-w-[120px] px-2 h-8 bg-[var(--md-sys-color-surface)] rounded-xl border border-[var(--md-sys-color-outline)]/10 font-mono font-black text-xs uppercase tracking-widest text-[var(--md-sys-color-on-surface)] overflow-hidden relative">
-                  <div class="absolute inset-0 opacity-[0.03] bg-[radial-gradient(circle_at_center,_var(--md-sys-color-on-surface)_1px,_transparent_1px)] bg-[size:4px_4px] pointer-events-none"></div>
+                <div class="flex items-center justify-center min-w-[130px] sm:min-w-[150px] px-3 h-9 font-sans font-bold text-sm sm:text-base tracking-tight text-[var(--md-sys-color-on-surface)] overflow-hidden relative select-none">
                   {#key `${format(currentDate, "MMMM yyyy")}-${view}-${activeTab}`}
                     <div
-                      transition:fly={{ y: 10, duration: 200 }}
-                      class="truncate relative z-10"
+                      transition:fly={{ y: 8, duration: 200 }}
+                      class="truncate relative z-10 font-bold"
                     >
                       {#if activeTab === "list"}
                         {#if view === "daily"}
@@ -423,16 +436,16 @@
                   {/key}
                 </div>
 
-                <IconButton
-                  variant="filled"
+                <button
+                  type="button"
+                  use:ripple
                   onclick={handleNext}
                   disabled={isLoading}
-                  ariaLabel="Next"
+                  aria-label="Next"
+                  class="w-9 h-9 rounded-full flex items-center justify-center bg-[var(--md-sys-color-surface-container)] hover:bg-[var(--md-sys-color-surface-container-highest)] text-[var(--md-sys-color-on-surface)] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
                 >
-                  {#snippet children()}
-                    <ChevronRight size={20} strokeWidth={iconStroke} />
-                  {/snippet}
-                </IconButton>
+                  <ChevronRight size={20} strokeWidth={iconStroke} />
+                </button>
               </div>
 
               {#if showLoadingState}
@@ -478,10 +491,11 @@
                   visualStyle === 'glass' && "bg-[var(--glass-bg)]/40 backdrop-blur-md border-[var(--glass-border)] shadow-inner"
                 )}>
                   <CalendarGridView 
-                    {currentDate}
+                    bind:currentDate
                     monthData={uniqueDisplayData} 
                     isLoading={showLoadingState}
                     onSelectDay={(day) => selectedDayData = day}
+                    onNavigateDate={(d) => currentDate = d}
                   />
                 </div>
               {:else if activeTab === "list"}
@@ -527,7 +541,7 @@
   <div 
     use:portal
     transition:fade={{ duration: 200 }}
-    class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm"
+    class="fixed inset-0 z-[9200] flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm"
     onclick={() => selectedPrayer = null}
   >
     <div 

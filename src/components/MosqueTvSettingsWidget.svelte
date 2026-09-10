@@ -3,7 +3,7 @@
   import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
   import { cn } from "../lib/utils";
   import { appSettings } from "../state/settings.svelte.ts";
-  import { onMount, onDestroy } from "svelte";
+  import { onMount, onDestroy, untrack } from "svelte";
   import { saveAsset, getAssetBlob, deleteAsset } from "../lib/db";
 
   import { Slider, FilterChip } from "$lib/components/ui";
@@ -21,41 +21,58 @@
   let dragActive = $state(false);
   let uploadError = $state<string | null>(null);
 
+  const slideshowAssetKeys = $derived.by(() => {
+    return slidesList
+      .filter((url) => url.startsWith("local:"))
+      .map((url) => url.replace("local:", ""))
+      .sort()
+      .join(",");
+  });
+
   $effect(() => {
     let active = true;
-    const urls = (settings.tvModeSlideshowUrls || "")
-      .split("\n")
-      .map(line => line.trim())
-      .filter(Boolean);
+    const keysStr = slideshowAssetKeys;
+    const keysToLoad = keysStr ? keysStr.split(",") : [];
+
+    const currentThumbs = untrack(() => localThumbnails);
+    if (keysToLoad.length === 0 && Object.keys(currentThumbs).length === 0) {
+      return;
+    }
 
     const loadThumbnails = async () => {
       const thumbs: Record<string, string> = {};
-      for (const url of urls) {
-        if (url.startsWith("local:")) {
-          const key = url.replace("local:", "");
-          if (localThumbnails[key]) {
-            thumbs[key] = localThumbnails[key];
-            continue;
+      for (const key of keysToLoad) {
+        if (currentThumbs[key]) {
+          thumbs[key] = currentThumbs[key];
+          continue;
+        }
+        try {
+          const blob = await getAssetBlob(key);
+          if (blob) {
+            thumbs[key] = URL.createObjectURL(blob);
           }
-          try {
-            const blob = await getAssetBlob(key);
-            if (blob) {
-              thumbs[key] = URL.createObjectURL(blob);
-            }
-          } catch (e) {
-            console.error(`Failed to load thumbnail for ${key}:`, e);
-          }
+        } catch (e) {
+          console.error(`Failed to load thumbnail for ${key}:`, e);
         }
       }
+
       if (active) {
-        Object.keys(localThumbnails).forEach(key => {
-          if (!thumbs[key]) {
-            try { URL.revokeObjectURL(localThumbnails[key]); } catch (e) {}
-          }
-        });
-        localThumbnails = thumbs;
+        const oldKeys = Object.keys(currentThumbs);
+        const newKeys = Object.keys(thumbs);
+        const isIdentical =
+          oldKeys.length === newKeys.length &&
+          oldKeys.every((k) => currentThumbs[k] === thumbs[k]);
+
+        if (!isIdentical) {
+          oldKeys.forEach((key) => {
+            if (!thumbs[key]) {
+              try { URL.revokeObjectURL(currentThumbs[key]); } catch (e) {}
+            }
+          });
+          localThumbnails = thumbs;
+        }
       } else {
-        Object.values(thumbs).forEach(u => {
+        Object.values(thumbs).forEach((u) => {
           try { URL.revokeObjectURL(u); } catch (e) {}
         });
       }

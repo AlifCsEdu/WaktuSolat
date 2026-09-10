@@ -71,9 +71,15 @@ test.describe('Tier 1: Feature Coverage (24 Test Cases)', () => {
     await makeOnline();
     // Setup onboarding bypass and default zone
     await page.addInitScript(() => {
-      localStorage.setItem('waktu-solat-onboarding-completed', 'true');
-      localStorage.setItem('waktu-solat-zone', 'WLY01');
+      try {
+        localStorage.setItem('waktu-solat-onboarding-completed', 'true');
+        localStorage.setItem('waktu-solat-zone', 'WLY01');
+      } catch (e) {}
     });
+  });
+
+  test.afterEach(async ({ makeOnline }) => {
+    await makeOnline();
   });
 
   // --- R1: PWA Asset Cache & Offline Load ---
@@ -506,9 +512,11 @@ test.describe('Tier 1: Feature Coverage (24 Test Cases)', () => {
 
   test('R4-TC24: Caching Status Verification (Settings)', async ({ page, writeIndexedDB }) => {
     await page.addInitScript(() => {
-      localStorage.setItem('waktu-solat-settings', JSON.stringify({
-        offlineCachedRange: 'month'
-      }));
+      try {
+        localStorage.setItem('waktu-solat-settings', JSON.stringify({
+          offlineCachedRange: 'month'
+        }));
+      } catch (e) {}
     });
     await writeIndexedDB('prayer-times', MOCK_ZONE, MOCK_COMPRESSED_DATA);
     await gotoSettings(page);
@@ -523,9 +531,15 @@ test.describe('Tier 2: Boundary & Corner Cases (20 Test Cases)', () => {
   test.beforeEach(async ({ page, makeOnline }) => {
     await makeOnline();
     await page.addInitScript(() => {
-      localStorage.setItem('waktu-solat-onboarding-completed', 'true');
-      localStorage.setItem('waktu-solat-zone', 'WLY01');
+      try {
+        localStorage.setItem('waktu-solat-onboarding-completed', 'true');
+        localStorage.setItem('waktu-solat-zone', 'WLY01');
+      } catch (e) {}
     });
+  });
+
+  test.afterEach(async ({ makeOnline }) => {
+    await makeOnline();
   });
 
   // --- R1: PWA Asset Cache & Offline Load ---
@@ -891,9 +905,15 @@ test.describe('Tier 3: Cross-Feature Combinations (5 Test Cases)', () => {
   test.beforeEach(async ({ page, makeOnline }) => {
     await makeOnline();
     await page.addInitScript(() => {
-      localStorage.setItem('waktu-solat-onboarding-completed', 'true');
-      localStorage.setItem('waktu-solat-zone', 'WLY01');
+      try {
+        localStorage.setItem('waktu-solat-onboarding-completed', 'true');
+        localStorage.setItem('waktu-solat-zone', 'WLY01');
+      } catch (e) {}
     });
+  });
+
+  test.afterEach(async ({ makeOnline }) => {
+    await makeOnline();
   });
 
   test('TC45: Offline Navigation & Cache Storage Refresh', async ({ page, makeOffline, writeIndexedDB }) => {
@@ -1004,11 +1024,18 @@ test.describe('Tier 3: Cross-Feature Combinations (5 Test Cases)', () => {
 
 test.describe('Tier 4: Real-World Application Scenarios (6 Test Cases)', () => {
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, makeOnline }) => {
+    await makeOnline();
     await page.addInitScript(() => {
-      localStorage.setItem('waktu-solat-onboarding-completed', 'true');
-      localStorage.setItem('waktu-solat-zone', 'WLY01');
+      try {
+        localStorage.setItem('waktu-solat-onboarding-completed', 'true');
+        localStorage.setItem('waktu-solat-zone', 'WLY01');
+      } catch (e) {}
     });
+  });
+
+  test.afterEach(async ({ makeOnline }) => {
+    await makeOnline();
   });
 
   test('TC50: The Incognito Sandbox Mode', async ({ page }) => {
@@ -1059,8 +1086,10 @@ test.describe('Tier 4: Real-World Application Scenarios (6 Test Cases)', () => {
       range: 'month'
     };
     await writeIndexedDB('prayer-times', MOCK_ZONE, ramadanTransitionData);
-    await makeOffline();
     await page.goto('/');
+    await waitForServiceWorker(page);
+    await makeOffline();
+    await page.reload();
     await expect(page.locator('body')).toBeVisible();
   });
 

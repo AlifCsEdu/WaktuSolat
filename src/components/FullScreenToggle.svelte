@@ -31,20 +31,21 @@
 </script>
 
 <div
-  class="inline-flex shrink-0 transition-transform hover:scale-105 active:scale-95"
+  class="inline-flex shrink-0 transition-transform duration-200 hover:scale-105 active:scale-95"
 >
   <IconButton
     variant="tonal"
-    shape="rounded"
+    shape="circle"
     size="md"
+    class="w-11 h-11"
     onclick={toggleFullscreen}
     title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
     ariaLabel={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
   >
     {#if isFullscreen}
-      <Minimize class="w-6 h-6 stroke-[2.5]" />
+      <Minimize class="w-5 h-5 stroke-[2.2]" />
     {:else}
-      <Maximize class="w-6 h-6 stroke-[2.5]" />
+      <Maximize class="w-5 h-5 stroke-[2.2]" />
     {/if}
   </IconButton>
 </div>

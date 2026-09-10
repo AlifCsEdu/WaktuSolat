@@ -219,31 +219,31 @@ const handleScroll = (e: Event) => {
   </div>
 {/if}
 
-<div class="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+<div class="flex items-center gap-2 flex-1 min-w-0">
   <button
     use:ripple
     onclick={() => isOpen = true}
     class={cn(
-      "relative flex-1 max-w-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] hover:bg-[var(--md-sys-color-primary)] hover:text-[var(--md-sys-color-on-primary)] rounded-[20px] sm:rounded-[24px] overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-sys-color-primary)] px-3 py-2.5 sm:px-4 sm:py-3 flex items-center justify-between group shadow-sm border border-[var(--md-sys-color-outline)]/5 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200",
+      "relative flex-1 max-w-full h-11 bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] hover:bg-[var(--md-sys-color-surface-container-highest)] rounded-full overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-sys-color-primary)] px-2.5 sm:px-3 flex items-center justify-between group shadow-xs border border-[var(--md-sys-color-outline-variant)]/40 hover:scale-[1.01] active:scale-[0.98] transition-all duration-200 cursor-pointer",
       visualStyle === 'retro' && "border-2 border-[var(--md-sys-color-on-surface)] shadow-[4px_4px_0px_0px_var(--md-sys-color-on-surface)] hover:shadow-[2px_2px_0px_0px_var(--md-sys-color-on-surface)]",
       visualStyle === 'glass' && "bg-[var(--glass-bg)] backdrop-blur-[8px] border border-[var(--glass-border)]",
       visualStyle === 'soft' && "shadow-[var(--soft-shadow-light)] border-0"
     )}
   >
     <div class="flex items-center w-full min-w-0">
-      <div class="w-9 h-9 lg:w-11 lg:h-11 bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] rounded-[10px] sm:rounded-[12px] flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110 shadow-sm mr-3">
-        <MapPin size={20} class={cn(
-          "lg:w-6 lg:h-6",
+      <div class="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] flex items-center justify-center shrink-0 shadow-xs mr-2.5">
+        <MapPin size={16} class={cn(
+          "shrink-0",
           visualStyle === 'retro' && "stroke-[3]",
           (visualStyle === 'glass' || visualStyle === 'soft') && "stroke-[1.5]",
-          !(visualStyle === 'retro' || visualStyle === 'glass' || visualStyle === 'soft') && "stroke-[2.5]"
+          !(visualStyle === 'retro' || visualStyle === 'glass' || visualStyle === 'soft') && "stroke-[2.2]"
         )} />
       </div>
       <div class="flex flex-col overflow-hidden min-w-0 flex-1 text-left justify-center">
-        <span class="text-lg sm:text-xl lg:text-2xl leading-tight font-black tracking-tighter truncate w-full group-hover:text-[var(--md-sys-color-primary)] transition-colors">
+        <span class="text-sm font-bold text-[var(--md-sys-color-on-surface)] truncate leading-tight">
           {selectedLabel}
         </span>
-        <span class="text-[10px] sm:text-[11px] lg:text-xs font-bold tracking-wide flex items-center gap-1.5 truncate mt-0.5 opacity-80">
+        <span class="text-[11px] font-medium text-[var(--md-sys-color-on-surface-variant)] flex items-center gap-1.5 truncate leading-none mt-0.5">
           {#if STATE_FLAGS[selectedState]}
             <div class="flex items-center justify-center w-[16px] h-[12px] sm:w-[18px] sm:h-[14px] bg-white overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.1)] shrink-0 rounded-[2px]">
               <img
@@ -254,7 +254,7 @@ const handleScroll = (e: Event) => {
             </div>
           {/if}
           <span class="truncate">{selectedState}</span>
-          <span class="font-sans font-black ml-auto flex-shrink-0 opacity-70">
+          <span class="font-sans font-bold ml-auto flex-shrink-0 opacity-70 text-[10px]">
             {selectedZone}
           </span>
         </span>
@@ -265,8 +265,9 @@ const handleScroll = (e: Event) => {
   <div class="shrink-0 inline-flex hover:scale-105 active:scale-95 transition-transform duration-200" style:view-transition-name={!isMapOpen ? 'map-transition' : 'none'}>
     <IconButton
       variant="tonal"
-      shape="rounded"
-      size="lg"
+      shape="circle"
+      size="md"
+      class="w-11 h-11"
       onclick={() => {
         if (document.startViewTransition) {
           document.startViewTransition(async () => {
@@ -281,10 +282,10 @@ const handleScroll = (e: Event) => {
       ariaLabel={t("viewMap")}
     >
       <MapIcon class={cn(
-        "w-[22px] h-[22px] lg:w-[24px] lg:h-[24px]",
+        "w-5 h-5",
         visualStyle === 'retro' && "stroke-[3]",
         (visualStyle === 'glass' || visualStyle === 'soft') && "stroke-[1.5]",
-        !(visualStyle === 'retro' || visualStyle === 'glass' || visualStyle === 'soft') && "stroke-[2.5]"
+        !(visualStyle === 'retro' || visualStyle === 'glass' || visualStyle === 'soft') && "stroke-[2.2]"
       )} />
     </IconButton>
   </div>

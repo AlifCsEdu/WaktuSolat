@@ -19,19 +19,39 @@
   import { ripple } from "$lib/actions/ripple";
 
   let {
-    currentDate,
+    currentDate = $bindable(),
     monthData,
     onSelectDay,
+    onNavigateDate,
     isLoading = false,
   }: {
     currentDate: Date;
     monthData: PrayerData[];
     onSelectDay: (day: PrayerData) => void;
+    onNavigateDate?: (d: Date) => void;
     isLoading?: boolean;
   } = $props();
 
   let settings = $derived(appSettings.settings);
   let visualStyle = $derived(settings.visualStyle);
+  const isMalay = $derived(settings.language === "ms");
+  const t = (key: string) => appSettings.t(key as any);
+
+  const handleCellClick = (d: Date, pData: PrayerData | undefined, isCurrentMonth: boolean) => {
+    if (isCurrentMonth) {
+      if (pData) onSelectDay(pData);
+    } else {
+      if (onNavigateDate) onNavigateDate(d);
+      currentDate = d;
+    }
+  };
+
+  const handleCellKeyDown = (e: KeyboardEvent, d: Date, pData: PrayerData | undefined, isCurrentMonth: boolean) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleCellClick(d, pData, isCurrentMonth);
+    }
+  };
 
   // Build 6-row calendar grid starting from Monday
   let monthStart = $derived(startOfMonth(currentDate));
@@ -103,7 +123,7 @@
       <div
         in:fly={{ y: 15, duration: 350, easing: cubicOut }}
         out:fade={{ duration: 150, isExit: true }}
-        class="grid grid-cols-7 grid-rows-6 gap-1.5 sm:gap-2 h-full w-full justify-items-center items-center sm:justify-items-stretch sm:items-stretch"
+        class="grid grid-cols-7 grid-rows-6 gap-1 sm:gap-2 h-full w-full justify-items-stretch items-stretch"
       >
         {#each days as d, i (d.toISOString())}
           {@const isCurrentMonth = isSameMonth(d, monthStart)}
@@ -113,34 +133,31 @@
           {@const pData = dataMap.get(jakimDateStr)}
           
           {@const hijriParts = pData ? pData.hijri.split('-') : null}
+          {@const hijriDayNum = hijriParts ? parseInt(hijriParts[2], 10) : null}
           {@const events = pData ? getAllEventsForDay(d, pData.hijri) : getAllEventsForDay(d, null)}
           {@const hasPublicHoliday = events.some((e) => e.type === "public")}
           {@const dayOfWeek = d.getDay()}
           {@const isWeekend = dayOfWeek === 0 || dayOfWeek === 6}
+          {@const cellAriaLabel = isCurrentMonth 
+            ? `${formattedDate} ${format(d, "MMMM yyyy", { locale: isMalay ? ms : enUS })}${hijriDayNum ? `, ${hijriDayNum} Hijri` : ''}${isCurrentDay ? ` (${t("today") || "Today"})` : ''}${hasPublicHoliday ? ` - ${events.find((e) => e.type === "public")?.title}` : ''}`
+            : `${format(d, "d MMMM yyyy", { locale: isMalay ? ms : enUS })} - ${t("navigate") || "Navigate to month"}`}
 
-          <!-- svelte-ignore a11y_click_events_have_key_events -->
-          <!-- svelte-ignore a11y_no_static_element_interactions -->
-          <div
+          <button
+            type="button"
             use:ripple
-            onclick={() => {
-              if (pData) onSelectDay(pData);
-            }}
+            onclick={() => handleCellClick(d, pData, isCurrentMonth)}
+            onkeydown={(e) => handleCellKeyDown(e, d, pData, isCurrentMonth)}
+            aria-label={cellAriaLabel}
             class={cn(
-              "relative flex flex-col items-center sm:items-stretch transition-all duration-250 border select-none group cursor-pointer overflow-hidden",
-              "hover:-translate-y-[2px] hover:scale-[1.02] active:translate-y-[1px] active:scale-[0.98]",
-              "w-full aspect-square max-w-[44px] sm:max-w-none sm:aspect-auto sm:h-full justify-center sm:justify-between p-1.5 sm:p-2.5",
-              "rounded-full sm:rounded-[24px] lg:rounded-[28px]",
-              isCurrentMonth
-                ? "text-[var(--md-sys-color-on-surface)]"
-                : "opacity-35 text-[var(--md-sys-color-on-surface-variant)]/20",
+              "relative flex flex-col items-stretch transition-all duration-200 border select-none group cursor-pointer overflow-hidden text-left",
+              "w-full h-full min-h-[48px] justify-between p-1 sm:p-2 sm:px-2.5",
+              "rounded-2xl sm:rounded-[24px] lg:rounded-[28px]",
+              "hover:-translate-y-[1px] hover:shadow-sm active:translate-y-[1px] active:scale-[0.98]",
               isCurrentDay
-                ? "bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] border-transparent shadow-md shadow-[var(--md-sys-color-primary)]/20 font-bold z-[2]"
+                ? "bg-[var(--md-sys-color-primary-container)]/25 border-2 border-[var(--md-sys-color-primary)] ring-2 ring-[var(--md-sys-color-primary)]/20 shadow-sm font-bold z-[2]"
                 : isCurrentMonth
-                  ? "bg-[var(--md-sys-color-surface-container-low)] hover:bg-[var(--md-sys-color-surface-container-highest)] hover:border-[var(--md-sys-color-primary)]/30 border-[var(--md-sys-color-outline)]/5 text-[var(--md-sys-color-on-surface)]"
-                  : "bg-transparent border-transparent",
-              isCurrentMonth &&
-                !isCurrentDay &&
-                "shadow-[2px_2px_0px_0px_var(--md-sys-color-outline-variant)] hover:shadow-[4px_4px_0px_0px_var(--md-sys-color-primary)]/25",
+                  ? "bg-[var(--md-sys-color-surface-container-low)] hover:bg-[var(--md-sys-color-surface-container-highest)] hover:border-[var(--md-sys-color-primary)]/30 border-[var(--md-sys-color-outline-variant)]/20 text-[var(--md-sys-color-on-surface)] shadow-xs"
+                  : "bg-transparent border-transparent opacity-40 hover:opacity-80 hover:bg-[var(--md-sys-color-surface-container)]/50 text-[var(--md-sys-color-on-surface-variant)]",
               visualStyle === "retro" &&
                 "border-2 border-[var(--md-sys-color-on-surface)] rounded-none shadow-[2px_2px_0px_0px_var(--md-sys-color-on-surface)] sm:hover:translate-y-[-2px] sm:hover:shadow-[4px_4px_0px_0px_var(--md-sys-color-on-surface)]",
               visualStyle === "glass" && "border-none shadow-none",
@@ -156,34 +173,42 @@
             style:background-size={!isCurrentMonth ? "8px 8px" : undefined}
           >
             <!-- Top Row: Date labels -->
-            <div class="flex justify-center sm:justify-between items-center sm:items-start shrink-0 w-full z-10 relative">
-              <span
-                class={cn(
-                  "text-sm sm:text-lg lg:text-2xl font-black tabular-nums tracking-tighter transition-all",
-                  isCurrentDay
-                    ? "text-[var(--md-sys-color-on-primary)]"
-                    : !isCurrentMonth
-                      ? "text-[var(--md-sys-color-on-surface-variant)]/40"
-                      : "",
-                  !isCurrentDay &&
-                    hasPublicHoliday &&
-                    isCurrentMonth &&
-                    "text-[var(--md-sys-color-error)] group-hover:text-[var(--md-sys-color-on-error-container)]"
-                )}
-              >
-                {formattedDate}
-              </span>
-
-              {#if hijriParts && isCurrentMonth}
+            <div class="flex justify-between items-center w-full z-10 relative">
+              {#if isCurrentDay}
+                <div class="flex items-center gap-1 sm:gap-1.5">
+                  <span class="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] text-xs sm:text-base lg:text-lg font-black shadow-xs tracking-tight">
+                    {formattedDate}
+                  </span>
+                  <span class="w-2 h-2 rounded-full bg-[var(--md-sys-color-primary)] shrink-0 shadow-xs" aria-hidden="true" title={t("today") || "Today"}></span>
+                </div>
+              {:else}
                 <span
                   class={cn(
-                    "hidden sm:inline text-[9px] font-black opacity-50 tabular-nums transition-colors",
-                    isCurrentDay
-                      ? "text-[var(--md-sys-color-on-primary)] opacity-80"
-                      : "text-[var(--md-sys-color-on-surface-variant)] group-hover:text-[var(--md-sys-color-primary)]"
+                    "text-sm sm:text-lg lg:text-2xl font-black tabular-nums tracking-tighter transition-all",
+                    !isCurrentMonth
+                      ? "text-[var(--md-sys-color-on-surface-variant)]/40"
+                      : hasPublicHoliday
+                        ? "text-[var(--md-sys-color-error)] group-hover:text-[var(--md-sys-color-on-error-container)]"
+                        : "text-[var(--md-sys-color-on-surface)]"
                   )}
                 >
-                  {parseInt(hijriParts[2], 10)}
+                  {formattedDate}
+                </span>
+              {/if}
+
+              {#if hijriDayNum && isCurrentMonth}
+                {@const isFirstHijri = hijriDayNum === 1}
+                <span
+                  class={cn(
+                    "text-[10px] sm:text-xs font-bold tabular-nums transition-colors px-1 py-0.5 rounded-md",
+                    isCurrentDay
+                      ? "text-[var(--md-sys-color-primary)] font-black bg-[var(--md-sys-color-primary-container)]/50"
+                      : isFirstHijri
+                        ? "bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)] font-black shadow-xs"
+                        : "text-[var(--md-sys-color-on-surface-variant)]/75 group-hover:text-[var(--md-sys-color-primary)]"
+                  )}
+                >
+                  {hijriDayNum}
                 </span>
               {/if}
             </div>
@@ -195,13 +220,13 @@
                 {#each events.slice(0, 2) as evt, idx}
                   <div
                     class={cn(
-                      "text-[9px] px-1.5 py-0.5 rounded-[6px] truncate font-black tracking-wider uppercase shadow-xs w-full text-left select-none",
+                      "text-[9px] px-2 py-0.5 rounded-full truncate font-bold tracking-wider uppercase shadow-xs w-full text-left select-none",
                       evt.type === "public"
                         ? isCurrentDay
-                          ? "bg-white/20 text-white"
+                          ? "bg-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)]"
                           : "bg-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)]"
                         : isCurrentDay
-                          ? "bg-black/10 text-white"
+                          ? "bg-[var(--md-sys-color-tertiary)] text-[var(--md-sys-color-on-tertiary)]"
                           : "bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]"
                     )}
                     title={evt.title}
@@ -216,25 +241,21 @@
                 {/if}
               </div>
 
-              <!-- Expressive Dots for mobile/tablet -->
-              <div class="flex lg:hidden gap-1 justify-center sm:justify-start items-center h-2 overflow-hidden mt-1">
+              <!-- Expressive Dots for mobile/tablet (8px high-contrast dots) -->
+              <div class="flex lg:hidden gap-1.5 justify-center sm:justify-start items-center h-2.5 overflow-hidden mt-1">
                 {#each events.slice(0, 3) as evt, idx}
                   <div
                     class={cn(
-                      "w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full shrink-0",
+                      "w-2 h-2 rounded-full shrink-0 shadow-xs",
                       evt.type === "public"
-                        ? isCurrentDay
-                          ? "bg-white"
-                          : "bg-[var(--md-sys-color-error)]"
-                        : isCurrentDay
-                          ? "bg-white/80"
-                          : "bg-[var(--md-sys-color-tertiary)]"
+                        ? "bg-[var(--md-sys-color-error)]"
+                        : "bg-[var(--md-sys-color-tertiary)]"
                     )}
                   ></div>
                 {/each}
               </div>
             </div>
-          </div>
+          </button>
         {/each}
       </div>
     {/key}

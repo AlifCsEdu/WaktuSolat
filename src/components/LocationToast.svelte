@@ -47,7 +47,17 @@ const t = (key: any, params?: any) => appSettings.t(key, params);
   <div transition:fly={{ y: 50, duration: 300 }} onoutrostart={() => isMorphing = false} class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] w-[90%] max-w-sm">
     <div class="bg-[var(--md-sys-color-surface-container-highest)] border border-[var(--md-sys-color-outline)]/20 shadow-2xl rounded-[28px] p-5 flex flex-col gap-3 backdrop-blur-xl relative overflow-hidden">
       <GooeyBackground isMorphing={isMorphing} />
-      <div class="flex items-start gap-4">
+      <!-- Top Right Dismiss Button -->
+      <button 
+        type="button"
+        onclick={onDismiss}
+        aria-label={t("close" as any) || "Dismiss"}
+        class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface-variant)] hover:text-[var(--md-sys-color-on-surface)] transition-colors cursor-pointer z-10"
+      >
+        <X size={18} />
+      </button>
+
+      <div class="flex items-start gap-4 pr-8">
         <div class="w-12 h-12 rounded-full flex items-center justify-center shrink-0 {
           autoUpdatedZone 
             ? 'bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)]' 
@@ -82,17 +92,6 @@ const t = (key: any, params?: any) => appSettings.t(key, params);
             {t("changeZone" as any)}
           </Button>
         </div>
-      {/if}
-
-      {#if autoUpdatedZone}
-         <div class="flex justify-end">
-             <button 
-               onclick={onDismiss}
-               class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--md-sys-color-surface-variant)] text-[var(--md-sys-color-on-surface-variant)]"
-             >
-               <X size={18} />
-             </button>
-         </div>
       {/if}
     </div>
   </div>

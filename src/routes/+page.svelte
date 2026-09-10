@@ -124,7 +124,7 @@
   <main
     in:fade={{ duration: 300 }}
     class={cn(
-      "flex-1 w-full max-w-[2560px] mx-auto relative z-10 flex flex-col lg:flex-row px-[var(--sys-spacing-edge)] py-[var(--sys-spacing-edge)] gap-[var(--sys-spacing-section)] lg:overflow-hidden min-h-0",
+      "flex-1 w-full max-w-[2560px] mx-auto relative z-10 flex flex-col lg:flex-row px-[var(--sys-spacing-edge)] py-2 sm:py-3 lg:py-3 xl:py-4 gap-[var(--sys-spacing-section)] lg:overflow-hidden min-h-0",
       !(appSettings.settings.wallpaperEnabled && activeWallpaperUrl) && "bg-[var(--md-sys-color-background)]",
       !(appSettings.settings.wallpaperEnabled && activeWallpaperUrl) && visualStyle === 'glass' && "bg-gradient-to-br from-[var(--md-sys-color-background)] via-[var(--md-sys-color-surface-variant)] to-[var(--md-sys-color-primary-container)]",
       appSettings.settings.wallpaperEnabled && activeWallpaperUrl && appSettings.settings.wallpaperTextGlow && "text-glow-boost"
@@ -142,7 +142,7 @@
     >
       <header
         in:fly={{ y: -10, duration: 400 }}
-        class="relative flex items-center gap-2 sm:gap-3 z-[60] mb-6 p-2 bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline-variant)]/50 rounded-[24px] sm:rounded-full shadow-md shrink-0 flex-wrap lg:w-full"
+        class="relative flex items-center h-14 z-[60] mb-6 px-2.5 sm:px-3 gap-1 sm:gap-2 bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline-variant)]/40 rounded-full shadow-sm shrink-0 flex-nowrap lg:w-full"
       >
         <ZoneSelector
           selectedZone={locationState.selectedZone}
@@ -158,6 +158,7 @@
               variant="tonal"
               shape="pill"
               size="md"
+              class="h-11 rounded-full text-xs font-semibold px-3 sm:px-3.5"
               onclick={() => locationState.saveAsDefault()}
             >
               {#snippet leadingIcon()}
@@ -171,13 +172,14 @@
           </div>
         {/if}
         <div
-          class="ml-auto sm:ml-2 shrink-0 inline-flex transition-transform hover:scale-105 active:scale-95"
+          class="shrink-0 inline-flex transition-transform hover:scale-105 active:scale-95"
           style:view-transition-name={!isCalendarOpen ? 'calendar-transition' : 'none'}
         >
           <IconButton
             variant="tonal"
             shape="circle"
             size="md"
+            class="w-11 h-11"
             onclick={() => {
               isCalendarOpen = true;
               goto('/calendar');
@@ -185,27 +187,28 @@
             title={appSettings.t("calendarLabel")}
             ariaLabel={appSettings.t("calendarLabel")}
           >
-            <CalendarRange class="w-5 h-5 lg:w-[20px] lg:h-[20px] stroke-[2.5]" />
+            <CalendarRange class="w-5 h-5 stroke-[2.2]" />
           </IconButton>
         </div>
-        <div class="flex gap-2 shrink-0 ml-auto sm:ml-0 bg-[var(--md-sys-color-surface-container-highest)] p-1.5 rounded-full">
-          {#if appSettings.settings.showTvShortcut}
-            <div
-              class="inline-flex shrink-0 transition-transform hover:scale-105 active:scale-95"
+        {#if appSettings.settings.showTvShortcut}
+          <div
+            class="shrink-0 inline-flex transition-transform hover:scale-105 active:scale-95"
+          >
+            <IconButton
+              variant="tonal"
+              shape="circle"
+              size="md"
+              class="w-11 h-11"
+              onclick={() => setIsTvMode(true)}
+              title={appSettings.settings.language === "ms" ? "Mod TV Masjid" : "Mosque TV Mode"}
+              ariaLabel={appSettings.settings.language === "ms" ? "Mod TV Masjid" : "Mosque TV Mode"}
             >
-              <IconButton
-                variant="tonal"
-                shape="rounded"
-                size="md"
-                onclick={() => setIsTvMode(true)}
-                title={appSettings.settings.language === "ms" ? "Mod TV Masjid" : "Mosque TV Mode"}
-                ariaLabel={appSettings.settings.language === "ms" ? "Mod TV Masjid" : "Mosque TV Mode"}
-              >
-                <Tv class="w-6 h-6 stroke-[2.5]" />
-              </IconButton>
-            </div>
-          {/if}
-          <ThemeControl />
+              <Tv class="w-5 h-5 stroke-[2.2]" />
+            </IconButton>
+          </div>
+        {/if}
+        <ThemeControl />
+        <div class="hidden sm:inline-flex shrink-0">
           <FullScreenToggle />
         </div>
       </header>
