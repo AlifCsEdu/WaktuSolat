@@ -1,12 +1,16 @@
 <script lang="ts">
   import SettingsModal from '../../components/SettingsModal.svelte';
   import { notificationsState } from '../../state/notifications.svelte';
+  import { mosqueState } from '../../state/mosque.svelte';
+  import { appSettings } from '../../state/settings.svelte';
   import { StorageManager } from '../../lib/StorageManager';
   import { goto } from '$app/navigation';
-  import { onMount, getContext, tick } from 'svelte';
+  import { page } from '$app/stores';
+  import { onMount, getContext } from 'svelte';
 
   let selectedZone = $state('');
-  let isOpen = $state(true);
+  let initialTab = $derived($page.url.searchParams.get('tab'));
+  let initialQuery = $derived($page.url.searchParams.get('q'));
 
   const layoutActions = getContext<{ 
     triggerPrePrompt: (action: () => void) => void; 
@@ -17,27 +21,34 @@
     selectedZone = StorageManager.getZone() || 'WLY01';
   });
 
-  const handleClose = async () => {
-    isOpen = false;
-    await tick();
-    goto('/');
+  const handleClose = () => {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      window.history.back();
+    } else {
+      goto('/');
+    }
   };
 </script>
 
-<!-- svelte-ignore a11y_click_events_have_key_events -->
-<!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="fixed inset-0 z-50 flex items-center justify-center p-0 m-0 bg-[var(--md-sys-color-scrim)]/30 backdrop-blur-md" onclick={handleClose}>
-  {#if selectedZone}
-    <SettingsModal
-      isOpen={isOpen}
-      preferences={notificationsState.preferences}
-      onUpdatePreference={(k, u) => notificationsState.updatePreference(k, u)}
-      onResetPreferences={() => notificationsState.resetPreferences()}
-      permission={notificationsState.permission}
-      onRequestPermission={() => layoutActions.requestPermission()}
-      onTestSound={(s, m) => notificationsState.playSound(s, m)}
-      selectedZone={selectedZone}
-      onClose={handleClose}
-    />
-  {/if}
-</div>
+{#if selectedZone}
+  <SettingsModal
+    isOpen={true}
+    initialTab={initialTab}
+    initialQuery={initialQuery}
+    preferences={notificationsState.preferences}
+    onUpdatePreference={(k, u) => notificationsState.updatePreference(k, u)}
+    onResetPreferences={() => notificationsState.resetPreferences()}
+    permission={notificationsState.permission}
+    onRequestPermission={() => layoutActions.requestPermission()}
+    onTestSound={(s, m) => notificationsState.playSound(s, m)}
+    onPreviewAzanAlert={(style) => {
+      mosqueState.mockAzanAlert = {
+        prayerName: 'Asar',
+        style,
+        remainingSeconds: appSettings.settings.azanAlertDuration ?? 20
+      };
+    }}
+    selectedZone={selectedZone}
+    onClose={handleClose}
+  />
+{/if}

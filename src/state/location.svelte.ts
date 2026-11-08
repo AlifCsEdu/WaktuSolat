@@ -1,11 +1,20 @@
-import { fetchReverseGeocode, extractLocalityName, extractStateName, mapStateToZone } from "../lib/geocoding";
+import { fetchReverseGeocode, extractLocalityName, findNearestZone, matchZoneFromGeocode } from "../lib/geocoding";
+import { JAKIM_ZONES } from "../lib/zones";
 import { appSettings } from "./settings.svelte";
 import { StorageManager } from "../lib/StorageManager";
 import { analytics } from "../lib/analytics";
 
+function getZoneDisplayName(zoneCode: string): string {
+  for (const state of JAKIM_ZONES) {
+    const found = state.zones.find((z) => z.v === zoneCode);
+    if (found) return found.l.split(",")[0].trim();
+  }
+  return zoneCode;
+}
+
 class LocationState {
-  selectedZone = $state(StorageManager.getZone() || "SGR01");
-  defaultZone = $state(StorageManager.getZone());
+  selectedZone = $state(StorageManager.getZone() || "WLY01");
+  defaultZone = $state(StorageManager.getZone() || "WLY01");
   promptZone = $state<string | null>(null);
   promptLocationName = $state<string | null>(null);
   autoUpdatedZone = $state<string | null>(null);
@@ -79,20 +88,38 @@ class LocationState {
         this.userCoords = { lat: latitude, lng: longitude };
         
         try {
-          const data = await fetchReverseGeocode(latitude, longitude);
-          const stateName = extractStateName(data);
-          const locName = extractLocalityName(data);
-          
-          this.currentLocationName = locName;
+          let resolvedZone: string | null = null;
+          let resolvedLocName: string | null = null;
 
-          const foundZone = mapStateToZone(stateName);
+          // 1. Try online reverse geocoding if online
+          if (typeof navigator === "undefined" || navigator.onLine) {
+            try {
+              const data = await fetchReverseGeocode(latitude, longitude);
+              const match = matchZoneFromGeocode(data);
+              if (match && match.zone) {
+                resolvedZone = match.zone;
+                resolvedLocName = match.detailVal || extractLocalityName(data);
+              }
+            } catch (geoErr) {
+              console.warn("Reverse geocode network request failed, falling back to centroid:", geoErr);
+            }
+          }
 
-          if (foundZone) {
+          // 2. Offline GPS Centroid Fallback
+          if (!resolvedZone) {
+            resolvedZone = findNearestZone(latitude, longitude);
+            resolvedLocName = getZoneDisplayName(resolvedZone);
+          }
+
+          this.currentLocationName = resolvedLocName;
+
+          // 3. Apply Zone Update
+          if (resolvedZone) {
             if (appSettings.settings.locationMode === 'auto') {
-              if (force || foundZone !== this.selectedZone) {
-                this.setZone(foundZone, true);
-                this.autoUpdatedZone = foundZone;
-                this.autoUpdatedLocationName = locName;
+              if (force || resolvedZone !== this.selectedZone) {
+                this.setZone(resolvedZone, true);
+                this.autoUpdatedZone = resolvedZone;
+                this.autoUpdatedLocationName = resolvedLocName;
                 if (this.autoDismissTimeout) {
                   clearTimeout(this.autoDismissTimeout);
                 }
@@ -103,9 +130,9 @@ class LocationState {
                 }, 5000);
               }
             } else if (appSettings.settings.locationMode === 'manual') {
-              if (foundZone !== this.selectedZone) {
-                this.promptZone = foundZone;
-                this.promptLocationName = locName;
+              if (resolvedZone !== this.selectedZone) {
+                this.promptZone = resolvedZone;
+                this.promptLocationName = resolvedLocName;
               }
             }
           }
@@ -116,7 +143,11 @@ class LocationState {
         }
       },
       (geoError) => {
-        analytics.logError(geoError, { context: "geolocation_getCurrentPosition" });
+        if (geoError.code === 1 /* PERMISSION_DENIED */) {
+          analytics.logEvent("geolocation_permission_denied");
+        } else {
+          analytics.logError(geoError, { context: "geolocation_getCurrentPosition" });
+        }
         this.isDetecting = false;
       },
       { timeout: 10000, maximumAge: force ? 0 : 60000 },

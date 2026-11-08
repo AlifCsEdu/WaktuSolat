@@ -31,7 +31,7 @@ export default defineConfig({
     }
   ],
   webServer: {
-    command: 'npm run build && npm run preview -- --host 127.0.0.1 --port 3001',
+    command: 'node preview-server.mjs',
     port: 3001,
     reuseExistingServer: !process.env.CI,
     timeout: 120000,

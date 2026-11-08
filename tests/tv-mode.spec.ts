@@ -20,19 +20,51 @@ test.describe('Mosque TV Mode Visual Configurations & Local Assets E2E', () => {
       console.log(`[BROWSER PAGEERROR] ${err.message}\n${err.stack}`);
     });
 
-    // Seed prayer times so TV Mode view can render next prayer time while online
+    // 1. Install init script before any navigation so localStorage defaults are immediately present
+    await page.addInitScript(() => {
+      try {
+        localStorage.setItem('waktu-solat-onboarding-completed', 'true');
+        localStorage.setItem('waktu-solat-zone', 'WLY01');
+        const settings = JSON.parse(localStorage.getItem('waktu-solat-settings') || '{}');
+        settings.showTvShortcut = true;
+        localStorage.setItem('waktu-solat-settings', JSON.stringify(settings));
+      } catch (e) {}
+    });
+
+    // 2. Navigate to root while online to establish origin and allow service worker precaching
+    await page.goto('/');
+    await page.waitForLoadState('networkidle').catch(() => page.waitForLoadState('load'));
+
+    // 3. Seed prayer times so TV Mode view can render next prayer time while offline
     await writeIndexedDB('prayer-times', MOCK_ZONE, MOCK_COMPRESSED_DATA);
     
-    // Run all TV Mode tests in offline mode to force IndexedDB database retrieval
+    // 4. Ensure service worker is ready before entering offline mode with bounded timeouts (NEVER DEADLOCK)
+    try {
+      await page.evaluate(async () => {
+        if (!('serviceWorker' in navigator)) return;
+        // Bounded wait for ready promise (max 2000ms)
+        await Promise.race([
+          navigator.serviceWorker.ready,
+          new Promise((resolve) => setTimeout(resolve, 2000))
+        ]);
+        // If not controlling yet, bounded wait for controllerchange (max 2000ms)
+        if (!navigator.serviceWorker.controller) {
+          await Promise.race([
+            new Promise((resolve) => {
+              navigator.serviceWorker.addEventListener('controllerchange', resolve, { once: true });
+            }),
+            new Promise((resolve) => setTimeout(resolve, 2000))
+          ]);
+        }
+      });
+    } catch (e) {}
+
+    // 5. Enter offline mode safely now that origin, precache, and storage are established
     await makeOffline();
-    await page.addInitScript(() => {
-      localStorage.setItem('waktu-solat-onboarding-completed', 'true');
-      localStorage.setItem('waktu-solat-zone', 'WLY01');
-      // Enable TV mode shortcut
-      const settings = JSON.parse(localStorage.getItem('waktu-solat-settings') || '{}');
-      settings.showTvShortcut = true;
-      localStorage.setItem('waktu-solat-settings', JSON.stringify(settings));
-    });
+  });
+
+  test.afterEach(async ({ makeOnline }) => {
+    await makeOnline();
   });
 
   test('TV-1: Style Configurations (Patterns, Effects, and Border Colors)', async ({ page }) => {
@@ -206,17 +238,58 @@ test.describe('Mosque TV Mode Visual Configurations & Local Assets E2E', () => {
       const pngBlob = new Blob([bytes], { type: 'image/png' });
 
       await new Promise<void>((resolve, reject) => {
+        const timer = setTimeout(() => {
+          reject(new Error('[tv-mode:TV-4] IndexedDB open timed out after 5000ms'));
+        }, 5000);
         const req = indexedDB.open('waktu-solat-db', 2);
+        req.onblocked = () => {
+          console.warn('[tv-mode:TV-4] IDB open blocked');
+        };
         req.onsuccess = () => {
           const db = req.result;
-          const tx = db.transaction('assets', 'readwrite');
-          const store = tx.objectStore('assets');
-          store.put(pngBlob, 'slideshow-image-test-key-1');
-          store.put(pngBlob, 'reminder-image-test-key-1');
-          tx.oncomplete = () => resolve();
-          tx.onerror = () => reject(tx.error);
+          db.onversionchange = () => {
+            try {
+              db.close();
+            } catch (e) {}
+          };
+          try {
+            const tx = db.transaction('assets', 'readwrite');
+            const store = tx.objectStore('assets');
+            store.put(pngBlob, 'slideshow-image-test-key-1');
+            store.put(pngBlob, 'reminder-image-test-key-1');
+            tx.oncomplete = () => {
+              clearTimeout(timer);
+              try {
+                db.close();
+              } catch (e) {}
+              resolve();
+            };
+            tx.onerror = () => {
+              clearTimeout(timer);
+              try {
+                db.close();
+              } catch (e) {}
+              reject(tx.error);
+            };
+            tx.onabort = () => {
+              clearTimeout(timer);
+              try {
+                db.close();
+              } catch (e) {}
+              reject(tx.error || new Error('Transaction aborted'));
+            };
+          } catch (e) {
+            clearTimeout(timer);
+            try {
+              db.close();
+            } catch (err) {}
+            reject(e);
+          }
         };
-        req.onerror = () => reject(req.error);
+        req.onerror = () => {
+          clearTimeout(timer);
+          reject(req.error);
+        };
       });
     }, { base64: base64Png });
 

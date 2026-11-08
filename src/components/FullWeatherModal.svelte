@@ -111,8 +111,6 @@
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
-      in:fly={{ y: 200, duration: 400 }}
-      out:fly={{ y: 200, duration: 300 , isExit: true}}
       onclick={(e) => e.stopPropagation()}
       class="bg-[var(--md-sys-color-surface)] w-full max-w-4xl h-[90vh] sm:h-[85vh] max-h-[900px] flex flex-col rounded-t-[2rem] sm:rounded-[2rem] overflow-hidden shadow-2xl sm:my-auto text-[var(--md-sys-color-on-surface)]"
       style:view-transition-name={isOpen ? 'weather-transition' : 'none'}

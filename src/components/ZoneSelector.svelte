@@ -6,8 +6,8 @@ import { cn } from "../lib/utils";
 import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
 import { Tabs, TextField, FilterChip, Button, IconButton } from "$lib/components/ui";
 import { ripple } from "$lib/actions/ripple";
-import MapModal from "./MapModal.svelte";
-import { fetchReverseGeocode, matchZoneFromGeocode, ALIASES } from "../lib/geocoding";
+import { goto } from "$app/navigation";
+import { fetchReverseGeocode, matchZoneFromGeocode, findNearestZone, ALIASES } from "../lib/geocoding";
 import { analytics } from "../lib/analytics";
 import { StorageManager } from "../lib/StorageManager";
 import { sanitizeInput } from "../lib/security";
@@ -34,19 +34,20 @@ let {
   selectedZone,
   onZoneSelect,
   isAutoDetecting = false,
-  currentLocationName = null
+  currentLocationName = null,
+  isSearching = $bindable(false)
 }: {
   selectedZone: string;
   onZoneSelect: (zone: string) => void;
   isAutoDetecting?: boolean;
   currentLocationName?: string | null;
+  isSearching?: boolean;
 } = $props();
 
 const t = (key: any, params?: any) => appSettings.t(key, params);
 const visualStyle = $derived(appSettings.settings.visualStyle);
 
 let isOpen = $state(false);
-let isMapOpen = $state(false);
 let searchQuery = $state("");
 let isDetecting = $state(false);
 let locationPermission = $state<PermissionState | null>(null);
@@ -54,6 +55,12 @@ let userCoords = $state<{ lat: number; lng: number } | null>(null);
 let activeScrollState = $state<string | null>(null);
 let scrollTimeoutRef = $state<number | null>(null);
 let detectReason = $state<string | null>(null);
+
+// Inline search expander state
+let inlineSearchInput = $state<HTMLInputElement | undefined>();
+let inlineSearchQuery = $state("");
+let activeInlineIndex = $state(0);
+let searchContainerRef = $state<HTMLDivElement | undefined>();
 
 $effect(() => {
   if ('permissions' in navigator) {
@@ -100,8 +107,17 @@ const handleAutoDetect = () => {
           setTimeout(() => { detectReason = null; }, 5000);
           isOpen = false;
         } catch (err) {
-          analytics.logError(err, { context: "ZoneSelector_handleAutoDetect" });
-          alert(t("failDetectLocation"));
+          // Offline GPS centroid fallback
+          try {
+            const nearest = findNearestZone(latitude, longitude);
+            onZoneSelect(nearest);
+            detectReason = "GPS Centroid (Luar Talian)";
+            setTimeout(() => { detectReason = null; }, 5000);
+            isOpen = false;
+          } catch (offlineErr) {
+            analytics.logError(err, { context: "ZoneSelector_handleAutoDetect" });
+            alert(t("failDetectLocation"));
+          }
         } finally {
           isDetecting = false;
         }
@@ -203,6 +219,113 @@ const handleScroll = (e: Event) => {
     activeScrollState = null;
   }, 800) as any;
 };
+
+function openInlineSearch() {
+  isSearching = true;
+  inlineSearchQuery = "";
+  activeInlineIndex = 0;
+  tick().then(() => {
+    inlineSearchInput?.focus();
+  });
+}
+
+function closeInlineSearch() {
+  isSearching = false;
+  inlineSearchQuery = "";
+}
+
+function handleInlineSelect(zoneCode: string) {
+  onZoneSelect(zoneCode);
+  closeInlineSearch();
+}
+
+function handleInlineKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    closeInlineSearch();
+    return;
+  }
+  const total = inlineResultsList.length;
+  if (total === 0) return;
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    activeInlineIndex = (activeInlineIndex + 1) % total;
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    activeInlineIndex = (activeInlineIndex - 1 + total) % total;
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    const selected = inlineResultsList[activeInlineIndex];
+    if (selected) {
+      handleInlineSelect(selected.v);
+    }
+  }
+}
+
+function handleWindowClick(e: MouseEvent) {
+  if (isSearching && searchContainerRef && !searchContainerRef.contains(e.target as Node)) {
+    closeInlineSearch();
+  }
+}
+
+let inlineResultsList = $derived.by(() => {
+  const q = inlineSearchQuery.toLowerCase().trim();
+  if (!q) {
+    const recentCodes = StorageManager.getRecentZones().filter((z: string) => z !== selectedZone).slice(0, 4);
+    if (recentCodes.length > 0) {
+      return recentCodes.map(code => {
+        let stateName = "";
+        let label = code;
+        for (const s of JAKIM_ZONES) {
+          const found = s.zones.find(z => z.v === code);
+          if (found) {
+            stateName = s.state;
+            label = found.l;
+            break;
+          }
+        }
+        return { state: stateName, v: code, l: label, isRecent: true };
+      });
+    }
+    const defaults = ['WLY01', 'SGR01', 'JHR02', 'PNG01', 'PRK02'];
+    return defaults.map(code => {
+      let stateName = "";
+      let label = code;
+      for (const s of JAKIM_ZONES) {
+        const found = s.zones.find(z => z.v === code);
+        if (found) {
+          stateName = s.state;
+          label = found.l;
+          break;
+        }
+      }
+      return { state: stateName, v: code, l: label, isRecent: false };
+    });
+  }
+
+  const aliasZoneCode = ALIASES[q];
+  const results: { state: string; v: string; l: string; isRecent: boolean }[] = [];
+
+  for (const state of JAKIM_ZONES) {
+    for (const zone of state.zones) {
+      const matchesLabel = zone.l.toLowerCase().includes(q);
+      const matchesCode = zone.v.toLowerCase().includes(q);
+      const matchesState = state.state.toLowerCase().includes(q);
+      const matchesAlias = aliasZoneCode && zone.v.toLowerCase() === aliasZoneCode.toLowerCase();
+
+      if (matchesLabel || matchesCode || matchesState || matchesAlias) {
+        results.push({
+          state: state.state,
+          v: zone.v,
+          l: zone.l,
+          isRecent: false
+        });
+      }
+    }
+  }
+  return results.slice(0, 8);
+});
 </script>
 
 {#if detectReason}
@@ -219,104 +342,233 @@ const handleScroll = (e: Event) => {
   </div>
 {/if}
 
-<div class="flex items-center gap-2 flex-1 min-w-0">
-  <button
-    use:ripple
-    onclick={() => isOpen = true}
-    class={cn(
-      "relative flex-1 max-w-full h-11 bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] hover:bg-[var(--md-sys-color-surface-container-highest)] rounded-full overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-sys-color-primary)] px-2.5 sm:px-3 flex items-center justify-between group shadow-xs border border-[var(--md-sys-color-outline-variant)]/40 hover:scale-[1.01] active:scale-[0.98] transition-all duration-200 cursor-pointer",
-      visualStyle === 'retro' && "border-2 border-[var(--md-sys-color-on-surface)] shadow-[4px_4px_0px_0px_var(--md-sys-color-on-surface)] hover:shadow-[2px_2px_0px_0px_var(--md-sys-color-on-surface)]",
-      visualStyle === 'glass' && "bg-[var(--glass-bg)] backdrop-blur-[8px] border border-[var(--glass-border)]",
-      visualStyle === 'soft' && "shadow-[var(--soft-shadow-light)] border-0"
-    )}
-  >
-    <div class="flex items-center w-full min-w-0">
-      <div class="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] flex items-center justify-center shrink-0 shadow-xs mr-2.5">
-        <MapPin size={16} class={cn(
-          "shrink-0",
+<svelte:window onmousedown={handleWindowClick} />
+
+<div class="relative flex items-center gap-2 flex-1 min-w-0" bind:this={searchContainerRef}>
+  {#if isSearching}
+    <div
+      in:fly={{ y: -6, duration: 250 }}
+      out:fly={{ y: -6, duration: 200 }}
+      class={cn(
+        "relative flex-1 h-11 bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] rounded-full flex items-center px-2.5 sm:px-3 gap-2 border border-[var(--md-sys-color-primary)]/50 shadow-sm focus-within:ring-2 focus-within:ring-[var(--md-sys-color-primary)] transition-all",
+        visualStyle === 'retro' && "border-2 border-[var(--md-sys-color-on-surface)] shadow-[2px_2px_0px_0px_var(--md-sys-color-on-surface)]",
+        visualStyle === 'glass' && "bg-[var(--glass-bg)] backdrop-blur-[12px] border border-[var(--glass-border)]"
+      )}
+    >
+      <div class="w-7 h-7 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] flex items-center justify-center shrink-0">
+        <Search size={14} class="stroke-[2.5]" />
+      </div>
+
+      <input
+        bind:this={inlineSearchInput}
+        bind:value={inlineSearchQuery}
+        type="text"
+        placeholder={t("searchPlaceholder") || "Cari zon atau daerah..."}
+        class="bg-transparent border-none outline-none text-xs sm:text-sm text-[var(--md-sys-color-on-surface)] placeholder-[var(--md-sys-color-on-surface-variant)]/60 flex-1 min-w-0 font-medium"
+        onkeydown={handleInlineKeydown}
+      />
+
+      {#if inlineSearchQuery}
+        <button
+          type="button"
+          onclick={() => { inlineSearchQuery = ""; inlineSearchInput?.focus(); }}
+          class="w-6 h-6 rounded-full hover:bg-[var(--md-sys-color-outline)]/20 flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] transition-colors shrink-0"
+          title="Kosongkan carian"
+          aria-label="Clear search"
+        >
+          <X size={14} class="stroke-[2.5]" />
+        </button>
+      {/if}
+
+      <button
+        type="button"
+        onclick={closeInlineSearch}
+        class="h-7 sm:h-8 px-2 sm:px-2.5 rounded-full bg-[var(--md-sys-color-surface-container-high)] hover:bg-[var(--md-sys-color-surface-container-highest)] text-xs font-semibold text-[var(--md-sys-color-on-surface-variant)] flex items-center gap-1 transition-colors border border-[var(--md-sys-color-outline-variant)]/40 shrink-0 cursor-pointer"
+        title="Tutup carian"
+        aria-label="Close search"
+      >
+        <span class="hidden sm:inline">Batal</span>
+        <X size={14} class="sm:hidden stroke-[2.2]" />
+      </button>
+    </div>
+
+    <!-- Floating Results Popover Dropdown -->
+    <div
+      in:fly={{ y: -8, duration: 200 }}
+      out:fade={{ duration: 150 }}
+      class="absolute top-[calc(100%+8px)] left-0 w-full min-w-[280px] sm:min-w-[380px] md:min-w-[460px] max-w-[calc(100vw-24px)] bg-[var(--md-sys-color-surface-container-high)] rounded-3xl shadow-2xl border border-[var(--md-sys-color-outline-variant)]/40 p-2 z-[150] max-h-[380px] flex flex-col overflow-hidden backdrop-blur-xl"
+    >
+      <!-- Quick GPS Auto-Detect Option -->
+      <button
+        use:ripple
+        type="button"
+        onclick={() => { closeInlineSearch(); handleAutoDetect(); }}
+        disabled={isDetecting}
+        class="w-full flex items-center gap-3 p-2.5 rounded-2xl hover:bg-[var(--md-sys-color-primary-container)]/50 text-[var(--md-sys-color-on-surface)] transition-colors text-left group cursor-pointer"
+      >
+        <div class="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center shrink-0">
+          <Crosshair size={16} class={cn("stroke-[2.2]", isDetecting && "animate-spin")} />
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="text-xs font-bold text-[var(--md-sys-color-primary)]">
+            {isDetecting ? (t("detecting") || "Mengesan lokasi...") : (t("detectLocation") || "Kesan Lokasi GPS Semasa")}
+          </div>
+          <div class="text-[11px] text-[var(--md-sys-color-on-surface-variant)] truncate">
+            {currentLocationName || "Padankan zon secara automatik berasaskan GPS"}
+          </div>
+        </div>
+      </button>
+
+      <div class="h-px bg-[var(--md-sys-color-outline-variant)]/30 my-1"></div>
+
+      <!-- Results List Header -->
+      <div class="px-2.5 py-1 flex items-center justify-between text-[11px] font-bold text-[var(--md-sys-color-on-surface-variant)]">
+        <span>{inlineSearchQuery ? `${inlineResultsList.length} Zon Dijumpai` : 'Cadangan & Zon Terkini'}</span>
+        <span class="text-[10px] opacity-70">Tekan Enter untuk pilih</span>
+      </div>
+
+      <!-- Scrollable Results -->
+      <div class="flex-1 overflow-y-auto no-scrollbar space-y-1 max-h-[220px]">
+        {#if inlineResultsList.length === 0}
+          <div class="p-4 text-center text-xs text-[var(--md-sys-color-on-surface-variant)]">
+            Tiada zon dijumpai untuk "{inlineSearchQuery}". Cuba cari nama daerah atau negeri.
+          </div>
+        {:else}
+          {#each inlineResultsList as item, idx}
+            {@const isHighlighted = idx === activeInlineIndex}
+            <button
+              use:ripple
+              type="button"
+              onclick={() => handleInlineSelect(item.v)}
+              onmouseenter={() => activeInlineIndex = idx}
+              class={cn(
+                "w-full flex items-center gap-2.5 px-3 py-2 rounded-2xl text-left transition-colors cursor-pointer",
+                isHighlighted
+                  ? "bg-[var(--md-sys-color-surface-container-highest)] ring-1 ring-[var(--md-sys-color-primary)]/40"
+                  : "hover:bg-[var(--md-sys-color-surface-container)]"
+              )}
+            >
+              {#if STATE_FLAGS[item.state]}
+                <div class="flex items-center justify-center w-[20px] h-[14px] bg-white overflow-hidden shadow-xs shrink-0 rounded-[3px]">
+                  <img
+                    src={STATE_FLAGS[item.state]}
+                    alt=""
+                    class="w-full h-full object-cover select-none pointer-events-none"
+                  />
+                </div>
+              {:else}
+                <div class="w-5 h-5 rounded-full bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] flex items-center justify-center shrink-0">
+                  <MapPin size={11} />
+                </div>
+              {/if}
+
+              <div class="flex-1 min-w-0">
+                <div class="text-xs font-semibold text-[var(--md-sys-color-on-surface)] truncate">
+                  {item.l}
+                </div>
+                <div class="text-[10px] text-[var(--md-sys-color-on-surface-variant)] truncate flex items-center gap-1.5">
+                  <span>{item.state}</span>
+                  {#if item.isRecent}
+                    <span class="text-[9px] px-1.5 py-0.2 rounded-full bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)] font-semibold">Terkini</span>
+                  {/if}
+                </div>
+              </div>
+
+              <span class="font-mono text-[11px] font-bold px-2 py-0.5 rounded-full bg-[var(--md-sys-color-surface-container-lowest)] text-[var(--md-sys-color-primary)] border border-[var(--md-sys-color-outline-variant)]/30 shrink-0">
+                {item.v}
+              </span>
+            </button>
+          {/each}
+        {/if}
+      </div>
+
+      <!-- Bottom action: Open full modal -->
+      <div class="h-px bg-[var(--md-sys-color-outline-variant)]/30 my-1"></div>
+      <button
+        use:ripple
+        type="button"
+        onclick={() => { closeInlineSearch(); goto(`/map?zone=${selectedZone}`); }}
+        class="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-semibold text-[var(--md-sys-color-primary)] hover:bg-[var(--md-sys-color-surface-container)] transition-colors cursor-pointer"
+      >
+        <MapIcon size={14} class="stroke-[2.2]" />
+        <span>Papar pada Peta Interaktif (GPS)</span>
+      </button>
+      <button
+        use:ripple
+        type="button"
+        onclick={() => { closeInlineSearch(); isOpen = true; }}
+        class="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-surface-container)] transition-colors cursor-pointer"
+      >
+        <span>Lihat Semua 14 Negeri & Tetapan Zon Lengkap</span>
+      </button>
+    </div>
+  {:else}
+    <button
+      use:ripple
+      onclick={openInlineSearch}
+      class={cn(
+        "relative flex-1 max-w-full h-11 bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] hover:bg-[var(--md-sys-color-surface-container-highest)] rounded-full overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-sys-color-primary)] px-2.5 sm:px-3 flex items-center justify-between group shadow-xs border border-[var(--md-sys-color-outline-variant)]/40 hover:scale-[1.01] active:scale-[0.98] transition-all duration-200 cursor-pointer",
+        visualStyle === 'retro' && "border-2 border-[var(--md-sys-color-on-surface)] shadow-[4px_4px_0px_0px_var(--md-sys-color-on-surface)] hover:shadow-[2px_2px_0px_0px_var(--md-sys-color-on-surface)]",
+        visualStyle === 'glass' && "bg-[var(--glass-bg)] backdrop-blur-[8px] border border-[var(--glass-border)]",
+        visualStyle === 'soft' && "shadow-[var(--soft-shadow-light)] border-0"
+      )}
+      title="Cari atau tukar zon solat"
+    >
+      <div class="flex items-center w-full min-w-0">
+        <div class="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] flex items-center justify-center shrink-0 shadow-xs mr-2.5">
+          <MapPin size={16} class={cn(
+            "shrink-0",
+            visualStyle === 'retro' && "stroke-[3]",
+            (visualStyle === 'glass' || visualStyle === 'soft') && "stroke-[1.5]",
+            !(visualStyle === 'retro' || visualStyle === 'glass' || visualStyle === 'soft') && "stroke-[2.2]"
+          )} />
+        </div>
+        <div class="flex flex-col overflow-hidden min-w-0 flex-1 text-left justify-center">
+          <span class="text-sm font-bold text-[var(--md-sys-color-on-surface)] truncate leading-tight">
+            {selectedLabel}
+          </span>
+          <span class="text-[11px] font-medium text-[var(--md-sys-color-on-surface-variant)] flex items-center gap-1.5 truncate leading-none mt-0.5">
+            {#if STATE_FLAGS[selectedState]}
+              <div class="flex items-center justify-center w-[16px] h-[12px] sm:w-[18px] sm:h-[14px] bg-white overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.1)] shrink-0 rounded-[2px]">
+                <img
+                  src={STATE_FLAGS[selectedState]}
+                  alt=""
+                  class="w-full h-full object-cover select-none pointer-events-none"
+                />
+              </div>
+            {/if}
+            <span class="truncate">{selectedState}</span>
+            <span class="font-sans font-bold ml-auto flex-shrink-0 opacity-70 text-[10px]">
+              {selectedZone}
+            </span>
+          </span>
+        </div>
+        <div class="w-7 h-7 rounded-full flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] opacity-60 group-hover:opacity-100 group-hover:bg-[var(--md-sys-color-outline)]/10 ml-1.5 shrink-0 transition-all">
+          <Search size={14} class="stroke-[2.2]" />
+        </div>
+      </div>
+    </button>
+
+    <div class="shrink-0 inline-flex hover:scale-105 active:scale-95 transition-transform duration-200" style:view-transition-name="map-transition">
+      <IconButton
+        variant="tonal"
+        shape="circle"
+        size="md"
+        class="w-11 h-11"
+        onclick={() => goto(`/map?zone=${selectedZone}`)}
+        title={t("viewMap")}
+        ariaLabel={t("viewMap")}
+      >
+        <MapIcon class={cn(
+          "w-5 h-5",
           visualStyle === 'retro' && "stroke-[3]",
           (visualStyle === 'glass' || visualStyle === 'soft') && "stroke-[1.5]",
           !(visualStyle === 'retro' || visualStyle === 'glass' || visualStyle === 'soft') && "stroke-[2.2]"
         )} />
-      </div>
-      <div class="flex flex-col overflow-hidden min-w-0 flex-1 text-left justify-center">
-        <span class="text-sm font-bold text-[var(--md-sys-color-on-surface)] truncate leading-tight">
-          {selectedLabel}
-        </span>
-        <span class="text-[11px] font-medium text-[var(--md-sys-color-on-surface-variant)] flex items-center gap-1.5 truncate leading-none mt-0.5">
-          {#if STATE_FLAGS[selectedState]}
-            <div class="flex items-center justify-center w-[16px] h-[12px] sm:w-[18px] sm:h-[14px] bg-white overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.1)] shrink-0 rounded-[2px]">
-              <img
-                src={STATE_FLAGS[selectedState]}
-                alt=""
-                class="w-full h-full object-cover select-none pointer-events-none"
-              />
-            </div>
-          {/if}
-          <span class="truncate">{selectedState}</span>
-          <span class="font-sans font-bold ml-auto flex-shrink-0 opacity-70 text-[10px]">
-            {selectedZone}
-          </span>
-        </span>
-      </div>
+      </IconButton>
     </div>
-  </button>
-
-  <div class="shrink-0 inline-flex hover:scale-105 active:scale-95 transition-transform duration-200" style:view-transition-name={!isMapOpen ? 'map-transition' : 'none'}>
-    <IconButton
-      variant="tonal"
-      shape="circle"
-      size="md"
-      class="w-11 h-11"
-      onclick={() => {
-        if (document.startViewTransition) {
-          document.startViewTransition(async () => {
-            isMapOpen = true;
-            await tick();
-          });
-        } else {
-          isMapOpen = true;
-        }
-      }}
-      title={t("viewMap")}
-      ariaLabel={t("viewMap")}
-    >
-      <MapIcon class={cn(
-        "w-5 h-5",
-        visualStyle === 'retro' && "stroke-[3]",
-        (visualStyle === 'glass' || visualStyle === 'soft') && "stroke-[1.5]",
-        !(visualStyle === 'retro' || visualStyle === 'glass' || visualStyle === 'soft') && "stroke-[2.2]"
-      )} />
-    </IconButton>
-  </div>
+  {/if}
 </div>
-
-<MapModal
-  isOpen={isMapOpen}
-  onClose={() => {
-    if (document.startViewTransition) {
-      document.startViewTransition(async () => {
-        isMapOpen = false;
-        await tick();
-      });
-    } else {
-      isMapOpen = false;
-    }
-  }}
-  {selectedZone}
-  userLocation={userCoords}
-  onZoneSelect={(zone: string) => {
-    onZoneSelect(zone);
-    if (document.startViewTransition) {
-      document.startViewTransition(async () => {
-        isMapOpen = false;
-        await tick();
-      });
-    } else {
-      isMapOpen = false;
-    }
-  }}
-/>
 
 {#if isOpen}
   <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -344,16 +596,31 @@ const handleScroll = (e: Event) => {
               {t("selectZoneDesc")}
             </p>
           </div>
-          <IconButton
-            variant="standard"
-            size="md"
-            shape="circle"
-            onclick={() => isOpen = false}
-            title="Close"
-            ariaLabel="Close"
-          >
-            <X size={24} strokeWidth={2.5} />
-          </IconButton>
+          <div class="flex items-center gap-2">
+            <IconButton
+              variant="tonal"
+              size="md"
+              shape="circle"
+              onclick={() => {
+                isOpen = false;
+                goto(`/map?zone=${selectedZone}`);
+              }}
+              title={t("viewMap")}
+              ariaLabel={t("viewMap")}
+            >
+              <MapIcon size={20} class="stroke-[2.2]" />
+            </IconButton>
+            <IconButton
+              variant="standard"
+              size="md"
+              shape="circle"
+              onclick={() => isOpen = false}
+              title="Close"
+              ariaLabel="Close"
+            >
+              <X size={24} strokeWidth={2.5} />
+            </IconButton>
+          </div>
         </div>
 
         <div class="mb-2 w-full">
@@ -362,7 +629,7 @@ const handleScroll = (e: Event) => {
               { id: 'manual', label: t('modeManual') || "Manual Selection", icon: Search },
               { id: 'auto', label: t('modeAuto') || "Auto Tracking", icon: Crosshair }
             ]}
-            activeTab={appSettings.settings.locationMode || 'manual'}
+            activeTab={appSettings.settings.locationMode || 'auto'}
             onchange={(tabId) => {
               appSettings.updateSettings({ locationMode: tabId as any });
               if (tabId === 'auto') {

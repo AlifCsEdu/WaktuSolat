@@ -43,6 +43,8 @@
     BellRing,
     Settings,
     Share2,
+    Sparkles,
+    ChevronDown,
   } from "lucide-svelte";
   import { parse, startOfDay, format } from "date-fns";
   import { calculateSunnahTimes } from "../lib/sunnah";
@@ -78,7 +80,6 @@
   let settings = $derived(appSettings.settings);
   let t = $derived((key: any, params?: any) => appSettings.t(key, params));
   let visualStyle = $derived(appSettings.settings.visualStyle);
-  const isSettingsOpen = $derived($page.url.pathname === '/settings');
 
   let filter = $state<"all" | "fardu" | "sunnah">("fardu");
 
@@ -115,6 +116,59 @@
   }) : {});
 
   let mergedData = $derived({ ...baseTimes, ...sunnahCalculated });
+
+  let isSunnahAccordionOpen = $state(false);
+
+  const sunnahPillItems = $derived.by(() => {
+    const isMs = settings.language === 'ms';
+    const tahajjudTime = (sunnahCalculated as any)?.tahajjud || '--:--';
+    const duhaTime = (sunnahCalculated as any)?.duha || '--:--';
+    const imsakTime = todayData?.imsak ? todayData.imsak.slice(0, 5) : '--:--';
+    const syurukTime = todayData?.syuruk ? todayData.syuruk.slice(0, 5) : '--:--';
+
+    return [
+      {
+        key: 'tahajjud',
+        name: isMs ? 'Solat Tahajjud' : 'Tahajjud Prayer',
+        time: tahajjudTime,
+        icon: Moon,
+        badge: isMs ? '1/3 Akhir Malam' : 'Last 1/3 Night',
+        context: isMs 
+          ? 'Waktu mustajab doa & Qiyamullail mendekatkan diri kepada Allah SWT'
+          : 'Blessed time for night prayer, repentance, and intimate supplication'
+      },
+      {
+        key: 'duha',
+        name: isMs ? 'Solat Dhuha' : 'Dhuha Prayer',
+        time: duhaTime,
+        icon: SunMedium,
+        badge: isMs ? 'Pagi Hari' : 'Mid-Morning',
+        context: isMs
+          ? '~20 minit selepas Syuruk. Amalan pembuka pintu rezeki dan sedekah sendi'
+          : '~20 mins after sunrise. Prayer of daily gratitude and spiritual abundance'
+      },
+      {
+        key: 'imsak',
+        name: isMs ? 'Waktu Imsak' : 'Imsak Time',
+        time: imsakTime,
+        icon: Sunrise,
+        badge: isMs ? 'Sebelum Subuh' : 'Pre-Dawn',
+        context: isMs
+          ? '10 minit sebelum azan Subuh sebagai ihtiyat persediaan berpuasa'
+          : '10 mins prior to Fajr as preparation and boundary for fasting'
+      },
+      {
+        key: 'syuruk',
+        name: isMs ? 'Waktu Syuruk' : 'Sunrise (Syuruk)',
+        time: syurukTime,
+        icon: Sun,
+        badge: isMs ? 'Matahari Terbit' : 'Sunrise',
+        context: isMs
+          ? 'Matahari mula terbit menandakan tamat Subuh, waktu zikir & doa pagi'
+          : 'Marks the end of Fajr time and opening of morning remembrance'
+      }
+    ];
+  });
 
   let allKeys = $derived.by(() => {
     let keys = [
@@ -252,7 +306,7 @@
             )} />
           </IconButton>
         </div>
-        <div class="inline-flex rotate-3 mt-1 hover:scale-105 active:scale-95 transition-transform" style:view-transition-name={!isSettingsOpen ? 'settings-transition' : 'none'}>
+        <div class="inline-flex rotate-3 mt-1 hover:scale-105 active:scale-95 transition-transform">
           <IconButton
             variant="tonal"
             shape="rounded"
@@ -289,6 +343,86 @@
           />
         </div>
       {/each}
+    </div>
+
+    <!-- Inline Expandable Sunnah Times Accordion Pill (Feature 8) -->
+    <div class="px-2 mb-2 lg:mb-2.5 shrink-0">
+      <button
+        type="button"
+        id="sunnah-accordion-btn"
+        aria-controls="sunnah-accordion-content"
+        use:ripple
+        class={cn(
+          "w-full rounded-[22px] px-3.5 py-2.5 flex items-center justify-between text-left transition-all duration-300 group cursor-pointer",
+          "bg-[var(--md-sys-color-surface-container)] hover:bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface)]",
+          "border border-[var(--md-sys-color-outline-variant)]/35 shadow-xs",
+          isSunnahAccordionOpen && "bg-[var(--md-sys-color-surface-container-high)] border-[var(--md-sys-color-primary)]/30 ring-1 ring-[var(--md-sys-color-primary)]/20"
+        )}
+        onclick={() => isSunnahAccordionOpen = !isSunnahAccordionOpen}
+        aria-expanded={isSunnahAccordionOpen}
+      >
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-7 h-7 rounded-full bg-[var(--md-sys-color-primary)]/15 text-[var(--md-sys-color-primary)] flex items-center justify-center shrink-0 shadow-xs">
+            <Sparkles size={14} class="stroke-[2.2]" />
+          </div>
+          <div class="flex flex-col min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-xs font-black tracking-tight text-[var(--md-sys-color-on-surface)]">
+                {settings.language === 'ms' ? 'Waktu Sunnah & Solat Pilihan' : 'Sunnah Times & Optional Prayers'}
+              </span>
+              <span class="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]">
+                Tahajjud • Dhuha • Imsak • Syuruk
+              </span>
+            </div>
+            <span class="text-[10px] text-[var(--md-sys-color-on-surface-variant)] truncate mt-0.5">
+              {settings.language === 'ms' ? 'Ketahui waktu amalan sunnah berserta fadhilat rohani' : 'Calculated optional prayer times with spiritual context'}
+            </span>
+          </div>
+        </div>
+        <div
+          class="w-6 h-6 rounded-full flex items-center justify-center text-[var(--md-sys-color-on-surface-variant)] group-hover:text-[var(--md-sys-color-primary)] transition-transform duration-300 shrink-0"
+          class:rotate-180={isSunnahAccordionOpen}
+        >
+          <ChevronDown size={16} class="stroke-[2.5]" />
+        </div>
+      </button>
+
+      {#if isSunnahAccordionOpen}
+        <div
+          id="sunnah-accordion-content"
+          role="region"
+          aria-labelledby="sunnah-accordion-btn"
+          transition:slide={{ duration: 250 }}
+          class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 pb-1"
+        >
+          {#each sunnahPillItems as item (item.key)}
+            {@const ItemIcon = item.icon}
+            <div class="rounded-[20px] p-2.5 sm:p-3 bg-[var(--md-sys-color-surface-container-low)] border border-[var(--md-sys-color-outline-variant)]/30 flex flex-col justify-between gap-1.5 shadow-xs hover:border-[var(--md-sys-color-primary)]/30 transition-all">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2 min-w-0">
+                  <div class="w-6 h-6 rounded-full bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] flex items-center justify-center shrink-0">
+                    <ItemIcon size={13} class="stroke-[2.2]" />
+                  </div>
+                  <div class="flex flex-col min-w-0">
+                    <span class="text-xs font-black text-[var(--md-sys-color-on-surface)] truncate">
+                      {item.name}
+                    </span>
+                    <span class="text-[8px] font-bold uppercase tracking-wider text-[var(--md-sys-color-on-surface-variant)]/75">
+                      {item.badge}
+                    </span>
+                  </div>
+                </div>
+                <span class="text-xs font-black tabular-nums text-[var(--md-sys-color-primary)] bg-[var(--md-sys-color-primary-container)] px-2.5 py-0.5 rounded-full shrink-0 shadow-2xs">
+                  {item.time}
+                </span>
+              </div>
+              <p class="text-[9.5px] text-[var(--md-sys-color-on-surface-variant)] leading-snug mt-0.5">
+                {item.context}
+              </p>
+            </div>
+          {/each}
+        </div>
+      {/if}
     </div>
 
     {#if hasAnyNotificationEnabled && notificationPermission === "denied"}

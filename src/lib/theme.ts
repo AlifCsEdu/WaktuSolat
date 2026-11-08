@@ -71,6 +71,12 @@ function applyThemeColors(scheme: DynamicScheme | Scheme, isDark: boolean = fals
     "surface-bright": (scheme as any).surfaceBright ?? scheme.surface,
     "surface-dim": (scheme as any).surfaceDim ?? scheme.surface,
     "surface-tint": (scheme as any).surfaceTint ?? scheme.primary,
+
+    // Error roles
+    "error": (scheme as any).error,
+    "on-error": (scheme as any).onError,
+    "error-container": (scheme as any).errorContainer,
+    "on-error-container": (scheme as any).onErrorContainer,
   };
 
   const root = document.documentElement;
@@ -87,13 +93,13 @@ function applyThemeColors(scheme: DynamicScheme | Scheme, isDark: boolean = fals
 }
 
 export const PRAYER_COLORS = {
-  imsak: "#1E1B4B",   // Isya/Imsak (Cosmic deep midnight indigo)
-  fajr: "#2E5A88",    // Subuh (Cool pre-dawn serenity blue)
-  syuruk: "#D97706",  // Syuruk (Radiant golden-yellow sunrise)
-  dhuhr: "#007A8C",   // Zohor (Vibrant sky-noon teal/cyan)
-  asr: "#B45309",     // Asar (Warm afternoon terracotta copper gold)
-  maghrib: "#BF3626", // Maghrib (Sunset glowing crimson)
-  isha: "#1E1B4B"     // Isya (Cosmic deep midnight indigo)
+  imsak: "#1E1B4B",   // Imsak (Midnight indigo)
+  fajr: "#6750A4",    // Subuh (Twilight violet)
+  syuruk: "#D97706",  // Syuruk (Golden dawn)
+  dhuhr: "#0284C7",   // Zohor (High sky azure)
+  asr: "#D97706",     // Asar (Amber warmth)
+  maghrib: "#BF3626", // Maghrib (Sunset crimson)
+  isha: "#1E1B4B"     // Isyak (Deep midnight indigo)
 };
 
 export async function applyThemeFromImage(image: HTMLImageElement, isDark: boolean = false, variant: ThemeVariant = "tonal_spot", contrastLevel: number = 0.0) {

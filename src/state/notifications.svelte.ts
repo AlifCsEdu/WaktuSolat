@@ -122,7 +122,7 @@ class NotificationsState {
       todayDataDate: todayData ? todayData.date : null,
       permission
     });
-    if (!todayData || permission !== 'granted') return;
+    if (!todayData) return;
     console.log('[checkNotifications] todayData contents:', JSON.stringify(todayData));
 
     if (this.prevDateRef !== todayData.date) {
@@ -158,13 +158,17 @@ class NotificationsState {
           const body = (appSettings.t("prayerTimeNow") as string).replace("{prayer}", prayerName);
           const title = (appSettings.t("prayerNotification") as string).replace("{prayer}", prayerName);
           
-          try {
-            console.log('[checkNotifications] creating main notification:', title, body);
-            new Notification(title, { body, requireInteraction: true });
-            console.log('[checkNotifications] main notification created successfully');
-            this.playSound(pref.sound, body);
-          } catch (e: any) {
-            console.error('[checkNotifications] main notification failed:', e.message, e.stack);
+          // In-app synthesized sound plays regardless of desktop push permission
+          this.playSound(pref.sound, body);
+
+          if (permission === 'granted' && typeof Notification !== 'undefined') {
+            try {
+              console.log('[checkNotifications] creating main notification:', title, body);
+              new Notification(title, { body, requireInteraction: true });
+              console.log('[checkNotifications] main notification created successfully');
+            } catch (e: any) {
+              console.error('[checkNotifications] main notification failed:', e.message, e.stack);
+            }
           }
         }
         
@@ -184,15 +188,18 @@ class NotificationsState {
             const preBody = (appSettings.t("preAlertMessage") as string).replace("{minutes}", pref.preAlert.toString()).replace("{prayer}", prayerName);
             const preTitle = (appSettings.t("preAlertNotification") as string).replace("{prayer}", prayerName);
             
-            try {
-              console.log('[checkNotifications] creating pre-alert notification:', preTitle, preBody);
-              new Notification(preTitle, { body: preBody, requireInteraction: true });
-              console.log('[checkNotifications] pre-alert notification created successfully');
-              if (pref.sound !== 'default') {
-                 this.playSound(pref.sound, preBody);
+            if (pref.sound !== 'default') {
+              this.playSound(pref.sound, preBody);
+            }
+
+            if (permission === 'granted' && typeof Notification !== 'undefined') {
+              try {
+                console.log('[checkNotifications] creating pre-alert notification:', preTitle, preBody);
+                new Notification(preTitle, { body: preBody, requireInteraction: true });
+                console.log('[checkNotifications] pre-alert notification created successfully');
+              } catch (e: any) {
+                console.error('[checkNotifications] pre-alert notification failed:', e.message, e.stack);
               }
-            } catch (e: any) {
-              console.error('[checkNotifications] pre-alert notification failed:', e.message, e.stack);
             }
           }
         }

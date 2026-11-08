@@ -15,7 +15,8 @@
     Pause,
     Plus,
     Minus,
-    Settings
+    Settings,
+    Sparkles
   } from "lucide-svelte";
   import type { PrayerData, GeneralSettings, TvModeReminder } from "../types";
   import { cn } from "../lib/utils";
@@ -23,6 +24,7 @@
   import { getMosqueLogoBlob, getAssetBlob } from "../lib/db";
   import TvModeReminderCard from "./TvModeReminderCard.svelte";
   import WeatherWidget from "./WeatherWidget.svelte";
+  import { playSynthesizedSound } from "../lib/audio";
 
   let {
     currentTime,
@@ -105,6 +107,33 @@
         hudIcon = null;
       }, 1500);
       return () => clearTimeout(timer);
+    }
+  });
+
+  let lastPlayedSecond = -1;
+
+  $effect(() => {
+    if (
+      iqamahCountdownActive && 
+      iqamahRemainingSeconds >= 0 && 
+      iqamahRemainingSeconds <= 10 && 
+      iqamahRemainingSeconds !== lastPlayedSecond &&
+      settings.iqamahCountdownSound &&
+      settings.iqamahCountdownSound !== 'none'
+    ) {
+      lastPlayedSecond = iqamahRemainingSeconds;
+      
+      const soundType = settings.iqamahCountdownSound;
+      const vol = (settings.soundVolume ?? 80) / 100;
+      if (soundType === 'chime') {
+        playSynthesizedSound('chime', vol, 800);
+      } else if (soundType === 'tick') {
+        playSynthesizedSound('tick', vol);
+      }
+    }
+    
+    if (!iqamahCountdownActive) {
+      lastPlayedSecond = -1;
     }
   });
 
@@ -250,6 +279,12 @@
         if (onSettingsClick) {
           onSettingsClick();
         }
+      } else if (key === "f") {
+        e.preventDefault();
+        toggleFullscreen();
+      } else if (key === "b") {
+        e.preventDefault();
+        isScreensaverActive = !isScreensaverActive;
       }
     };
 
@@ -266,6 +301,59 @@
       document.exitFullscreen();
     }
   }
+
+  // Ambient Screensaver State for Non-Prayer Periods
+  let isScreensaverActive = $state(false);
+  let screensaverQuadrant = $state(0); // 0: top, 1: bottom, 2: left, 3: right
+
+  // Inactivity tracking (default 5 minutes idle or manual activation via B / Sparkles button)
+  $effect(() => {
+    if (settings.tvModeScreensaverEnabled === false) {
+      isScreensaverActive = false;
+      return;
+    }
+
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    const idleMs = (settings.tvModeScreensaverIdleMinutes ?? 5) * 60 * 1000;
+
+    const resetIdle = () => {
+      if (isScreensaverActive) isScreensaverActive = false;
+      if (timeoutId) clearTimeout(timeoutId);
+      if (!iqamahCountdownActive) {
+        timeoutId = setTimeout(() => {
+          if (!iqamahCountdownActive) {
+            isScreensaverActive = true;
+          }
+        }, idleMs);
+      }
+    };
+
+    resetIdle();
+
+    const activityEvents = ["mousemove", "mousedown", "keydown", "touchstart", "wheel"];
+    activityEvents.forEach(evt => window.addEventListener(evt, resetIdle, { passive: true }));
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      activityEvents.forEach(evt => window.removeEventListener(evt, resetIdle));
+    };
+  });
+
+  // Cycle screensaver position for burn-in protection every 45s
+  $effect(() => {
+    if (!isScreensaverActive) return;
+    const interval = setInterval(() => {
+      screensaverQuadrant = (screensaverQuadrant + 1) % 4;
+    }, 45000);
+    return () => clearInterval(interval);
+  });
+
+  // Auto-dismiss screensaver if iqamah countdown starts
+  $effect(() => {
+    if (iqamahCountdownActive && isScreensaverActive) {
+      isScreensaverActive = false;
+    }
+  });
 
   const isMalay = $derived(settings.language === "ms");
   const showCenterWidget = $derived(settings.tvModeCenterWidget && settings.tvModeCenterWidget !== 'none');
@@ -539,7 +627,7 @@
     untrack(() => {
       const urls = urlsString
         .split("\n")
-        .map(line => line.trim())
+        .map((line: string) => line.trim())
         .filter(Boolean);
 
       const resolved: string[] = [];
@@ -984,6 +1072,14 @@
             <Settings size={20} />
           </button>
         {/if}
+
+        <button
+          onclick={() => isScreensaverActive = !isScreensaverActive}
+          class="w-12 h-12 rounded-2xl flex items-center justify-center bg-[var(--md-sys-color-surface-container-high)] hover:bg-[var(--md-sys-color-primary-container)] hover:text-[var(--md-sys-color-on-primary-container)] border border-[var(--md-sys-color-outline-variant)]/50 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+          title={isMalay ? "Mod Rehat / Screensaver (B)" : "Ambient Screensaver (B)"}
+        >
+          <Sparkles size={20} />
+        </button>
 
         <button
           onclick={toggleFullscreen}
@@ -1464,6 +1560,95 @@
           <Minus size={20} class="text-[var(--md-sys-color-error)] stroke-[2.5]" />
         {/if}
         <span class="text-xs font-black tracking-widest uppercase">{hudMessage}</span>
+      </div>
+    {/if}
+
+    {#if isScreensaverActive}
+      <!-- Ambient Screensaver Overlay during Non-Prayer Periods -->
+      <!-- svelte-ignore a11y_click_events_have_key_events -->
+      <!-- svelte-ignore a11y_no_static_element_interactions -->
+      <div
+        in:fade={{ duration: 600 }}
+        out:fade={{ duration: 300, isExit: true }}
+        class="fixed inset-0 z-[10001] bg-[var(--md-sys-color-surface-container-lowest)] flex items-center justify-center cursor-pointer select-none overflow-hidden"
+        onclick={() => isScreensaverActive = false}
+      >
+        <!-- Sacred Islamic Geometry Rotating Rosette / Khatam Star -->
+        <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+          <svg class="w-[85vmin] h-[85vmin] animate-[spin_120s_linear_infinite]" viewBox="0 0 200 200">
+            <!-- 8-Point Star Geometry -->
+            <polygon
+              points="100,10 120,60 170,40 145,90 190,120 135,135 140,190 95,155 60,190 65,135 10,120 55,90 30,40 80,60"
+              fill="none"
+              stroke="var(--md-sys-color-primary)"
+              stroke-width="1.2"
+              class="animate-pulse duration-[4000ms]"
+            />
+            <circle cx="100" cy="100" r="75" fill="none" stroke="var(--md-sys-color-primary)" stroke-width="0.8" opacity="0.6" />
+            <circle cx="100" cy="100" r="45" fill="none" stroke="var(--md-sys-color-primary)" stroke-width="0.8" stroke-dasharray="4 4" />
+            <rect x="55" y="55" width="90" height="90" fill="none" stroke="var(--md-sys-color-outline-variant)" stroke-width="0.6" transform="rotate(45 100 100)" />
+            <rect x="55" y="55" width="90" height="90" fill="none" stroke="var(--md-sys-color-outline-variant)" stroke-width="0.6" />
+          </svg>
+        </div>
+
+        <!-- Ambient Radial Glow -->
+        <div class="absolute w-[600px] h-[600px] rounded-full bg-[var(--md-sys-color-primary)]/10 blur-[140px] pointer-events-none"></div>
+
+        <!-- Floating Drifting Clock (Burn-in Protection) -->
+        <div
+          class={cn(
+            "relative z-10 flex flex-col items-center text-center p-8 transition-transform duration-1000 ease-out",
+            screensaverQuadrant === 0 && "-translate-y-12 sm:-translate-y-20",
+            screensaverQuadrant === 1 && "translate-y-12 sm:translate-y-20",
+            screensaverQuadrant === 2 && "-translate-x-16 sm:-translate-x-28",
+            screensaverQuadrant === 3 && "translate-x-16 sm:translate-x-28"
+          )}
+        >
+          <!-- Mosque Name or Title -->
+          <span class="text-sm font-extrabold tracking-[0.3em] uppercase text-[var(--md-sys-color-primary)] mb-3">
+            {settings.mosqueName || "AlurWaktu"}
+          </span>
+
+          <!-- Time Display with clamp -->
+          <div class="flex items-baseline justify-center select-none font-sans font-black tabular-nums tracking-tighter text-[var(--md-sys-color-on-surface)] leading-none text-[clamp(5rem,14vh,9rem)] drop-shadow-2xl">
+            <span>{timeString.split(":")[0]}</span>
+            <span class={cn(colonBlink && "tv-colon-blink")}>:</span>
+            <span>{timeString.split(":")[1]}</span>
+            {#if ampm}
+              <span class="ml-4 text-[clamp(1.5rem,4vh,2.5rem)] text-[var(--md-sys-color-primary)] font-black uppercase tracking-widest">
+                {ampm}
+              </span>
+            {/if}
+          </div>
+
+          <!-- Date Display -->
+          <div class="flex items-center gap-3 mt-4 text-base sm:text-lg font-bold text-[var(--md-sys-color-on-surface-variant)]">
+            <span>{dateString}</span>
+            {#if hijriString}
+              <span class="text-[var(--md-sys-color-tertiary)] font-black uppercase tracking-wider">
+                • {hijriString}
+              </span>
+            {/if}
+          </div>
+
+          <!-- Next Prayer Badge -->
+          {#if nextPrayerName && countdownString}
+            <div class="mt-6 px-6 py-2 rounded-full bg-[var(--md-sys-color-surface-container-high)]/80 backdrop-blur-xl border border-[var(--md-sys-color-outline-variant)]/40 shadow-lg flex items-center gap-2.5">
+              <span class="w-2 h-2 rounded-full bg-[var(--md-sys-color-primary)] animate-pulse"></span>
+              <span class="text-xs uppercase font-extrabold tracking-widest text-[var(--md-sys-color-on-surface-variant)]">
+                {isMalay ? "Solat Seterusnya" : "Next Prayer"}:
+              </span>
+              <span class="text-sm font-black text-[var(--md-sys-color-primary)]">
+                {nextPrayerName} ({countdownString})
+              </span>
+            </div>
+          {/if}
+
+          <!-- Subtle Wake Hint -->
+          <span class="mt-8 text-[11px] font-semibold text-[var(--md-sys-color-outline)]/60 tracking-wider">
+            {isMalay ? "Ketik skrin atau tekan sebarang kekunci untuk kembali" : "Click anywhere or press any key to resume"}
+          </span>
+        </div>
       </div>
     {/if}
   </div>

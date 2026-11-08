@@ -9,7 +9,7 @@
 </script>
 
 <script lang="ts">
-  import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
+  import { m3Fade as fade, m3Fly as fly, m3Slide as slide, m3Scale as scale } from "../lib/transitions";
   import { Sparkles, Tv, Heart, Quote, AlertCircle } from "lucide-svelte";
   import type { TvModeReminder, TvModeReminderText, TvModeReminderImage } from "../types";
   import { cn } from "../lib/utils";

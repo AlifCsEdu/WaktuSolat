@@ -1,15 +1,18 @@
 <script lang="ts">
   import MapModal from '../../components/MapModal.svelte';
   import { StorageManager } from '../../lib/StorageManager';
+  import { locationState } from '../../state/location.svelte';
   import { goto } from '$app/navigation';
-  import { onMount, tick } from 'svelte';
+  import { page } from '$app/stores';
+  import { onMount } from 'svelte';
 
   let selectedZone = $state('');
   let userLocation = $state<{ lat: number; lng: number } | null>(null);
-  let isOpen = $state(true);
+
+  let zoneParam = $derived($page.url.searchParams.get('zone'));
 
   onMount(() => {
-    selectedZone = StorageManager.getZone() || 'WLY01';
+    selectedZone = zoneParam || locationState.selectedZone || StorageManager.getZone() || 'WLY01';
     
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -25,28 +28,38 @@
     }
   });
 
-  async function handleZoneSelect(zone: string) {
-    StorageManager.saveZone(zone);
-    isOpen = false;
-    await tick();
-    goto('/');
+  $effect(() => {
+    if (zoneParam && zoneParam !== selectedZone) {
+      selectedZone = zoneParam;
+    }
+  });
+
+  function handleZoneSelect(zone: string) {
+    selectedZone = zone;
+    StorageManager.setZone(zone);
+    locationState.setZone(zone, false);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('zone', zone);
+      window.history.replaceState({}, '', url.toString());
+    }
   }
 
-  async function handleClose() {
-    isOpen = false;
-    await tick();
-    goto('/');
+  function handleClose() {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      window.history.back();
+    } else {
+      goto('/');
+    }
   }
 </script>
 
-<div class="fixed inset-0 z-50 flex items-center justify-center p-0 m-0 bg-[var(--md-sys-color-scrim)]/30 backdrop-blur-md">
-  {#if selectedZone}
-    <MapModal
-      isOpen={isOpen}
-      selectedZone={selectedZone}
-      userLocation={userLocation}
-      onZoneSelect={handleZoneSelect}
-      onClose={handleClose}
-    />
-  {/if}
-</div>
+{#if selectedZone}
+  <MapModal
+    isOpen={true}
+    selectedZone={selectedZone}
+    userLocation={userLocation}
+    onZoneSelect={handleZoneSelect}
+    onClose={handleClose}
+  />
+{/if}

@@ -1,187 +1,195 @@
-# Playwright E2E Test Suite Infrastructure & Design
+# AlurWaktu M3 Expressive — Test Infrastructure & Quality Assurance Specification
 
-This document details the configuration, feature inventory, equivalence class partitions, and the 55 end-to-end test cases configured to verify the Offline-First PWA features of the Waktu Solat Expressive app.
+**Document Version**: 2.0.0  
+**Target Milestone**: M1–M5 Full Verification Track  
+**Architecture Tier**: Google Material 3 Expressive (Pixel Flagship Tier)  
+**Standard**: 4-Tier Test Verification Methodology  
+**Working Directory**: `c:\Users\alif325\Documents\WIndsurf projeks\waktu-solat-expressive`  
 
 ---
 
-## 1. Test Runner Command & Configuration
+## 1. Executive Summary & Verification Philosophy
 
-### A. Execution Commands
-To run the full suite of E2E tests:
+AlurWaktu adheres to a zero-compromise quality assurance architecture built to ensure reliability, offline resilience, and fluid 60fps performance across web, mobile, and mosque kiosk environments.
+
+The testing infrastructure operates on two distinct, complementary test runners:
+1. **Vitest Unit & Integration Suite**: High-speed Node.js test harness exercising pure domain logic, astronomical calculations, Web Audio synthesizer tone generators, security sanitization, and state derivation.
+2. **Playwright End-to-End (E2E) Browser Suite**: Headless and headed Chromium browser automation verifying the Service Worker cache lifecycle, IndexedDB storage engine, View Transitions API, reactive layout viewports, and standalone SvelteKit route transitions.
+
+### Core Testing Invariants
+- **Progressive Testability**: Tests depend strictly on completed milestone features and stable platform primitives.
+- **Strict Isolation & Concurrency Control**: Playwright runs single-worker serialized execution (`workers: 1`) to eliminate database write contention in IndexedDB and Service Worker cache races.
+- **Deterministic Oracle Derivation**: Astronomical prayer time calculations are verified against official JAKIM reference models, Adhan astronomical formulas, and exact ISO time schedules.
+- **Zero Implementation Tampering**: Tests evaluate external contract interfaces, visual layout constraints, and runtime side effects without modifying production code.
+
+---
+
+## 2. The 4-Tier Testing Methodology
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│               TIER 4: Real-World Scenarios (End-to-End)                │
+│  - Airplane mode commutation, 24/7 Mosque Kiosk, Zero-onboarding launch │
+├────────────────────────────────────────────────────────────────────────┤
+│            TIER 3: Cross-Feature Integration Combinations              │
+│  - Prayer theme transitions during navigation, Offline zone switches   │
+├────────────────────────────────────────────────────────────────────────┤
+│               TIER 2: Boundary, Edge & Stress Conditions               │
+│  - Leap second rollovers, quota pressure, 320px vs 2560px viewports    │
+├────────────────────────────────────────────────────────────────────────┤
+│                 TIER 1: Primary Feature Coverage                       │
+│  - 20 Features from PROJECT.md, M3 Tokens, Countdown Ring, Routes      │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Tier 1: Feature Coverage (Primary Capabilities)
+Exhaustive verification of each standalone feature across M1–M4.
+
+| Feature ID | Feature Name | Test File(s) | Key Assertions & Observables |
+|---|---|---|---|
+| **F-01** | Atmospheric Prayer Color Spectrum | `tests/theme.test.ts` | Validates `PRAYER_COLORS` contains 7 prayer phases with valid hex values (`#6750A4`, `#D97706`, `#0284C7`, `#BF3626`, `#1E1B4B`). |
+| **F-02** | Default Dynamic Theme & Dark Mode | `tests/theme.test.ts` | Validates `DEFAULT_GENERAL_SETTINGS` defaults, dark mode toggling, and Material 3 CSS variable generation. |
+| **F-03** | M3 Typography & Squircle Tokens | `tests/m3-expressive.spec.ts` | Validates `.md3-*` font metrics, `--radius-*` tokens, and `--app-radius-scale`. |
+| **F-04** | Symmetrical 56px Top Floating App Bar | `tests/m3-expressive.spec.ts` | Confirms header container rendered at 56px (`h-14`), 44px circular action buttons (`w-11 h-11`), stroke 2.2. |
+| **F-05** | Hero Prayer Focal Card | `tests/m3-expressive.spec.ts` | Centerpiece focal card with next prayer title, time remaining countdown, progress track, and radiant glow. |
+| **F-06** | Adaptive Bento Dashboard Grid | `tests/m3-expressive.spec.ts` | Fluid multi-column squircle grid replacing rigid columns; responsive flex/grid wrappers. |
+| **F-07** | Sticky Mini-Countdown on Mobile | `tests/m3-expressive.spec.ts` | Persistent mobile countdown pinning when hero card scrolls out of viewport. |
+| **F-08** | Inline Expandable Sunnah Times | `tests/m3-expressive.spec.ts` | Accordion/filter chips (`all`, `fardu`, `sunnah`) in prayer schedule revealing Tahajjud, Dhuha, Imsak, Syuruk. |
+| **F-09** | Standalone Calendar Page (`/calendar`) | `tests/m3-expressive.spec.ts`, `tests/transitions.spec.ts` | Direct route loading, HTTP 200, absence of teleport portal bugs, and M3 sheet day view. |
+| **F-10** | Standalone Settings Center (`/settings`) | `tests/m3-expressive.spec.ts`, `tests/pwa-offline.spec.ts` | Direct route loading, tab switching, search filtering, and state persistence. |
+| **F-11** | Standalone Mosque TV Mode (`/tv`) | `tests/tv-mode.spec.ts`, `tests/m3-expressive.spec.ts` | Direct `/tv` route, large digital clock, Iqamah countdown, ticker, and screensaver modes. |
+| **F-12** | Standalone Zone Map Page (`/map`) | `tests/m3-expressive.spec.ts` | Direct `/map` route, interactive JAKIM zone picker, and coordinate geocoding. |
+| **F-13** | Native View Transitions API Integration | `tests/transitions.spec.ts`, `tests/m3-expressive.spec.ts` | Smooth 60fps morphing with `view-transition-name` attributes and `prefers-reduced-motion` safety. |
+| **F-14** | Instant Launch & Zero Onboarding Blocker | `tests/m3-expressive.spec.ts` | Verifies clean-profile launch lands directly on interactive dashboard without blocking multi-step modals. |
+| **F-15** | Silent Automatic GPS Zone Detection | `tests/geocoding.test.ts`, `tests/pwa-offline.spec.ts` | Default auto location mode and silent Malaysian default coordinate lookup (`WLY01`/`SGR01`). |
+| **F-16** | Offline GPS Centroid Fallback | `tests/geocoding.test.ts` | Haversine distance nearest-zone centroid lookup without network connection. |
+| **F-17** | Calendar Offline IndexedDB Fallback | `tests/pwa-offline.spec.ts` | Reading cached monthly prayer schedule from `prayer-times` store when network is disconnected. |
+| **F-18** | Web Audio API Harmonic Synthesizers | `tests/audio.test.ts` | Oscillator frequencies, sub-harmonic chords, gesture unlocking, and volume normalization. |
+| **F-19** | Production Build & Lint Validation | Continuous runner | `npm run lint` (`tsc --noEmit`) and `npm run build` pass with 0 errors. |
+| **F-20** | E2E & Unit Test Hardening | Test runner aggregate | 100% pass across all Vitest unit tests and Playwright E2E suites. |
+
+---
+
+### Tier 2: Boundary, Edge & Corner Cases
+Validation of system stability under adverse conditions, extreme dimensions, and hostile inputs.
+
+1. **Storage & Quota Stress**:
+   - Corrupted IndexedDB payloads: Graceful fallback to default values without app crashes.
+   - Legacy schema compatibility: Decompressing both uncompressed legacy objects and compact tuple arrays.
+   - Cleared local storage: Seamless re-initialization of `appSettings` and `locationState`.
+2. **Viewport Boundaries**:
+   - Ultra-narrow mobile (`320px` and `375px`): Eliminates horizontal scrolling; top bar and cards adjust smoothly.
+   - High-density tablet fold (`768px` and `1024px`): Balanced two-column bento transition.
+   - Ultra-wide 4K (`2560px` and `3840px`): Container clamped to max-width with balanced whitespace.
+3. **Temporal & Clock Edge Conditions**:
+   - Leap second and midnight date rollovers (`23:59:59` -> `00:00:00`): Schedule recalculates without refresh.
+   - Ramadan seasonal timings: Suhoor and Imsak offsets properly adjusted.
+4. **Motion & Accessibility Boundary**:
+   - `prefers-reduced-motion: reduce`: View Transitions API and CSS animations cleanly degrade to instantaneous switches.
+
+---
+
+### Tier 3: Cross-Feature Integration Combinations
+Verification of interdependent systems interacting concurrently.
+
+1. **Theme Shifting During Standalone Page Navigation**:
+   - Changing solar prayer phase dynamically updates the primary color scheme across `/calendar`, `/settings`, and `/tv`.
+2. **Offline Zone Switching**:
+   - Switching JAKIM zone while completely offline resolves cached prayer times from IndexedDB or triggers offline sync notice.
+3. **Active Countdown During Mosque Mode Audition**:
+   - High-frequency countdown clock ticks in parallel with Web Audio oscillator chime playback without audio stutter or frame drops.
+4. **Overlay Queue Prioritization**:
+   - Verification that higher priority notifications (`azan-alert` at priority 80) supersede lower priority banners (`location-toast` at priority 30).
+
+---
+
+### Tier 4: Real-World User Scenarios
+End-to-end simulations mirroring actual user journeys.
+
+1. **The Commuter (Offline Airplane Mode Simulation)**:
+   - User launches application with pre-cached schedules.
+   - App is taken offline via Playwright CDP network disconnection.
+   - User reviews prayer schedule and opens `/calendar`.
+   - Device reconnects: App automatically triggers background silent sync without page reload.
+2. **The Mosque Kiosk Display (Unattended 24/7 Run)**:
+   - Application launched in Mosque TV mode (`/tv`).
+   - Custom reminders and ticker texts rotate across configurable intervals.
+   - Iqamah countdown reaches zero, triggering synthesized chime alert.
+3. **The Multi-State Traveler**:
+   - User travels from Kuala Lumpur (`WLY01`) to Johor Bahru (`JHR01`).
+   - Coordinates update: Zone promptly adjusts, schedule reflects new solar coordinates.
+
+---
+
+## 3. Test Suite Inventory
+
+### Vitest Unit Suites (`tests/**/*.test.ts`)
+| File | Tests | Focus Area |
+|---|---|---|
+| `tests/theme.test.ts` | 8 | Material 3 colors, `PRAYER_COLORS`, CSS variable injection, dynamic schemes. |
+| `tests/audio.test.ts` | 12 | Web Audio API synthesizer, frequencies, chords, volume normalization. |
+| `tests/geocoding.test.ts` | 12 | Geocoding parsing, Haversine formulas, centroid lookup. |
+| `tests/api.test.ts` | 13 | API endpoint validation, zone parameters, Adhan fallback calculations. |
+| `tests/StorageManager.test.ts` | 6 | LocalStorage wrapper, defaults, migration helpers. |
+| `tests/security.test.ts` | 5 | Input sanitization, XSS mitigation, parameter escaping. |
+| `tests/zone.test.ts` | 5 | JAKIM zone code normalization and state mapping. |
+| `tests/ui-primitives.test.ts` | 7 | M3 UI components, ripple effects, custom transitions. |
+| `tests/m4-screens.test.ts` | 3 | Settings state modifiers, mosque state computations. |
+| `tests/og.test.ts` | 5 | Dynamic OpenGraph image generation and HTTP error handling. |
+| **Total Vitest** | **76 tests** | **10 files — 100% Pass** |
+
+### Playwright E2E Suites (`tests/**/*.spec.ts`)
+| File | Tests | Focus Area |
+|---|---|---|
+| `tests/pwa-offline.spec.ts` | 55 | Service Worker, offline IndexedDB CRUD, network recovery, settings. |
+| `tests/m3-expressive.spec.ts` | 10 | M3 Expressive top bar, hero card, bento grid, standalone routes, responsive. |
+| `tests/transitions.spec.ts` | 3 | View Transitions, reduced-motion compliance, overlay queue priorities. |
+| `tests/tv-mode.spec.ts` | 4 | Mosque TV layouts, countdown targets, typography, custom reminders. |
+| `tests/visual-regression.spec.ts` | 1 | Pixel-fidelity full-page visual regression artifacts. |
+| **Total Playwright** | **73 tests** | **5 spec files** |
+
+---
+
+## 4. Execution Guide
+
+### Running Unit Tests
 ```bash
-# Build the application
-npm run build
+# Execute full Vitest suite in single run
+npm run test
 
-# Run Playwright tests
+# Run specific test file
+npx vitest run tests/theme.test.ts
+```
+
+### Running E2E Playwright Tests
+```bash
+# Execute all Playwright E2E specs
 npx playwright test
-```
 
-For UI mode testing or specific specifications:
-```bash
-# Run tests in UI mode
-npx playwright test --ui
-
-# Run only PWA offline tests
+# Execute specific suite
+npx playwright test tests/m3-expressive.spec.ts
 npx playwright test tests/pwa-offline.spec.ts
+npx playwright test tests/tv-mode.spec.ts
+npx playwright test tests/transitions.spec.ts
 ```
 
-### B. Playwright Configuration (`playwright.config.ts`)
-The configuration is optimized to prevent IndexedDB lock conflicts by disabling parallel workers (`workers: 1`) and allowing script execution in the browser context via `bypassCSP: true`. It also establishes default permissions for notifications and geolocation, and registers a `webServer` block to build and run the SvelteKit application locally.
+### Static Analysis & Production Build
+```bash
+# Verify TypeScript strict typings
+npm run lint
+
+# Compile production bundle
+npm run build
+```
 
 ---
 
-## 2. Feature Inventory & Equivalence Class Partitions
-
-### R1: PWA Asset Cache & Offline Load
-*Verifies that the application can install, boot, load static assets, and function visually without any active network connection.*
-
-- **Network State**:
-  - P1.1: Online (Normal)
-  - P1.2: Complete Offline
-  - P1.3: Flaky / Slow (latency and timeout simulation)
-- **Asset Categories**:
-  - P1.4: App Shell Core (`/`, `manifest`)
-  - P1.5: Static Assets (`/assets/*.js`, `/audio/*.mp3`)
-  - P1.6: Same-Origin GeoJSON files
-- **Service Worker Lifecycle**:
-  - P1.7: Unregistered
-  - P1.8: Activated & Running
-  - P1.9: Old Cache Purging
-
-### R2: IndexedDB Offline Prayer Times Calendar
-*Verifies database reading, writing, decompression, range configuration, and calendar lookup when disconnected.*
-
-- **Cache State**:
-  - P2.1: Cold Storage (No cache for zone)
-  - P2.2: Warm Storage (Valid range cache)
-  - P2.3: Multi-Zone Storage (Different active zones)
-- **Compression Mode**:
-  - P2.4: Compressed tuple arrays (`[date, hijri, ...]`)
-  - P2.5: Legacy object array records (backwards-compat)
-- **Duration Range**:
-  - P2.6: Week-only scope
-  - P2.7: Month-only scope
-  - P2.8: Year-only scope
-- **Database Access**:
-  - P2.9: Read/Write success
-  - P2.10: Restricted space / QuotaExceededError
-
-### R3: Background Notification Switches and Scheduling
-*Verifies that background notifications trigger at the correct time, play selected audio volumes, and respect preferences.*
-
-- **Notification Permission**:
-  - P3.1: Granted
-  - P3.2: Denied
-  - P3.3: Default (Displays Pre-Prompt)
-- **Switch Toggles**:
-  - P3.4: Single prayer active
-  - P3.5: Multi-prayer active
-  - P3.6: Quick Action All Muted / All Enabled
-- **Clock Conditions**:
-  - P3.7: Current time < prayer time
-  - P3.8: Current time = prayer time (Trigger)
-  - P3.9: Current time = pre-alert offset
-- **Alert Feedback**:
-  - P3.10: Synthetic tones (beep, chime)
-  - P3.11: Audio file (azan1, azan2)
-  - P3.12: Speech Synthesis (text-to-speech)
-  - P3.13: Visual overlay alert (dramatic, standard, none)
-
-### R4: Synchronization Status & Manual Force Re-Sync
-*Verifies that the application signals offline state, notifies users when going online, and syncs data either automatically or manually.*
-
-- **Network Transition**:
-  - P4.1: Online to Offline
-  - P4.2: Offline to Online (Auto-Sync ON)
-  - P4.3: Offline to Online (Auto-Sync OFF)
-- **Trigger Origin**:
-  - P4.4: Auto reconnect background trigger
-  - P4.5: Toast manual button ("Sync Now")
-  - P4.6: Settings manual button ("Save Offline")
-- **Sync Feedback**:
-  - P4.7: Loading (spinner showing)
-  - P4.8: Sync Success (green toast, updated timestamp)
-  - P4.9: Sync Failure (error toast, offline fallback preserved)
-
----
-
-## 3. Detailed List of 55 Planned Test Cases
-
-### Tier 1: Feature Coverage (24 Test Cases)
-
-#### R1: PWA Asset Cache & Offline Load
-1. **R1-TC1: Service Worker Registration**: Verify that visiting the site online successfully registers the service worker.
-2. **R1-TC2: App Shell Offline Boot**: Verify the app loads and renders correctly when completely offline on reload.
-3. **R1-TC3: Cache-First Static Assets**: Verify static assets (Vite assets, icons, fonts) are loaded from Cache-First strategy.
-4. **R1-TC4: Network-First GeoJSON Loading**: Verify the Malaysia zone map GeoJSON loads from network first, caching it for offline fallback.
-5. **R1-TC5: API Cache Bypass**: Verify API requests bypass the service worker static cache.
-6. **R1-TC6: SW Activation Purge**: Verify that activating a new service worker deletes older caches.
-
-#### R2: IndexedDB Offline Prayer Times Calendar
-7. **R2-TC7: Offline Data Write on Fetch Success**: Verify that successful API fetches auto-cache prayer times into IndexedDB.
-8. **R2-TC8: Offline Data Read on Network Loss**: Verify that when offline, prayer schedule details are populated from IndexedDB.
-9. **R2-TC9: Database Compression Verification**: Verify prayer times stored in IndexedDB are stored in the compressed tuple array format.
-10. **R2-TC10: Database Backwards-Compatibility Decompression**: Verify legacy object arrays inside IndexedDB are correctly parsed.
-11. **R2-TC11: Settings Cache Manual Download**: Verify users can download offline cache manually via Settings.
-12. **R2-TC12: Settings Cache Manual Clear**: Verify users can purge offline cache from the database.
-
-#### R3: Background Notification Switches & Scheduling
-13. **R3-TC13: Notification Permission Pre-Prompt UI**: Verify pre-prompt is displayed when notifications are default.
-14. **R3-TC14: Notification Toggle Storage**: Verify toggling alerts writes state to localStorage.
-15. **R3-TC15: Quick Toggle Actions**: Verify "Enable All" and "Mute All" toggle all switches simultaneously.
-16. **R3-TC16: Standard Prayer Alert Trigger**: Verify notification triggers at the exact prayer hour.
-17. **R3-TC17: Pre-Alert Offset Trigger**: Verify notifications trigger at pre-alert offsets (e.g., 5 mins before).
-18. **R3-TC18: Background Volume Adjustments**: Verify volume slider changes output level in settings.
-
-#### R4: Synchronization Status & Manual Force Re-Sync
-19. **R4-TC19: Online Reconnection Detection (Toast)**: Verify that going online displays the connection sync toast.
-20. **R4-TC20: Auto-Sync on Reconnect**: Verify background synchronization triggers automatically if configured.
-21. **R4-TC21: Manual Force Re-Sync (Toast Trigger)**: Verify manual trigger of sync updates local databases.
-22. **R4-TC22: Sync Success Feedback UI**: Verify successful sync automatically hides the toast.
-23. **R4-TC23: Sync Error Handling & UI Feedback**: Verify UI state when synchronization fails.
-24. **R4-TC24: Caching Status Verification (Settings)**: Verify Settings displays the correct cache state and duration values.
-
-### Tier 2: Boundary & Corner Cases (20 Test Cases)
-
-#### R1: PWA Asset Cache & Offline Load
-25. **R1-TC25: Flaky Network Fallback**: Verify asset loading during highly unstable connections.
-26. **R1-TC26: Large GeoJSON File Corruption**: Verify app behavior if GeoJSON file fails during download or is partially cached.
-27. **R1-TC27: Offline Reload of Settings Route directly**: Verify visiting `/settings` route directly while offline handles hydration.
-28. **R1-TC28: Storage Quota Limit on Cache Put**: Verify PWA handles full cache partitions without crashes.
-29. **R1-TC29: Non-GET Requests Bypass**: Verify non-GET requests are not intercepted by SW cache.
-
-#### R2: IndexedDB Offline Prayer Times Calendar
-30. **R2-TC30: Empty Cache Calendar Navigation**: Verify calendar behavior when navigating dates with no offline database entry.
-31. **R2-TC31: Invalid Zone IndexedDB Query**: Verify IndexedDB gracefully handles invalid zone requests.
-32. **R2-TC32: Year-End Range Transition**: Verify year-range offline caching on December 31st.
-33. **R2-TC33: IndexedDB Access Blocked (Private Browsing)**: Verify database fallback when browser blocks IndexedDB (e.g. strict incognito modes).
-34. **R2-TC34: Overwriting Stale Cache Records**: Verify database updates when caching new range over an existing range.
-
-#### R3: Background Notification Switches & Scheduling
-35. **R3-TC35: Notification Dismissed or Blocked Permisssions**: Verify UI behavior if user blocks notifications during pre-prompt.
-36. **R3-TC36: Audio Track Load Failure**: Verify notification sound fails gracefully if audio files are missing.
-37. **R3-TC37: Multi-Prayer Coincidence (Same Minute Times)**: Verify behavior if two alerts occur at the same minute.
-38. **R3-TC38: Minimized Tab Activity Retention**: Verify notifications trigger when the tab is running in the background.
-39. **R3-TC39: Negative Adjustments / Offsets**: Verify calculations and notifications when minute offset makes a prayer time transition past midnight.
-
-#### R4: Synchronization Status & Manual Force Re-Sync
-40. **R4-TC40: Multiple Online Transitions (Debouncing)**: Verify that toggling connection online/offline rapidly does not queue multiple sync tasks.
-41. **R4-TC41: Sync Action while Offline**: Verify that manual sync requests are rejected while offline.
-42. **R4-TC42: Interrupted Sync Network Drop**: Verify sync state if connection drops mid-request.
-43. **R4-TC43: Large Year Payload Parse Limits**: Verify sync handles large payloads (yearly calendar contains 365 rows of arrays).
-44. **R4-TC44: Partial Success Cache Cleanup**: Verify database state if local storage updates succeed but IndexedDB fails during sync.
-
-### Tier 3: Cross-Feature Combinations (5 Test Cases)
-45. **TC45: Offline Navigation & Cache Storage Refresh**: Verify offline app navigation combined with settings management.
-46. **TC46: Offline Settings Offsets & Alert Recalculation**: Verify that modifying offsets offline recalculates and schedules notifications using offline database.
-47. **TC47: Interrupted Sync Auto-Recovery & Notification**: Verify system recovery after connection loss during an active sync task while notifications are scheduled.
-48. **TC48: Multi-Zone Cache Selection, Switching, and Notifications**: Verify changing zones offline updates calendar and schedules.
-49. **TC49: Incognito Storage Blocked, Calculated Offsets, and Mock Alerts**: Verify system behavior when IndexedDB is blocked, offline mode is forced, offsets are applied, and alerts trigger.
-
-### Tier 4: Real-World Application Scenarios (6 Test Cases)
-50. **TC50: The Incognito Sandbox Mode**: Verify total system operation under strict user privacy restrictions.
-51. **TC51: Mosque TV Mode Running Offline for 7 Days**: Verify TV Mode display reliability and clock updates during prolonged offline setups.
-52. **TC52: Ramadan Hijri Calendar Transition Offline**: Verify offline calendar searches and calculations across month transitions.
-53. **TC53: First-time Onboarding, Permission Denial, and Recovery**: Verify first-time installation flow, permission rejection, and manual recovery.
-54. **TC54: Auto-Update Zone Re-Sync on Travel**: Verify zone updates when geographical coordinates shift while offline.
-55. **TC55: Factory Reset and Purge Lifecycle**: Verify factory reset fully restores app to fresh install state.
+## 5. Environment & Infrastructure Requirements
+- **Node.js**: v20+ / v22+
+- **Playwright Configuration**:
+  - `baseURL`: `http://127.0.0.1:3001`
+  - `workers`: `1` (strict serialization for storage safety)
+  - `webServer`: Automatically boots production preview build on port 3001.
+  - Permissions: `geolocation`, `notifications` pre-granted in test context.

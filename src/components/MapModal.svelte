@@ -1,7 +1,6 @@
 <script lang="ts">
   import { X, Navigation, MapPin } from "lucide-svelte";
   import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
-  import { portal } from "../lib/portal";
   import L from "leaflet";
   import type { FeatureCollection, Geometry, Feature } from "geojson";
   // @ts-ignore
@@ -240,100 +239,91 @@
   });
 </script>
 
-{#if isOpen}
-  <!-- svelte-ignore a11y_click_events_have_key_events -->
-  <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <div 
-    use:portal
-    class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/80 sm:overflow-y-auto" 
-    transition:fade={{ duration: 200 }}
-    onclick={(e) => {
-      if (e.target === e.currentTarget) onClose();
-    }}
-  >
-    <div
-      transition:fly={{ y: 50, duration: 400 }}
-      class="w-full max-w-6xl bg-[var(--md-sys-color-surface)] rounded-[var(--md-sys-shape-corner-extra-large)] shadow-2xl overflow-hidden flex flex-col h-[90dvh] sm:my-auto"
-      onintroend={() => window.dispatchEvent(new Event('resize'))}
-      style:view-transition-name={isOpen ? 'map-transition' : 'none'}
-    >
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between p-6 md:p-8 border-b border-[var(--md-sys-color-outline)]/10 shrink-0 gap-4 bg-[var(--md-sys-color-surface)]">
-        <div>
-          <h2 class="text-3xl md:text-4xl font-black tracking-tighter text-[var(--md-sys-color-primary)] mb-1">
-            {appSettings.t('mapView')}
-          </h2>
-          <div class="flex items-center gap-2 text-[var(--md-sys-color-on-surface-variant)]">
-            <MapPin size={16} class="shrink-0" />
-            <p class="text-base font-bold truncate max-w-[300px] md:max-w-none">{zoneLabel || selectedZone}</p>
-          </div>
-        </div>
-        <div class="flex items-center gap-3 self-end sm:self-auto shrink-0">
-          {#if userLocation}
-            <Button 
-              variant="tonal"
-              shape="pill"
-              size="md"
-              onclick={() => {
-                if (map) {
-                  map.setView([userLocation!.lat, userLocation!.lng], 12);
-                }
-              }}
-            >
-              {#snippet leadingIcon()}
-                <Navigation size={18} />
-              {/snippet}
-              {appSettings.t('yourLocation')}
-            </Button>
-          {/if}
-          <IconButton
-            variant="tonal"
-            shape="circle"
-            size="lg"
-            onclick={onClose}
-            title="Close"
-            ariaLabel="Close"
-          >
-            <X size={24} class="stroke-[3]" />
-          </IconButton>
+<div
+  class="relative w-full h-[100dvh] bg-[var(--md-sys-color-surface)] flex flex-col overflow-hidden font-sans text-[var(--md-sys-color-on-background)]"
+  style:view-transition-name="map-transition"
+>
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-6 md:px-8 border-b border-[var(--md-sys-color-outline)]/10 shrink-0 gap-4 bg-[var(--md-sys-color-surface)] shadow-xs">
+      <div>
+        <h2 class="text-3xl md:text-4xl font-black tracking-tighter text-[var(--md-sys-color-primary)] mb-1">
+          {appSettings.t('mapView')}
+        </h2>
+        <div class="flex items-center gap-2 text-[var(--md-sys-color-on-surface-variant)]">
+          <MapPin size={16} class="shrink-0" />
+          <p class="text-base font-bold truncate max-w-[300px] md:max-w-none">{zoneLabel || selectedZone}</p>
         </div>
       </div>
-      
-      <div class="flex-1 w-full relative shrink-0 bg-[var(--md-sys-color-surface-container-lowest)]">
-        <!-- Floating Selection Indicator -->
-        <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-[400] pointer-events-none w-[90%] max-w-sm">
-          {#key selectedZone}
-            <div
-              in:fly={{ y: 20, duration: 400 }}
-              out:fly={{ y: -20, duration: 300 , isExit: true}}
-              class="bg-[var(--md-sys-color-primary)] shadow-[0_16px_32px_rgba(0,0,0,0.3)] rounded-3xl p-5 flex flex-col items-center justify-center text-center overflow-hidden"
-            >
-              <span class="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-[var(--md-sys-color-on-primary)] opacity-90 mb-1">
-                {appSettings.t('selectedZone' as any)}
-              </span>
-              <span class="text-xl sm:text-3xl font-black text-[var(--md-sys-color-on-primary)] leading-tight drop-shadow-sm truncate w-full px-2">
-                {zoneLabel || selectedZone}
-              </span>
-              <div class="absolute -right-4 -bottom-4 opacity-10">
-                <MapPin size={80} class="text-[var(--md-sys-color-on-primary)]" />
-              </div>
-            </div>
-          {/key}
-        </div>
-
-        {#if !geoData}
-          <div class="absolute inset-0 z-50 flex items-center justify-center bg-[var(--md-sys-color-surface)]/50 backdrop-blur-sm">
-            <div class="flex flex-col items-center gap-4">
-              <div class="w-12 h-12 border-4 border-[var(--md-sys-color-primary)]/30 border-t-[var(--md-sys-color-primary)] rounded-full animate-spin"></div>
-              <span class="font-bold text-[var(--md-sys-color-primary)] animate-pulse tracking-widest uppercase">Loading Boundaries...</span>
-            </div>
-          </div>
+      <div class="flex items-center gap-3 self-end sm:self-auto shrink-0">
+        {#if userLocation}
+          <Button 
+            variant="tonal"
+            shape="pill"
+            size="md"
+            onclick={() => {
+              if (map) {
+                map.setView([userLocation!.lat, userLocation!.lng], 12);
+              }
+            }}
+          >
+            {#snippet leadingIcon()}
+              <Navigation size={18} />
+            {/snippet}
+            {appSettings.t('yourLocation')}
+          </Button>
         {/if}
-        
-        <div 
-          use:mapAction
-          class="absolute inset-0 w-full h-full"
-        ></div>
+        <IconButton
+          variant="tonal"
+          shape="circle"
+          size="lg"
+          onclick={onClose}
+          title="Close"
+          ariaLabel="Close"
+        >
+          <X size={24} class="stroke-[3]" />
+        </IconButton>
       </div>
     </div>
+    
+    <div class="flex-1 w-full relative shrink-0 bg-[var(--md-sys-color-surface-container-lowest)]">
+      <!-- Floating Selection Indicator & Confirmation Card -->
+      <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-[400] pointer-events-auto w-[90%] max-w-sm">
+        {#key selectedZone}
+          <div
+            in:fly={{ y: 20, duration: 400 }}
+            out:fly={{ y: -20, duration: 300 , isExit: true}}
+            class="bg-[var(--md-sys-color-primary)] shadow-[0_16px_32px_rgba(0,0,0,0.3)] rounded-3xl p-5 flex flex-col items-center justify-center text-center overflow-hidden relative"
+          >
+            <span class="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-[var(--md-sys-color-on-primary)] opacity-90 mb-1">
+              {appSettings.t('selectedZone' as any)}
+            </span>
+            <span class="text-xl sm:text-2xl font-black text-[var(--md-sys-color-on-primary)] leading-tight drop-shadow-sm truncate w-full px-2 mb-3">
+              {zoneLabel || selectedZone}
+            </span>
+            <button
+              onclick={onClose}
+              class="px-5 py-2 rounded-full font-bold text-xs bg-[var(--md-sys-color-on-primary)] text-[var(--md-sys-color-primary)] shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            >
+              {appSettings.settings.language === 'ms' ? "Gunakan Zon Ini" : "Use This Zone"}
+            </button>
+            <div class="absolute -right-4 -bottom-4 opacity-10 pointer-events-none">
+              <MapPin size={80} class="text-[var(--md-sys-color-on-primary)]" />
+            </div>
+          </div>
+        {/key}
+      </div>
+
+      {#if !geoData}
+        <div class="absolute inset-0 z-50 flex items-center justify-center bg-[var(--md-sys-color-surface)]/50 backdrop-blur-sm">
+          <div class="flex flex-col items-center gap-4">
+            <div class="w-12 h-12 border-4 border-[var(--md-sys-color-primary)]/30 border-t-[var(--md-sys-color-primary)] rounded-full animate-spin"></div>
+            <span class="font-bold text-[var(--md-sys-color-primary)] animate-pulse tracking-widest uppercase">Loading Boundaries...</span>
+          </div>
+        </div>
+      {/if}
+      
+      <div 
+        use:mapAction
+        class="absolute inset-0 w-full h-full"
+      ></div>
+    </div>
   </div>
-{/if}

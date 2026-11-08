@@ -7,7 +7,6 @@
   import { currentTimeState } from '../../state/time.svelte';
   import { themeState } from '../../state/theme.svelte';
   import { goto } from '$app/navigation';
-  import { onMount } from 'svelte';
 
   let computedPrayers = $derived(activePrayerState.computedPrayers);
   let mosque = $derived(mosqueState.computedState);
@@ -16,16 +15,12 @@
   let activeWallpaperUrl = $derived(themeState.activeWallpaperUrl);
   let computedWallpaperDim = $derived(themeState.computedWallpaperDim);
 
-  onMount(() => {
-    // Ensure TV mode setting is active
-    if (!appSettings.settings.tvModeEnabled) {
-      appSettings.updateSettings({ tvModeEnabled: true });
-    }
-  });
-
   function handleClose() {
-    appSettings.updateSettings({ tvModeEnabled: false });
-    goto('/');
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      window.history.back();
+    } else {
+      goto('/');
+    }
   }
 </script>
 

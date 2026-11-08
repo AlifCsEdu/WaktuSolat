@@ -24,8 +24,6 @@
   import LocationToast from '../components/LocationToast.svelte';
   import AzanAlert from '../components/AzanAlert.svelte';
   import SolatMode from '../components/SolatMode.svelte';
-  import OnboardingFlow from '../components/OnboardingFlow.svelte';
-  import TvModeView from '../components/TvModeView.svelte';
   import NotificationPrePrompt from '../components/NotificationPrePrompt.svelte';
   import UpdateToast from '../components/UpdateToast.svelte';
   import { dev } from '$app/environment';
@@ -36,7 +34,6 @@
 
   let { children } = $props();
 
-  let hasCompletedOnboarding = $state(false);
   let showPrePrompt = $state(false);
   let pendingPermissionAction = $state<(() => void) | null>(null);
   let showUpdateToast = $state(false);
@@ -53,7 +50,6 @@
   }
 
   // Derived layout aesthetics and overlay conditions
-  let isTvMode = $derived(!!appSettings.settings.tvModeEnabled && $page.url.pathname === '/');
   let computedPrayers = $derived(activePrayerState.computedPrayers);
   let mosque = $derived(mosqueState.computedState);
   let todayData = $derived(activePrayerState.todayData);
@@ -61,10 +57,6 @@
   let visualStyle = $derived(appSettings.settings.visualStyle);
   let activeWallpaperUrl = $derived(themeState.activeWallpaperUrl);
   let computedWallpaperDim = $derived(themeState.computedWallpaperDim);
-
-  function setIsTvMode(val: boolean) {
-    appSettings.updateSettings({ tvModeEnabled: val });
-  }
 
   // Permission Context Setup for Child Pages
   const requestPermission = async () => {
@@ -103,6 +95,7 @@
 
   onNavigate((navigation) => {
     if (!document.startViewTransition) return;
+    if (navigation.from?.url.pathname === navigation.to?.url.pathname) return;
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReducedMotion) return;
 
@@ -139,7 +132,9 @@
       };
     }
     initState();
-    hasCompletedOnboarding = StorageManager.getHasCompletedOnboarding();
+    if (!StorageManager.getHasCompletedOnboarding()) {
+      StorageManager.setHasCompletedOnboarding(true);
+    }
     
     if ('serviceWorker' in navigator) {
       // Unregister legacy sw.js if found
@@ -241,12 +236,12 @@
 
   {#if overlayManager.shouldRender('solat-mode')}
     <SolatMode
-      prayerName={mosque.solatPrayerName}
+      prayerName={mosque.solatPrayerName || ""}
       remainingSeconds={mosque.solatRemainingSeconds}
       showClock={appSettings.settings.solatModeShowClock}
       showQibla={appSettings.settings.solatModeShowQibla}
       isDuaStage={mosque.isSolatDuaStage}
-      {isTvMode}
+      isTvMode={$page.url.pathname === '/tv'}
       onExit={() => {
         if (computedPrayers.prevPrayerKey) mosqueState.manuallyExitedSolatPrayer = computedPrayers.prevPrayerKey;
       }}
@@ -283,7 +278,9 @@
   </svg>
 
   <!-- SvelteKit Page Outlet -->
-  {@render children()}
+  <div class="page-container flex-1 flex flex-col w-full relative min-h-0" style="view-transition-name: page-content;">
+    {@render children()}
+  </div>
 
   <NotificationPrePrompt
     isOpen={showPrePrompt}
@@ -291,43 +288,4 @@
     onConfirm={handlePrePromptConfirm}
     language={appSettings.settings.language || "ms"}
   />
-
-  {#if !hasCompletedOnboarding}
-    <OnboardingFlow 
-      language={appSettings.settings.language || "ms"} 
-      onComplete={(zone) => {
-        StorageManager.saveRecentZone(zone);
-        locationState.setZone(zone, false);
-        hasCompletedOnboarding = true;
-        StorageManager.setHasCompletedOnboarding(true);
-      }}
-    />
-  {/if}
-
-  {#if isTvMode}
-    <TvModeView
-      {currentTime}
-      {todayData}
-      nextPrayerName={computedPrayers.nextPrayerName}
-      nextPrayerTime={computedPrayers.nextPrayerTime}
-      prevPrayerName={computedPrayers.prevPrayerKey}
-      prevPrayerTime={computedPrayers.prevPrayerTime}
-      selectedZone={locationState.selectedZone}
-      currentLocationName={locationState.currentLocationName}
-      t={(k: any) => appSettings.t(k as any)}
-      settings={appSettings.settings}
-      onClose={() => setIsTvMode(false)}
-      iqamahCountdownActive={mosque.iqamahCountdownActive}
-      iqamahRemainingSeconds={mosque.iqamahRemainingSeconds}
-      iqamahTotalSeconds={mosque.iqamahTotalSeconds}
-      {activeWallpaperUrl}
-      {computedWallpaperDim}
-      userCoords={locationState.userCoords}
-      iqamahPaused={computedPrayers.prevPrayerKey ? !!mosqueState.iqamahPausedState[computedPrayers.prevPrayerKey]?.paused : false}
-      onIqamahTogglePause={() => mosqueState.handleIqamahTogglePause()}
-      onIqamahAddMinute={() => mosqueState.handleIqamahAddMinute()}
-      onIqamahSubMinute={() => mosqueState.handleIqamahSubMinute()}
-      onSettingsClick={() => goto('/settings')}
-    />
-  {/if}
 </div>

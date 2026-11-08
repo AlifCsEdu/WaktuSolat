@@ -1,6 +1,5 @@
 <script lang="ts">
   import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
-  import { portal } from "../lib/portal";
   import {
     X, Bell, BellRing, Volume2, VolumeX, Volume1, Mic, Activity,
     Settings as SettingsIcon, Clock, Smartphone, Music, ChevronDown, ChevronLeft,
@@ -41,6 +40,8 @@
     onTestSound: (sound: NotificationSound, message: string) => void;
     selectedZone: string;
     onPreviewAzanAlert?: (style: string) => void;
+    initialTab?: string | null;
+    initialQuery?: string | null;
   }
 
   let {
@@ -53,8 +54,17 @@
     onRequestPermission,
     onTestSound,
     selectedZone,
-    onPreviewAzanAlert
+    onPreviewAzanAlert,
+    initialTab = null,
+    initialQuery = null
   }: Props = $props();
+
+  const VALID_TABS = ["general", "notifications", "adjustments", "advanced", "mosque"] as const;
+  type TabId = (typeof VALID_TABS)[number];
+
+  function sanitizeTab(tab?: string | null): TabId {
+    return tab && (VALID_TABS as readonly string[]).includes(tab) ? (tab as TabId) : "general";
+  }
 
   const t = (k: any, p?: any) => appSettings.t(k, p);
   let settings = $derived(appSettings.settings);
@@ -62,7 +72,7 @@
   
   let visualStyle = $derived(appSettings.settings.visualStyle);
   
-  let activeTab = $state("general");
+  let activeTab = $state<TabId>(sanitizeTab(initialTab));
   let showAdvancedGeneral = $state(false);
   let showAdvancedCalculations = $state(false);
   let showHijriEngine = $state(false);
@@ -78,7 +88,52 @@
   
   let sidebarCollapsed = $state(StorageManager.getItem("settings_sidebar_collapsed") === "true");
   
-  let searchQuery = $state("");
+  let searchQuery = $state(initialQuery || "");
+
+  $effect(() => {
+    if (initialTab) {
+      const sanitized = sanitizeTab(initialTab);
+      if (sanitized !== activeTab) {
+        activeTab = sanitized;
+      }
+    }
+  });
+
+  $effect(() => {
+    if (initialQuery !== undefined && initialQuery !== null && initialQuery !== searchQuery) {
+      searchQuery = initialQuery;
+    }
+  });
+
+  $effect(() => {
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      let changed = false;
+      if (activeTab && activeTab !== 'general') {
+        if (url.searchParams.get('tab') !== activeTab) {
+          url.searchParams.set('tab', activeTab);
+          changed = true;
+        }
+      } else if (url.searchParams.has('tab')) {
+        url.searchParams.delete('tab');
+        changed = true;
+      }
+
+      if (searchQuery.trim()) {
+        if (url.searchParams.get('q') !== searchQuery.trim()) {
+          url.searchParams.set('q', searchQuery.trim());
+          changed = true;
+        }
+      } else if (url.searchParams.has('q')) {
+        url.searchParams.delete('q');
+        changed = true;
+      }
+
+      if (changed) {
+        window.history.replaceState({}, '', url.toString());
+      }
+    }
+  });
   let searchInputRef = $state<HTMLInputElement | null>(null);
   let prevVolumeRef = $state<number>(80);
 
@@ -284,7 +339,7 @@
            card.categoryLabel.toLowerCase().includes(query);
   }));
 
-  const tabs = $derived([
+  const tabs = $derived<{ id: TabId; label: string; icon: any }[]>([
     { id: "general", label: t("general"), icon: SettingsIcon },
     { id: "notifications", label: t("notifications"), icon: Bell },
     { id: "adjustments", label: t("offset"), icon: Clock },
@@ -1081,24 +1136,23 @@
   </div>
 {/snippet}
 
-{#if isOpen}
-  <div use:portal in:fade={{ duration: 200 }} out:fade={{ duration: 200 , isExit: true}} class="fixed inset-0 z-[10005] flex items-end sm:items-center justify-center p-0 sm:p-6" style="isolation: isolate">
-    <style>
-      @keyframes bounce-bar {
-        0%, 100% { height: 4px; }
-        50% { height: 12px; }
-      }
-      .animate-bar-1 { animation: bounce-bar 0.6s infinite ease-in-out; }
-      .animate-bar-2 { animation: bounce-bar 0.6s infinite ease-in-out 0.15s; }
-      .animate-bar-3 { animation: bounce-bar 0.6s infinite ease-in-out 0.3s; }
-    </style>
-    <!-- svelte-ignore a11y_click_events_have_key_events -->
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="absolute inset-0 bg-black/80" onclick={onClose}></div>
-
-    <!-- svelte-ignore a11y_click_events_have_key_events -->
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div in:fly={{ y: 20, duration: 300 }} out:fly={{ y: 20, duration: 200 , isExit: true}} onclick={(e) => e.stopPropagation()} class={cn("relative w-full max-w-4xl max-h-[90dvh] flex flex-col rounded-[var(--md-sys-shape-corner-extra-large)] overflow-hidden shadow-2xl border border-[var(--md-sys-color-outline)]/20 shadow-black/50 transition-colors duration-300", getStyleClasses(visualStyle, "bg-[var(--md-sys-color-surface-container)]"), visualStyle === "glass" && "settings-glass-modal")} style:view-transition-name={isOpen ? 'settings-transition' : 'none'}>
+<div
+  class={cn(
+    "relative w-full flex-1 flex flex-col min-h-0 overflow-hidden font-sans text-[var(--md-sys-color-on-background)] bg-[var(--md-sys-color-background)] transition-colors duration-300",
+    getStyleClasses(visualStyle, "bg-[var(--md-sys-color-background)]"),
+    visualStyle === "glass" && "settings-glass-modal"
+  )}
+  style:view-transition-name="settings-transition"
+>
+  <style>
+    @keyframes bounce-bar {
+      0%, 100% { height: 4px; }
+      50% { height: 12px; }
+    }
+    .animate-bar-1 { animation: bounce-bar 0.6s infinite ease-in-out; }
+    .animate-bar-2 { animation: bounce-bar 0.6s infinite ease-in-out 0.15s; }
+    .animate-bar-3 { animation: bounce-bar 0.6s infinite ease-in-out 0.3s; }
+  </style>
       <div class="flex flex-col sm:flex-row sm:items-center justify-between p-6 sm:px-8 sm:pt-8 sm:pb-4 border-b border-[var(--md-sys-color-outline)]/10 gap-4 shrink-0 bg-[var(--md-sys-color-surface)]">
         <div>
           <h2 class="md3-headline-small font-bold text-[var(--md-sys-color-on-surface)]">{t("settings")}</h2>
@@ -1239,10 +1293,21 @@
                   <p class="text-xs text-[var(--md-sys-color-on-surface-variant)] mt-1">{settings.language === "ms" ? "Cuba kata kunci yang berbeza seperti 'azan', 'iqamah', 'jam', atau 'bahasa'." : "Try using different keywords like 'adhan', 'iqamah', 'clock', or 'language'."}</p>
                 </div>
               </div>
+            {:else if !searchQuery && matchingCards.length === 0}
+              <div in:fade class="py-12 flex flex-col items-center justify-center gap-4 text-center max-w-sm mx-auto">
+                <div class="w-16 h-16 rounded-full bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-outline)] flex items-center justify-center">
+                  <SettingsIcon size={28} />
+                </div>
+                <div>
+                  <h4 class="font-bold text-[var(--md-sys-color-on-surface)]">{settings.language === "ms" ? "Tiada tetapan tersedia" : "No settings available"}</h4>
+                  <p class="text-xs text-[var(--md-sys-color-on-surface-variant)] mt-1">{settings.language === "ms" ? "Sila pilih tab yang sah daripada menu." : "Please select a valid tab from the menu."}</p>
+                </div>
+                <Button variant="tonal" onclick={() => activeTab = "general"}>
+                  {t("general")}
+                </Button>
+              </div>
             {/if}
           </div>
         </div>
       </div>
     </div>
-  </div>
-{/if}

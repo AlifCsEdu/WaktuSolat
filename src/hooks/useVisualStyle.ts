@@ -1,4 +1,4 @@
-export function getStyleClasses(visualStyle: string, defaultClasses: string = ""): string {
+export function getStyleClasses(visualStyle?: string, defaultClasses: string = ""): string {
   if (!visualStyle) return defaultClasses;
   
   if (visualStyle === 'glass') {
@@ -12,6 +12,6 @@ export function getStyleClasses(visualStyle: string, defaultClasses: string = ""
   return defaultClasses;
 }
 
-export function useIconStroke(visualStyle: string): number {
+export function useIconStroke(visualStyle?: string): number {
   return visualStyle === 'retro' ? 3 : visualStyle === 'glass' || visualStyle === 'soft' ? 1.5 : 2;
 }

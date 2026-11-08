@@ -2,7 +2,8 @@
   import { getContext } from 'svelte';
   import { goto } from '$app/navigation';
   import { m3Fade as fade, m3Fly as fly } from '../lib/transitions';
-  import { CalendarRange, Wifi, RefreshCw, Tv } from 'lucide-svelte';
+  import { CalendarRange, Wifi, RefreshCw, Tv, Clock } from 'lucide-svelte';
+  import { differenceInSeconds, format } from 'date-fns';
   import { Button, IconButton } from '$lib/components/ui';
 
   // Dashboard Components
@@ -34,10 +35,11 @@
   }>('layoutActions');
 
   let showSharePanel = $state(false);
-  let isCalendarOpen = $state(false);
+  let isHeaderSearching = $state(false);
+  let heroSectionEl = $state<HTMLElement | null>(null);
+  let isStickyCountdownVisible = $state(false);
 
   // Derived widget dependencies
-  let isTvMode = $derived(!!appSettings.settings.tvModeEnabled);
   let computedPrayers = $derived(activePrayerState.computedPrayers);
   let todayData = $derived(activePrayerState.todayData);
   let tomorrowData = $derived(activePrayerState.tomorrowData);
@@ -46,12 +48,45 @@
   let activeWallpaperUrl = $derived(themeState.activeWallpaperUrl);
   let mosque = $derived(mosqueState.computedState);
 
+  // Sticky mini-countdown text for mobile viewport
+  let stickyCountdownText = $derived.by(() => {
+    if (!computedPrayers.nextPrayerTime) return '--:--';
+    const diff = Math.max(0, differenceInSeconds(computedPrayers.nextPrayerTime, currentTime));
+    if (diff <= 0) return appSettings.t('now');
+    const h = Math.floor(diff / 3600);
+    const m = Math.floor((diff % 3600) / 60);
+    const s = diff % 60;
+    if (h > 0) {
+      return `${h}j ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`;
+    }
+    return `${m}m ${String(s).padStart(2, '0')}s`;
+  });
+
+  $effect(() => {
+    if (typeof window === 'undefined') return;
+    const handleScroll = () => {
+      if (!heroSectionEl) return;
+      const isMobile = window.innerWidth < 1024;
+      if (!isMobile) {
+        isStickyCountdownVisible = false;
+        return;
+      }
+      const rect = heroSectionEl.getBoundingClientRect();
+      isStickyCountdownVisible = rect.bottom < 80;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleScroll);
+    handleScroll();
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+    };
+  });
+
   function handleManualZoneSelect(zone: string) {
     locationState.setZone(zone, false);
-  }
-
-  function setIsTvMode(val: boolean) {
-    appSettings.updateSettings({ tvModeEnabled: val });
   }
 
   const togglePreference = async (key: PrayerKey) => {
@@ -121,10 +156,49 @@
   </main>
 {:else}
   <!-- Full Dashboard Markup -->
+  {#if isStickyCountdownVisible && computedPrayers.nextPrayerName}
+    <!-- Mobile Sticky Mini-Countdown Bar (Feature 7) -->
+    <div
+      in:fly={{ y: -30, duration: 250 }}
+      out:fly={{ y: -30, duration: 200, isExit: true }}
+      class="fixed top-2.5 left-3 right-3 sm:left-6 sm:right-6 z-[70] lg:hidden flex items-center justify-between px-3.5 py-2 rounded-full bg-[var(--md-sys-color-surface-container-highest)]/95 backdrop-blur-xl border border-[var(--md-sys-color-outline-variant)]/40 shadow-xl cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.98]"
+      onclick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      role="button"
+      tabindex="0"
+      onkeydown={(e) => { if (e.key === 'Enter') window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+    >
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-8 h-8 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] flex items-center justify-center shrink-0 shadow-xs">
+          <Clock class="w-4 h-4 stroke-[2.2]" />
+        </div>
+        <div class="flex flex-col min-w-0 leading-tight">
+          <span class="text-[9px] font-extrabold uppercase tracking-widest text-[var(--md-sys-color-primary)]">
+            {appSettings.t("nextPrayer")}
+          </span>
+          <span class="text-xs sm:text-sm font-black text-[var(--md-sys-color-on-surface)] truncate">
+            {computedPrayers.nextPrayerName}
+            {#if computedPrayers.nextPrayerTime}
+              <span class="text-[10px] font-bold text-[var(--md-sys-color-on-surface-variant)]/80 ml-1">
+                {format(computedPrayers.nextPrayerTime, appSettings.settings.timeFormat === "12h" ? "hh:mm a" : "HH:mm")}
+              </span>
+            {/if}
+          </span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 shrink-0">
+        <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] text-xs font-black tabular-nums shadow-xs">
+          <span class="w-1.5 h-1.5 rounded-full bg-[var(--md-sys-color-primary)] animate-pulse"></span>
+          <span>{stickyCountdownText}</span>
+        </div>
+      </div>
+    </div>
+  {/if}
+
   <main
     in:fade={{ duration: 300 }}
     class={cn(
-      "flex-1 w-full max-w-[2560px] mx-auto relative z-10 flex flex-col lg:flex-row px-[var(--sys-spacing-edge)] py-2 sm:py-3 lg:py-3 xl:py-4 gap-[var(--sys-spacing-section)] lg:overflow-hidden min-h-0",
+      "m3e-main-bento flex-1 w-full max-w-[2560px] mx-auto relative z-10 flex flex-col lg:flex-row px-[var(--sys-spacing-edge)] py-2 sm:py-3 lg:py-3 xl:py-4 gap-4 sm:gap-6 lg:gap-6 xl:gap-8 lg:overflow-hidden min-h-0",
       !(appSettings.settings.wallpaperEnabled && activeWallpaperUrl) && "bg-[var(--md-sys-color-background)]",
       !(appSettings.settings.wallpaperEnabled && activeWallpaperUrl) && visualStyle === 'glass' && "bg-gradient-to-br from-[var(--md-sys-color-background)] via-[var(--md-sys-color-surface-variant)] to-[var(--md-sys-color-primary-container)]",
       appSettings.settings.wallpaperEnabled && activeWallpaperUrl && appSettings.settings.wallpaperTextGlow && "text-glow-boost"
@@ -138,82 +212,91 @@
 
     <section
       in:fly={{ y: 15, duration: 400 }}
-      class="flex flex-col w-full lg:w-[50%] xl:w-[55%] lg:overflow-hidden pb-2 lg:pb-0 min-h-0 relative z-20"
+      class="m3e-panel-left flex flex-col w-full lg:w-[52%] xl:w-[54%] lg:overflow-hidden pb-2 lg:pb-0 min-h-0 relative z-20"
     >
       <header
         in:fly={{ y: -10, duration: 400 }}
-        class="relative flex items-center h-14 z-[60] mb-6 px-2.5 sm:px-3 gap-1 sm:gap-2 bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline-variant)]/40 rounded-full shadow-sm shrink-0 flex-nowrap lg:w-full"
+        class="relative flex items-center h-14 stadium-pill-container z-[60] mb-6 px-2.5 sm:px-3 gap-1 sm:gap-2 bg-[var(--md-sys-color-surface-container-high)] border border-[var(--md-sys-color-outline-variant)]/40 rounded-full shadow-sm shrink-0 flex-nowrap lg:w-full transition-all duration-300"
       >
         <ZoneSelector
           selectedZone={locationState.selectedZone}
           onZoneSelect={handleManualZoneSelect}
           isAutoDetecting={locationState.isDetecting}
           currentLocationName={locationState.currentLocationName}
+          bind:isSearching={isHeaderSearching}
         />
-        {#if locationState.defaultZone !== locationState.selectedZone}
-          <div
-            class="relative shrink-0 transition-transform hover:scale-105 active:scale-95"
-          >
-            <Button
-              variant="tonal"
-              shape="pill"
-              size="md"
-              class="h-11 rounded-full text-xs font-semibold px-3 sm:px-3.5"
-              onclick={() => locationState.saveAsDefault()}
+        {#if !isHeaderSearching}
+          {#if locationState.defaultZone !== locationState.selectedZone}
+            <div
+              class="relative shrink-0 transition-transform hover:scale-105 active:scale-95"
             >
-              {#snippet leadingIcon()}
-                <span class="relative flex h-2 w-2 mr-1">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--md-sys-color-primary)] opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-2 w-2 bg-[var(--md-sys-color-primary)]"></span>
+              <Button
+                variant="tonal"
+                shape="pill"
+                size="md"
+                class="h-11 rounded-full text-xs font-semibold px-2.5 sm:px-3.5"
+                onclick={() => locationState.saveAsDefault()}
+                title={appSettings.settings.language === "ms" ? "Set Zon Utama" : "Set as Default"}
+                ariaLabel={appSettings.settings.language === "ms" ? "Set Zon Utama" : "Set as Default"}
+              >
+                {#snippet leadingIcon()}
+                  <span class="relative flex h-2 w-2 mr-1">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--md-sys-color-primary)] opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-[var(--md-sys-color-primary)]"></span>
+                  </span>
+                {/snippet}
+                <span class="inline sm:hidden">
+                  {appSettings.settings.language === "ms" ? "Set Utama" : "Set Default"}
                 </span>
-              {/snippet}
-              {appSettings.settings.language === "ms" ? "Set Zon Utama" : "Set as Default"}
-            </Button>
-          </div>
-        {/if}
-        <div
-          class="shrink-0 inline-flex transition-transform hover:scale-105 active:scale-95"
-          style:view-transition-name={!isCalendarOpen ? 'calendar-transition' : 'none'}
-        >
-          <IconButton
-            variant="tonal"
-            shape="circle"
-            size="md"
-            class="w-11 h-11"
-            onclick={() => {
-              isCalendarOpen = true;
-              goto('/calendar');
-            }}
-            title={appSettings.t("calendarLabel")}
-            ariaLabel={appSettings.t("calendarLabel")}
-          >
-            <CalendarRange class="w-5 h-5 stroke-[2.2]" />
-          </IconButton>
-        </div>
-        {#if appSettings.settings.showTvShortcut}
+                <span class="hidden sm:inline">
+                  {appSettings.settings.language === "ms" ? "Set Zon Utama" : "Set as Default"}
+                </span>
+              </Button>
+            </div>
+          {/if}
           <div
             class="shrink-0 inline-flex transition-transform hover:scale-105 active:scale-95"
+            style:view-transition-name="calendar-transition"
           >
             <IconButton
               variant="tonal"
               shape="circle"
               size="md"
-              class="w-11 h-11"
-              onclick={() => setIsTvMode(true)}
-              title={appSettings.settings.language === "ms" ? "Mod TV Masjid" : "Mosque TV Mode"}
-              ariaLabel={appSettings.settings.language === "ms" ? "Mod TV Masjid" : "Mosque TV Mode"}
+              class="w-11 h-11 tonal-action-btn"
+              onclick={() => {
+                goto('/calendar');
+              }}
+              title={appSettings.t("calendarLabel")}
+              ariaLabel={appSettings.t("calendarLabel")}
             >
-              <Tv class="w-5 h-5 stroke-[2.2]" />
+              <CalendarRange class="w-5 h-5 stroke-[2.2]" />
             </IconButton>
           </div>
+          {#if appSettings.settings.showTvShortcut}
+            <div
+              class="shrink-0 inline-flex transition-transform hover:scale-105 active:scale-95"
+            >
+              <IconButton
+                variant="tonal"
+                shape="circle"
+                size="md"
+                class="w-11 h-11 tonal-action-btn"
+                onclick={() => goto('/tv')}
+                title={appSettings.settings.language === "ms" ? "Mod TV Masjid" : "Mosque TV Mode"}
+                ariaLabel={appSettings.settings.language === "ms" ? "Mod TV Masjid" : "Mosque TV Mode"}
+              >
+                <Tv class="w-5 h-5 stroke-[2.2]" />
+              </IconButton>
+            </div>
+          {/if}
+          <ThemeControl />
+          <div class="hidden sm:inline-flex shrink-0">
+            <FullScreenToggle />
+          </div>
         {/if}
-        <ThemeControl />
-        <div class="hidden sm:inline-flex shrink-0">
-          <FullScreenToggle />
-        </div>
       </header>
 
-      <div class="flex-1 flex flex-col justify-center lg:justify-start xl:justify-center min-h-0 lg:overflow-y-visible no-scrollbar pt-1">
+      <div bind:this={heroSectionEl} class="flex-1 flex flex-col justify-center lg:justify-start xl:justify-center min-h-0 lg:overflow-y-visible no-scrollbar pt-1">
         <ClockPanel
           {currentTime}
           nextPrayerName={computedPrayers.nextPrayerName}
@@ -224,7 +307,6 @@
           syurukTime={todayData?.syuruk ? todayData.syuruk.slice(0, 5) : null}
           {todayData}
           onCalendarClick={() => {
-            isCalendarOpen = true;
             goto('/calendar');
           }}
           iqamahCountdownActive={mosque.iqamahCountdownActive}

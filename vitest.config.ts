@@ -8,6 +8,11 @@ export default defineConfig({
     environment: 'node', // use Node environment for lightweight, fast unit tests
     globals: true,
     include: ['tests/**/*.test.ts'],
+    server: {
+      deps: {
+        inline: [/@material\/material-color-utilities/],
+      },
+    },
   },
   resolve: {
     alias: {

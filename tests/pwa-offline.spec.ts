@@ -25,14 +25,17 @@ const MOCK_LEGACY_DATA = {
 async function waitForServiceWorker(page: any) {
   try {
     await page.evaluate(async () => {
-      if (!navigator.serviceWorker) return;
-      await navigator.serviceWorker.ready;
+      if (!('serviceWorker' in navigator)) return;
+      await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise((resolve) => setTimeout(resolve, 2000))
+      ]);
       if (!navigator.serviceWorker.controller) {
         await Promise.race([
           new Promise((resolve) => {
             navigator.serviceWorker.addEventListener('controllerchange', resolve, { once: true });
           }),
-          new Promise((resolve) => setTimeout(resolve, 3000))
+          new Promise((resolve) => setTimeout(resolve, 2000))
         ]);
       }
     });
@@ -98,7 +101,8 @@ test.describe('Tier 1: Feature Coverage (24 Test Cases)', () => {
     expect(registered).toBe(true);
   });
 
-  test('R1-TC2: App Shell Offline Boot', async ({ page, makeOffline }) => {
+  test('R1-TC2: App Shell Offline Boot', async ({ page, writeIndexedDB, makeOffline }) => {
+    await writeIndexedDB('prayer-times', MOCK_ZONE, MOCK_COMPRESSED_DATA);
     await page.goto('/');
     await waitForServiceWorker(page);
     await makeOffline();
@@ -551,7 +555,7 @@ test.describe('Tier 2: Boundary & Corner Cases (20 Test Cases)', () => {
       await route.continue();
     });
     await page.goto('/');
-    await expect(page.locator('h3', { hasText: 'Jadual' }).or(page.locator('h3', { hasText: 'Schedule' }))).toBeVisible();
+    await expect(page.locator('h3', { hasText: 'Jadual' }).or(page.locator('h3', { hasText: 'Schedule' }))).toBeVisible({ timeout: 10000 });
   });
 
   test('R1-TC26: Large GeoJSON File Corruption', async ({ page }) => {

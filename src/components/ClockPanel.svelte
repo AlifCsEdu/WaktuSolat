@@ -4,8 +4,9 @@
   import { m3Fade as fade, m3Fly as fly, m3Slide as slide, m3Scale as scale } from "../lib/transitions";
   import { format, differenceInSeconds } from "date-fns";
   import { ms as msLocale, enUS } from "date-fns/locale";
-  import { Compass, Sunrise, Moon, Calendar, Play, Pause, Plus } from "lucide-svelte";
+  import { Compass, Sunrise, Moon, Calendar, Play, Pause, Plus, Sun, Sparkles } from "lucide-svelte";
   import { appSettings } from "../state/settings.svelte";
+  import { themeState } from "../state/theme.svelte";
   import { getDynamicHijriDate, HIJRI_MONTHS, HIJRI_MONTHS_EN } from "../lib/holidays";
   import { cn } from "../lib/utils";
   import type { PrayerData } from "../types";
@@ -125,10 +126,95 @@
     if (prevPrayerTime) {
       const total = nextPrayerTime.getTime() - prevPrayerTime.getTime();
       const current = currentTime.getTime() - prevPrayerTime.getTime();
-      progress = Math.max(0, Math.min(100, (current / total) * 100));
+      if (total > 0 && !isNaN(total) && !isNaN(current)) {
+        const calculated = (current / total) * 100;
+        progress = !isNaN(calculated) ? Math.max(0, Math.min(100, calculated)) : 50;
+      } else {
+        progress = 50;
+      }
     } else {
       progress = 50;
     }
+  });
+
+  // --- Circular Countdown Ring Derivations ---
+  const ringRadius = 38;
+  const ringCircumference = 2 * Math.PI * ringRadius; // ~238.761
+  let safeProgress = $derived(isNaN(progress) ? 50 : Math.max(0, Math.min(100, progress)));
+  let ringDashoffset = $derived(ringCircumference * (1 - safeProgress / 100));
+  let ringAngle = $derived((-90 + (safeProgress / 100) * 360) * (Math.PI / 180));
+  let ringOrbX = $derived(48 + ringRadius * Math.cos(ringAngle));
+  let ringOrbY = $derived(48 + ringRadius * Math.sin(ringAngle));
+
+  // --- Solar Progress Arc Trajectory Derivations ---
+  // Solar trajectory: Fajr (0%) -> Syuruk (20%) -> Dhuhr (50% Zenith) -> Asr (72%) -> Maghrib (90%) -> Isha (100%)
+  let solarTrajectory = $derived.by(() => {
+    if (!todayData) {
+      return { progress: 0.5, sunX: 150, sunY: 31, phaseName: 'Zohor (Zenith)' };
+    }
+
+    const parseTimeToMins = (tStr?: string | null) => {
+      if (!tStr) return 0;
+      const [h, m] = tStr.split(':').map(Number);
+      return (h || 0) * 60 + (m || 0);
+    };
+
+    const fajrM = parseTimeToMins(todayData.fajr);
+    const syurukM = parseTimeToMins(todayData.syuruk);
+    const dhuhrM = parseTimeToMins(todayData.dhuhr);
+    const asrM = parseTimeToMins(todayData.asr);
+    const maghribM = parseTimeToMins(todayData.maghrib);
+    const ishaM = parseTimeToMins(todayData.isha);
+    const imsakM = Math.max(0, fajrM - 10);
+
+    const nowM = currentTime.getHours() * 60 + currentTime.getMinutes() + currentTime.getSeconds() / 60;
+
+    let p = 0;
+    let phaseName = 'Subuh';
+
+    if (nowM < imsakM) {
+      p = 1.0;
+      phaseName = 'Malam (Tahajjud)';
+    } else if (nowM < fajrM) {
+      p = 0;
+      phaseName = 'Imsak / Subuh';
+    } else if (nowM < syurukM) {
+      const frac = (nowM - fajrM) / Math.max(1, syurukM - fajrM);
+      p = frac * 0.20;
+      phaseName = 'Subuh (Fajr)';
+    } else if (nowM < dhuhrM) {
+      const frac = (nowM - syurukM) / Math.max(1, dhuhrM - syurukM);
+      p = 0.20 + frac * 0.30;
+      phaseName = 'Syuruk / Dhuha';
+    } else if (nowM < asrM) {
+      const frac = (nowM - dhuhrM) / Math.max(1, asrM - dhuhrM);
+      p = 0.50 + frac * 0.22;
+      phaseName = 'Zohor (Zenith)';
+    } else if (nowM < maghribM) {
+      const frac = (nowM - asrM) / Math.max(1, maghribM - asrM);
+      p = 0.72 + frac * 0.18;
+      phaseName = 'Asar';
+    } else if (nowM < ishaM) {
+      const frac = (nowM - maghribM) / Math.max(1, ishaM - maghribM);
+      p = 0.90 + frac * 0.10;
+      phaseName = 'Maghrib (Sunset)';
+    } else {
+      p = 1.0;
+      phaseName = 'Isyak (Night)';
+    }
+
+    // Quadratic Bezier: P0(24, 58), P1(150, 4), P2(276, 58)
+    const t = Math.max(0, Math.min(1, p));
+    const invT = 1 - t;
+    const sunX = invT * invT * 24 + 2 * invT * t * 150 + t * t * 276;
+    const sunY = invT * invT * 58 + 2 * invT * t * 4 + t * t * 58;
+
+    return {
+      progress: t,
+      sunX: Math.round(sunX * 10) / 10,
+      sunY: Math.round(sunY * 10) / 10,
+      phaseName
+    };
   });
 
   let lastPlayedSecond = -1;
@@ -146,9 +232,9 @@
       
       const soundType = appSettings.settings.iqamahCountdownSound;
       if (soundType === 'chime') {
-        playSynthesizedSound('chime', 800);
+        playSynthesizedSound('chime', (appSettings.settings.soundVolume ?? 80) / 100, 800);
       } else if (soundType === 'tick') {
-        playSynthesizedSound('tick');
+        playSynthesizedSound('tick', (appSettings.settings.soundVolume ?? 80) / 100);
       }
     }
     
@@ -340,12 +426,42 @@
           {/if}
 
           <div class={cn(
-            "bg-[var(--md-sys-color-primary-container)]/90 backdrop-blur-md rounded-[20px] lg:rounded-[24px] p-4 sm:p-5 md:p-6 flex-1 flex flex-col justify-between border border-white/10 dark:border-white/5 relative overflow-hidden group min-h-[110px]",
+            "bg-[var(--md-sys-color-primary-container)]/90 backdrop-blur-md rounded-[24px] lg:rounded-[32px] p-4 sm:p-5 md:p-6 flex-1 flex flex-col justify-between border border-white/10 dark:border-white/5 relative overflow-hidden group min-h-[110px]",
             !prevPrayerName && "w-full"
           )}>
-            <div class="absolute -right-16 -top-16 w-64 h-64 bg-gradient-to-br from-[var(--md-sys-color-primary)]/20 to-transparent rounded-full blur-3xl opacity-60 group-hover:opacity-80 transition-opacity duration-1000 pointer-events-none"></div>
-            <div class="absolute -left-10 -bottom-20 w-48 h-48 bg-gradient-to-tr from-[var(--md-sys-color-primary)]/10 to-transparent rounded-full blur-2xl opacity-40 pointer-events-none"></div>
+            <!-- Atmospheric dynamic radiant glow harmonizing with the 6 prayer phases -->
+            <div
+              class="absolute -inset-8 rounded-[48px] opacity-40 dark:opacity-60 blur-3xl pointer-events-none transition-all duration-1000 -z-10"
+              style="background: radial-gradient(circle at 80% 20%, {themeState.activeColor}55 0%, transparent 65%), radial-gradient(circle at 20% 80%, {themeState.activeColor}33 0%, transparent 60%);"
+            ></div>
+            <div
+              class="absolute -right-20 -top-20 w-80 h-80 rounded-full blur-3xl opacity-50 dark:opacity-75 transition-all duration-1000 pointer-events-none"
+              style="background: radial-gradient(circle, {themeState.activeColor}40 0%, transparent 70%);"
+            ></div>
+            <div
+              class="absolute -left-16 -bottom-16 w-64 h-64 rounded-full blur-2xl opacity-35 dark:opacity-50 transition-all duration-1000 pointer-events-none"
+              style="background: radial-gradient(circle, {themeState.activeColor}25 0%, transparent 70%);"
+            ></div>
             
+            <!-- Integrated Gregorian & Hijri Date Badges (M3 Squircle Pills) -->
+            <div class="flex items-center gap-2 mb-3.5 flex-wrap relative z-10">
+              <button
+                type="button"
+                use:ripple
+                onclick={onCalendarClick}
+                class="rounded-full bg-[var(--md-sys-color-surface-container)]/85 hover:bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline-variant)]/40 px-3 py-1 flex items-center gap-1.5 text-xs font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-xs"
+                title={appSettings.t("calendarLabel")}
+              >
+                <Calendar class="w-3.5 h-3.5 text-[var(--md-sys-color-primary)]" />
+                <span>{format(currentTime, "EEEE, d MMM yyyy", { locale: appSettings.settings.language === "ms" ? msLocale : enUS })}</span>
+              </button>
+
+              <div class="rounded-full bg-[var(--md-sys-color-tertiary-container)]/80 text-[var(--md-sys-color-on-tertiary-container)] border border-[var(--md-sys-color-outline-variant)]/30 px-3 py-1 flex items-center gap-1.5 text-xs font-bold shadow-xs">
+                <Moon class="w-3.5 h-3.5 text-[var(--md-sys-color-tertiary)]" />
+                <span>{hijriDayNum} {hijriMonthYear}</span>
+              </div>
+            </div>
+
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center w-full relative z-10 gap-4 sm:gap-0">
               <div class="flex flex-col w-full sm:w-auto">
                 <div class="flex items-center gap-2 mb-1 sm:mb-2">
@@ -365,31 +481,79 @@
                 </div>
               </div>
 
-              <div class="flex flex-col items-start sm:items-end w-full sm:w-auto">
-                <span class="text-[10px] font-bold uppercase tracking-widest text-[var(--md-sys-color-on-primary-container)]/70 mb-1">
-                  {appSettings.t("timeRemaining")}
-                </span>
-                <div class="flex items-baseline font-sans text-[var(--md-sys-color-primary)] text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter drop-shadow-sm">
-                  {#if countdownParts.active}
-                    {#if countdownParts.h > 0}
+              <div class="flex items-center gap-3 sm:gap-4 w-full sm:w-auto justify-between sm:justify-end">
+                <!-- High-Precision Circular Countdown Ring (SVG) -->
+                <div class="relative shrink-0 flex items-center justify-center">
+                  <svg viewBox="0 0 96 96" class="w-14 h-14 sm:w-16 sm:h-16 lg:w-18 lg:h-18 drop-shadow-sm">
+                    <!-- Background Track Ring -->
+                    <circle
+                      cx="48"
+                      cy="48"
+                      r="38"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="6.5"
+                      transform="rotate(-90 48 48)"
+                      class="text-[var(--md-sys-color-on-primary-container)]/15"
+                    />
+                    <!-- Reactive Progress Ring -->
+                    <circle
+                      cx="48"
+                      cy="48"
+                      r="38"
+                      fill="none"
+                      stroke="var(--md-sys-color-primary)"
+                      stroke-width="6.5"
+                      stroke-linecap="round"
+                      stroke-dasharray="238.76"
+                      stroke-dashoffset={ringDashoffset}
+                      transform="rotate(-90 48 48)"
+                      class="transition-[stroke-dashoffset] duration-1000 ease-linear"
+                    />
+                    <!-- Active Tip Orb -->
+                    <circle
+                      cx={ringOrbX}
+                      cy={ringOrbY}
+                      r="4.5"
+                      fill="var(--md-sys-color-primary)"
+                      stroke="white"
+                      stroke-width="1.5"
+                      class="shadow-sm transition-all duration-1000 ease-linear"
+                    />
+                  </svg>
+                  <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <span class="text-[10px] sm:text-xs font-black tabular-nums text-[var(--md-sys-color-primary)]">
+                      {Math.round(safeProgress)}%
+                    </span>
+                  </div>
+                </div>
+
+                <div class="flex flex-col items-start sm:items-end">
+                  <span class="text-[10px] font-bold uppercase tracking-widest text-[var(--md-sys-color-on-primary-container)]/70 mb-1">
+                    {appSettings.t("timeRemaining")}
+                  </span>
+                  <div class="flex items-baseline font-sans text-[var(--md-sys-color-primary)] text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter drop-shadow-sm">
+                    {#if countdownParts.active}
+                      {#if countdownParts.h > 0}
+                        <div class="flex items-baseline">
+                          {@render AnimatedNumber(countdownParts.h, false)}
+                          <span class="text-sm sm:text-base md:text-lg opacity-60 ml-0.5 mr-1.5 font-sans font-bold">{appSettings.t("hoursShort")}</span>
+                        </div>
+                      {/if}
+                      {#if countdownParts.m > 0 || countdownParts.h > 0}
+                        <div class="flex items-baseline">
+                          {@render AnimatedNumber(countdownParts.m, true)}
+                          <span class="text-sm sm:text-base md:text-lg opacity-60 ml-0.5 mr-1.5 font-sans font-bold">{appSettings.t("minutesShort")}</span>
+                        </div>
+                      {/if}
                       <div class="flex items-baseline">
-                        {@render AnimatedNumber(countdownParts.h, false)}
-                        <span class="text-sm sm:text-base md:text-lg opacity-60 ml-0.5 mr-1.5 font-sans font-bold">{appSettings.t("hoursShort")}</span>
+                        {@render AnimatedNumber(countdownParts.s, true)}
+                        <span class="text-sm sm:text-base md:text-lg opacity-60 ml-0.5 font-sans font-bold">{appSettings.t("secondsShort")}</span>
                       </div>
+                    {:else}
+                       <span class="text-3xl sm:text-4xl md:text-5xl font-sans font-black uppercase tracking-widest text-[var(--md-sys-color-error)] animate-pulse">{appSettings.t("now")}</span>
                     {/if}
-                    {#if countdownParts.m > 0 || countdownParts.h > 0}
-                      <div class="flex items-baseline">
-                        {@render AnimatedNumber(countdownParts.m, true)}
-                        <span class="text-sm sm:text-base md:text-lg opacity-60 ml-0.5 mr-1.5 font-sans font-bold">{appSettings.t("minutesShort")}</span>
-                      </div>
-                    {/if}
-                    <div class="flex items-baseline">
-                      {@render AnimatedNumber(countdownParts.s, true)}
-                      <span class="text-sm sm:text-base md:text-lg opacity-60 ml-0.5 font-sans font-bold">{appSettings.t("secondsShort")}</span>
-                    </div>
-                  {:else}
-                     <span class="text-3xl sm:text-4xl md:text-5xl font-sans font-black uppercase tracking-widest text-[var(--md-sys-color-error)] animate-pulse">{appSettings.t("now")}</span>
-                  {/if}
+                  </div>
                 </div>
               </div>
             </div>
@@ -398,12 +562,98 @@
               <div class="w-full h-2.5 lg:h-3 bg-[var(--md-sys-color-on-primary-container)]/10 text-[var(--md-sys-color-primary)] rounded-full relative flex items-center">
                 <div
                   class="absolute inset-y-0 left-0 bg-current transition-all duration-1000 ease-linear animate-squiggle drop-shadow-[0_2px_4px_var(--md-sys-color-primary)]"
-                  style="width: {progress}%; mask-image: url(&quot;data:image/svg+xml,%3Csvg width='40' height='16' viewBox='0 0 40 16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 0 8 Q 10 2 20 8 T 40 8' fill='none' stroke='black' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E&quot;); mask-repeat: repeat-x; -webkit-mask-image: url(&quot;data:image/svg+xml,%3Csvg width='40' height='16' viewBox='0 0 40 16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 0 8 Q 10 2 20 8 T 40 8' fill='none' stroke='black' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E&quot;); -webkit-mask-repeat: repeat-x;"
+                  style="width: {safeProgress}%; mask-image: url(&quot;data:image/svg+xml,%3Csvg width='40' height='16' viewBox='0 0 40 16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 0 8 Q 10 2 20 8 T 40 8' fill='none' stroke='black' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E&quot;); mask-repeat: repeat-x; -webkit-mask-image: url(&quot;data:image/svg+xml,%3Csvg width='40' height='16' viewBox='0 0 40 16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 0 8 Q 10 2 20 8 T 40 8' fill='none' stroke='black' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E&quot;); -webkit-mask-repeat: repeat-x;"
                 ></div>
                 <div
                   class="absolute h-3 w-3 lg:h-4 lg:w-4 bg-[var(--md-sys-color-primary)] rounded-full transition-all duration-1000 ease-linear shadow-[0_0_8px_var(--md-sys-color-primary)] border-[1.5px] border-white z-10"
-                  style="left: calc({progress}% - 6px);"
+                  style="left: calc({safeProgress}% - 6px);"
                 ></div>
+              </div>
+            </div>
+
+            <!-- Solar Progress Arc Tracking Day's Solar Trajectory -->
+            <div class="w-full mt-3.5 sm:mt-4 pt-2.5 border-t border-[var(--md-sys-color-outline-variant)]/20 relative z-10 flex flex-col gap-1">
+              <div class="flex items-center justify-between text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-[var(--md-sys-color-on-primary-container)]/75">
+                <div class="flex items-center gap-1.5">
+                  <Sun class="w-3.5 h-3.5 text-[var(--md-sys-color-primary)]" />
+                  <span>{appSettings.settings.language === 'ms' ? 'Trajektori Suria Harian' : 'Daily Solar Trajectory'}</span>
+                </div>
+                <span class="text-[var(--md-sys-color-primary)] font-black">
+                  {solarTrajectory.phaseName}
+                </span>
+              </div>
+
+              <!-- SVG Solar Trajectory Arc & Position Orb -->
+              <div class="relative w-full h-12 sm:h-14 flex items-center justify-center overflow-visible">
+                <svg viewBox="0 0 300 70" class="w-full h-full overflow-visible" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="solarTrajectoryGrad" x1="0%" y1="100%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#6750A4" stop-opacity="0.4" />
+                      <stop offset="20%" stop-color="#D97706" stop-opacity="0.6" />
+                      <stop offset="50%" stop-color="#0284C7" stop-opacity="0.9" />
+                      <stop offset="72%" stop-color="#D97706" stop-opacity="0.7" />
+                      <stop offset="90%" stop-color="#BF3626" stop-opacity="0.6" />
+                      <stop offset="100%" stop-color="#1E1B4B" stop-opacity="0.4" />
+                    </linearGradient>
+                    <filter id="solarOrbGlow" x="-50%" y="-50%" width="200%" height="200%">
+                      <feGaussianBlur stdDeviation="2.5" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                  </defs>
+
+                  <!-- Horizon dashed baseline -->
+                  <line x1="20" y1="58" x2="280" y2="58" stroke="currentColor" stroke-dasharray="3 3" stroke-width="1" class="text-[var(--md-sys-color-on-primary-container)]/20" />
+
+                  <!-- Solar trajectory background arc track -->
+                  <path
+                    d="M 24 58 Q 150 4 276 58"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    class="text-[var(--md-sys-color-on-primary-container)]/15"
+                  />
+
+                  <!-- Solar trajectory traversed arc highlight -->
+                  <path
+                    d="M 24 58 Q 150 4 276 58"
+                    fill="none"
+                    stroke="url(#solarTrajectoryGrad)"
+                    stroke-width="3.5"
+                    stroke-linecap="round"
+                    stroke-dasharray="290"
+                    stroke-dashoffset={290 * (1 - solarTrajectory.progress)}
+                    class="transition-[stroke-dashoffset] duration-1000 ease-linear"
+                  />
+
+                  <!-- 6 Prayer Phase Solar Milestones -->
+                  <circle cx="24" cy="58" r="3" fill="#6750A4" class="opacity-80" />
+                  <circle cx="74.4" cy="39.5" r="3" fill="#D97706" class="opacity-80" />
+                  <circle cx="150" cy="31" r="3.5" fill="#0284C7" class="opacity-90" />
+                  <circle cx="205.4" cy="36.4" r="3" fill="#D97706" class="opacity-80" />
+                  <circle cx="250.6" cy="50.1" r="3" fill="#BF3626" class="opacity-80" />
+                  <circle cx="276" cy="58" r="3" fill="#1E1B4B" class="opacity-80" />
+
+                  <!-- Active Sun / Solar Position Orb -->
+                  <g transform="translate({solarTrajectory.sunX}, {solarTrajectory.sunY})">
+                    <circle cx="0" cy="0" r="10" fill="var(--md-sys-color-primary)" opacity="0.25" class="animate-ping" />
+                    <circle cx="0" cy="0" r="7" fill="var(--md-sys-color-primary)" filter="url(#solarOrbGlow)" />
+                    <circle cx="0" cy="0" r="4.5" fill="#FFF9C4" stroke="var(--md-sys-color-primary)" stroke-width="1.5" />
+                  </g>
+                </svg>
+              </div>
+
+              <!-- Milestone labels -->
+              <div class="flex justify-between items-center px-1 text-[8px] sm:text-[9px] font-extrabold uppercase tracking-tight text-[var(--md-sys-color-on-primary-container)]/60">
+                <div class="text-left">Subuh</div>
+                <div class="text-center">Syuruk</div>
+                <div class="text-center text-[var(--md-sys-color-primary)] font-black">Zohor</div>
+                <div class="text-center">Asar</div>
+                <div class="text-center">Maghrib</div>
+                <div class="text-right">Isyak</div>
               </div>
             </div>
           </div>

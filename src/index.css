@@ -22,6 +22,16 @@
     --radius-3xl: calc(40px * var(--app-radius-scale, 1.2));
     --radius-4xl: calc(48px * var(--app-radius-scale, 1.2));
 
+    /* Material 3 Expressive Squircle & Pill Geometries */
+    --radius-squircle-xs: calc(8px * var(--app-radius-scale, 1.2));
+    --radius-squircle-sm: calc(12px * var(--app-radius-scale, 1.2));
+    --radius-squircle-md: calc(16px * var(--app-radius-scale, 1.2));
+    --radius-squircle-lg: calc(24px * var(--app-radius-scale, 1.2));
+    --radius-squircle-xl: calc(32px * var(--app-radius-scale, 1.2));
+    --radius-squircle-2xl: calc(40px * var(--app-radius-scale, 1.2));
+    --radius-squircle-3xl: calc(48px * var(--app-radius-scale, 1.2));
+    --radius-squircle-pill: 9999px;
+
     /* Semantic MD3 Colors */
     --color-primary: var(--md-sys-color-primary);
     --color-on-primary: var(--md-sys-color-on-primary);
@@ -494,33 +504,41 @@ html.dark[data-style="soft"] {
     }
 
     /* --- M3 Elevation Utility Classes --- */
-    .md3-elevation-0 {
+    .md3-elevation-0,
+    .elevation-0 {
         box-shadow: var(--md-sys-elevation-0);
     }
-    .md3-elevation-1 {
+    .md3-elevation-1,
+    .elevation-1 {
         box-shadow: var(--md-sys-elevation-1);
     }
-    .md3-elevation-2 {
+    .md3-elevation-2,
+    .elevation-2 {
         box-shadow: var(--md-sys-elevation-2);
     }
-    .md3-elevation-3 {
+    .md3-elevation-3,
+    .elevation-3 {
         box-shadow: var(--md-sys-elevation-3);
     }
-    .md3-elevation-4 {
+    .md3-elevation-4,
+    .elevation-4 {
         box-shadow: var(--md-sys-elevation-4);
     }
-    .md3-elevation-5 {
+    .md3-elevation-5,
+    .elevation-5 {
         box-shadow: var(--md-sys-elevation-5);
     }
 
     /* --- M3 State Layer Utility Classes ---
      Apply these to interactive elements for proper M3 hover/focus states.
      Uses pseudo-element overlay for the state layer. */
-    .md3-state-layer {
+    .md3-state-layer,
+    .state-layer {
         position: relative;
         overflow: hidden;
     }
-    .md3-state-layer::after {
+    .md3-state-layer::after,
+    .state-layer::after {
         content: "";
         position: absolute;
         inset: 0;
@@ -531,13 +549,16 @@ html.dark[data-style="soft"] {
         transition: opacity var(--md-sys-motion-duration-short2)
             var(--md-sys-motion-easing-standard);
     }
-    .md3-state-layer:hover::after {
+    .md3-state-layer:hover::after,
+    .state-layer:hover::after {
         opacity: var(--md-sys-state-hover-opacity);
     }
-    .md3-state-layer:focus-visible::after {
+    .md3-state-layer:focus-visible::after,
+    .state-layer:focus-visible::after {
         opacity: var(--md-sys-state-focus-opacity);
     }
-    .md3-state-layer:active::after {
+    .md3-state-layer:active::after,
+    .state-layer:active::after {
         opacity: var(--md-sys-state-pressed-opacity);
     }
 
@@ -562,6 +583,48 @@ html.dark[data-style="soft"] {
     }
     .md3-shape-full {
         border-radius: var(--md-sys-shape-corner-full);
+    }
+
+    /* --- M3 Expressive Squircle & Stadium Pill Utilities --- */
+    .squircle-xs {
+        border-radius: calc(8px * var(--app-radius-scale, 1.2));
+    }
+    .squircle-sm {
+        border-radius: calc(12px * var(--app-radius-scale, 1.2));
+    }
+    .squircle-md {
+        border-radius: calc(16px * var(--app-radius-scale, 1.2));
+    }
+    .squircle-lg {
+        border-radius: calc(24px * var(--app-radius-scale, 1.2));
+    }
+    .squircle-xl {
+        border-radius: calc(32px * var(--app-radius-scale, 1.2));
+    }
+    .squircle-2xl {
+        border-radius: calc(40px * var(--app-radius-scale, 1.2));
+    }
+    .squircle-3xl {
+        border-radius: calc(48px * var(--app-radius-scale, 1.2));
+    }
+    .squircle-pill,
+    .stadium-pill {
+        border-radius: 9999px;
+    }
+    .stadium-pill-container {
+        height: 3.5rem; /* 56px */
+        border-radius: 9999px;
+        display: flex;
+        align-items: center;
+    }
+    .tonal-action-btn {
+        width: 2.75rem; /* 44px */
+        height: 2.75rem; /* 44px */
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
     }
 }
 
@@ -1239,22 +1302,99 @@ html[data-style="glass"] .settings-glass-modal {
 }
 
 /* View Transitions API styles */
-::view-transition-old(root),
+@view-transition {
+  navigation: auto;
+}
+
+@keyframes m3-fade-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+@keyframes m3-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes m3-slide-up-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes m3-slide-down-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+/* Global Root and Page Content transitions */
+::view-transition-old(root) {
+  animation: 200ms cubic-bezier(0.4, 0, 1, 1) both m3-fade-out;
+}
+
 ::view-transition-new(root) {
-  animation-duration: 0.3s;
-  animation-timing-function: cubic-bezier(0.2, 0.0, 0, 1.0);
+  animation: 300ms cubic-bezier(0, 0, 0.2, 1) both m3-fade-in;
+}
+
+::view-transition-old(page-content) {
+  animation: 220ms cubic-bezier(0.4, 0, 1, 1) both m3-slide-down-out;
+}
+
+::view-transition-new(page-content) {
+  animation: 320ms cubic-bezier(0.05, 0.7, 0.1, 1) both m3-slide-up-in;
+}
+
+/* Shared element morph transitions */
+::view-transition-group(calendar-transition),
+::view-transition-group(settings-transition),
+::view-transition-group(map-transition),
+::view-transition-group(weather-transition),
+::view-transition-group(hero-prayer-card) {
+  animation-duration: 350ms;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
 }
 
 ::view-transition-old(calendar-transition),
-::view-transition-new(calendar-transition),
 ::view-transition-old(settings-transition),
-::view-transition-new(settings-transition),
 ::view-transition-old(map-transition),
-::view-transition-new(map-transition),
 ::view-transition-old(weather-transition),
-::view-transition-new(weather-transition) {
-  animation-duration: 0.35s;
-  animation-timing-function: cubic-bezier(0.2, 0.0, 0, 1.0);
+::view-transition-old(hero-prayer-card) {
+  animation: 200ms cubic-bezier(0.4, 0, 1, 1) both m3-fade-out;
+  mix-blend-mode: normal;
+  object-fit: cover;
+}
+
+::view-transition-new(calendar-transition),
+::view-transition-new(settings-transition),
+::view-transition-new(map-transition),
+::view-transition-new(weather-transition),
+::view-transition-new(hero-prayer-card) {
+  animation: 350ms cubic-bezier(0.05, 0.7, 0.1, 1) both m3-fade-in;
+  mix-blend-mode: normal;
+  object-fit: cover;
 }
 
 /* prefers-reduced-motion compatibility */

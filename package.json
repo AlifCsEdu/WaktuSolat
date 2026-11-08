@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "npm run clean && svelte-kit sync && vite build",
+    "build": "node -e \"import('node:fs').then(fs => fs.mkdirSync('.svelte-kit/output/server', { recursive: true }))\" && svelte-kit sync && vite build",
     "preview": "vite preview",
-    "clean": "npx rimraf .svelte-kit dist",
+    "clean": "npx rimraf .svelte-kit/output dist",
     "lint": "tsc --noEmit",
     "test": "vitest run"
   },

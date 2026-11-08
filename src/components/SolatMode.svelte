@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { m3Fade as fade, m3Fly as fly, m3Slide as slide } from "../lib/transitions";
+  import { m3Fade as fade, m3Fly as fly, m3Slide as slide, m3Scale as scale } from "../lib/transitions";
   import GooeyBackground from "./GooeyBackground.svelte";
 
   let isMorphing = $state(false);

@@ -257,7 +257,8 @@
   <button
     use:ripple
     onclick={() => {
-      if (document.startViewTransition) {
+      const prefersReducedMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (document.startViewTransition && !prefersReducedMotion) {
         document.startViewTransition(async () => {
           isModalOpen = true;
           await tick();
@@ -354,7 +355,8 @@
   <FullWeatherModal
     isOpen={isModalOpen}
     onClose={() => {
-      if (document.startViewTransition) {
+      const prefersReducedMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (document.startViewTransition && !prefersReducedMotion) {
         document.startViewTransition(async () => {
           isModalOpen = false;
           await tick();

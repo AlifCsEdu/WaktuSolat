@@ -62,7 +62,10 @@ class ThemeState {
   solarDark = $derived.by(() => {
     const todayData = activePrayerState.todayData;
     const currentTime = currentTimeState.value;
-    if (!todayData) return false;
+    if (!todayData) {
+      const hour = new Date(currentTime).getHours();
+      return hour >= 19 || hour < 6;
+    }
     try {
       const getAdjustedTimeLocal = (data: any, key: 'syuruk' | 'maghrib') => {
         const [h, m, s] = data[key].split(":").map(Number);
@@ -95,10 +98,13 @@ class ThemeState {
 
   activeColor = $derived.by(() => {
     const prevPrayerKey = activePrayerState.computedPrayers.prevPrayerKey;
-    if (appSettings.settings.colorThemeMode === "prayer" && prevPrayerKey) {
-      const key = prevPrayerKey.toLowerCase();
-      const colorKey = key in PRAYER_COLORS ? key : "fajr";
-      return PRAYER_COLORS[colorKey as keyof typeof PRAYER_COLORS] || appSettings.settings.themeColor || "#006C54";
+    if (appSettings.settings.colorThemeMode === "prayer") {
+      if (prevPrayerKey) {
+        const key = prevPrayerKey.toLowerCase();
+        const colorKey = key in PRAYER_COLORS ? key : "fajr";
+        return PRAYER_COLORS[colorKey as keyof typeof PRAYER_COLORS] || PRAYER_COLORS.fajr;
+      }
+      return PRAYER_COLORS.fajr;
     }
     return appSettings.settings.themeColor || "#006C54";
   });

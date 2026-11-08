@@ -299,3 +299,61 @@ Integrity mode: development
 - [ ] `npm run lint` passes with 0 TypeScript/ESLint errors.
 - [ ] `npm run build` generates a production-ready client bundle without compilation warnings or errors.
 - [ ] `npx playwright test` and `npm run test` pass 100% of test cases.
+
+
+## Follow-up — 2026-10-20T15:24:26Z
+
+Ground-up architectural remake, visual redesign, and benchmark-tier polish of AlurWaktu into an authentic Google Material 3 Expressive (Pixel Flagship Tier) Islamic prayer companion web application that sets the standard for fluid, tactile, and spiritually serene web experiences.
+
+Working directory: c:\Users\alif325\Documents\WIndsurf projeks\waktu-solat-expressive
+Integrity mode: development
+
+## Requirements
+
+### R1. Authentic Google Material 3 Expressive Design System & Color Dynamics
+- Complete ground-up design system adhering strictly to Google Material 3 Expressive standards (Android 15/16 Pixel design language):
+  - Dynamic atmospheric color harmonization: surface and accent tokens seamlessly adapt to the current Islamic prayer phase / solar position (Subuh twilight violet, Syuruk golden dawn, Zohor high sky azure, Asar amber warmth, Maghrib sunset crimson, Isyak deep midnight indigo).
+  - Authentic M3 Expressive typography hierarchy, dimensional tonal elevations, tactile state layers, and squircle pill geometries.
+  - Symmetrical, unified top floating app bar with integrated zone locator, smooth search expander, and standardized action controls.
+
+### R2. Hero Prayer Focal Card & Adaptive Bento Dashboard
+- Re-architect the core homepage into a Hero Prayer Focal Card + Expressive Bento Grid:
+  - Hero Card: Dynamic focal centerpiece for the active/upcoming prayer featuring a high-precision countdown ring, solar progress arc, atmospheric radiant glow, and Gregorian/Hijri date.
+  - Bento Grid: Fluid cards housing the full daily prayer timeline, expandable sunnah times (Tahajjud, Dhuha, Imsak, Syuruk), live weather glance, and quick notification toggles.
+  - Complete multi-viewport adaptability: seamless single-column thumb-friendly flow on mobile with sticky mini-countdown, expanding into a balanced, majestic bento grid on tablet, desktop, and ultra-wide screens.
+
+### R3. First-Class Route Architecture & Native-Grade View Transitions
+- Convert all destinations into first-class, standalone SvelteKit pages (`/`, `/calendar`, `/settings`, `/tv`, `/map`):
+  - Clean URL state, deep linking, and browser back/forward history support, permanently eliminating portal z-index collisions and backdrop clipping.
+  - Fluid 60fps View Transitions API navigation that morphs cards and panels smoothly between views, with complete reduced-motion safety.
+  - Dedicated Mosque TV mode (`/tv`): large-display optimized clock, Iqamah countdowns, customizable announcements/hadith ticker, and ambient screensavers.
+  - Full Calendar view (`/calendar`): interactive monthly prayer schedules, interactive day selection with bottom sheet / side sheet, and Hijri calendar alignment.
+  - Settings Center (`/settings`): instant search filtering, time adjustments, mazhab selection, sound volume controls, and theme customizers.
+
+### R4. Instant-Launch Experience & Resilient Offline Engine
+- Implement instant-launch experience with zero onboarding friction:
+  - Silent automatic GPS location and zone detection on first visit with smart Malaysian defaults, transitioning directly into the live, interactive dashboard.
+  - Low-latency Web Audio API harmonic sound synthesizers for prayer alert chimes and test auditioning.
+  - Resilient offline-first PWA caching via IndexedDB, ensuring complete, accurate prayer time availability without internet connectivity.
+
+## Verification Resources
+- Existing test suites in `tests/` directory (Playwright E2E and Vitest unit tests).
+- Automated test scripts: `npm run lint`, `npm run test`, and `npx playwright test`.
+
+## Acceptance Criteria
+
+### Visual Design & Aesthetics
+- [ ] Atmospheric dynamic theme shifts smoothly according to the active prayer phase across all screens.
+- [ ] Top floating app bar presents a unified 56px stadium pill container with symmetrical 44px action buttons and consistent strokes.
+- [ ] Dashboard hero prayer card features smooth countdown ring progress, radiant atmospheric glow, and responsive bento grid cards.
+
+### Interactivity & Navigation
+- [ ] First-time launch immediately opens the active dashboard with automatic GPS zone detection and zero onboarding blockers.
+- [ ] All routes (`/`, `/calendar`, `/settings`, `/tv`, `/map`) navigate seamlessly with View Transitions API without errors or broken back navigation.
+- [ ] Calendar page allows selecting any day to view detailed prayer schedules in an expressive M3 sheet/modal.
+- [ ] Settings page opens, filters, toggles options, and exits reliably without UI freezes.
+
+### Verification
+- [ ] `npm run lint` passes with 0 TypeScript/ESLint errors.
+- [ ] `npm run build` generates a production-ready client bundle without compilation warnings or errors.
+- [ ] `npx playwright test` and `npm run test` pass 100% of test cases.

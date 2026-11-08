@@ -30,15 +30,35 @@ export class AudioSynthesizer {
     this.isGestureInitialized = true;
 
     const unlockHandler = async () => {
-      await this.ensureContext();
+      const ctx = await this.ensureContext();
+      if (ctx) {
+        // 1-sample silent buffer kick for iOS Safari audio routing
+        try {
+          const buffer = ctx.createBuffer(1, 1, 22050);
+          const source = ctx.createBufferSource();
+          source.buffer = buffer;
+          source.connect(ctx.destination);
+          source.start(0);
+        } catch {}
+      }
       window.removeEventListener('click', unlockHandler);
       window.removeEventListener('touchstart', unlockHandler);
       window.removeEventListener('keydown', unlockHandler);
+      window.removeEventListener('pointerdown', unlockHandler);
     };
 
     window.addEventListener('click', unlockHandler, { once: true, passive: true });
     window.addEventListener('touchstart', unlockHandler, { once: true, passive: true });
     window.addEventListener('keydown', unlockHandler, { once: true, passive: true });
+    window.addEventListener('pointerdown', unlockHandler, { once: true, passive: true });
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume().catch(() => {});
+        }
+      });
+    }
   }
 
   /**
@@ -128,6 +148,13 @@ export class AudioSynthesizer {
 
         osc.connect(gain);
         gain.connect(ctx.destination);
+
+        osc.onended = () => {
+          try {
+            osc.disconnect();
+            gain.disconnect();
+          } catch {}
+        };
 
         osc.start(actualStart);
         osc.stop(actualStart + duration + 0.05);

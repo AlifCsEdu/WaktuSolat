@@ -57,7 +57,7 @@
     }
 }
 
-/* Left Panel (Clock, Header, Prompts) */
+/* Bento Left (Hero Prayer Focal Card, Complications, Header) */
 .m3e-panel-left {
     display: flex;
     flex-direction: column;
@@ -70,7 +70,8 @@
 
 @media (min-width: 1024px) {
     .m3e-panel-left {
-        width: 50%;
+        width: 52%;
+        max-width: 55%;
         overflow: visible;
         padding-bottom: 0;
     }
@@ -78,11 +79,11 @@
 
 @media (min-width: 1280px) {
     .m3e-panel-left {
-        width: 55%;
+        width: 54%;
     }
 }
 
-/* Right Panel (Schedule Grid) */
+/* Bento Right (Weather Glance Bento Card, Daily Prayer Timeline Bento Card) */
 .m3e-panel-right {
     width: 100%;
     display: flex;
@@ -90,22 +91,20 @@
     position: relative;
     z-index: 10;
     min-height: 0;
+    gap: 1rem;
 }
 
 @media (min-width: 1024px) {
     .m3e-panel-right {
-        width: 50%;
-        padding-left: 1.5rem;
-        border-left: 4px solid var(--md-sys-color-surface-variant);
-        overflow: hidden;
         flex: 1;
+        width: 48%;
+        overflow: hidden;
     }
 }
 
 @media (min-width: 1280px) {
     .m3e-panel-right {
-        width: 45%;
-        padding-left: 2rem;
+        width: 46%;
     }
 }
 
